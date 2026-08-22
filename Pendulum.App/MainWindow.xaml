@@ -7,7 +7,7 @@
         xmlns:views="clr-namespace:Pendulum.App.Views"
         mc:Ignorable="d"
         Title="Pendulum"
-        Height="800" Width="1140"
+        Height="800" Width="1200"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Icon="pack://application:,,,/Resources/pendulum.ico"

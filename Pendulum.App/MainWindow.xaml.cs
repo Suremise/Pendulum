@@ -31,6 +31,7 @@ public partial class MainWindow : FluentWindow
 
         e.Cancel = true;
         Hide();
+        app.NotifyFirstMinimizeToTray();
     }
 
     private void FluentWindow_Closed(object sender, EventArgs e)

@@ -10,6 +10,7 @@
         Background="Transparent"
         ShowInTaskbar="False"
         Topmost="True"
+        ShowActivated="False"
         WindowStartupLocation="Manual">
     <Border Background="#FF201F36"
             CornerRadius="12"

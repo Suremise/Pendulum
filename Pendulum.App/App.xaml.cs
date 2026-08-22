@@ -132,6 +132,16 @@ public partial class App : Application
             _trayIcon.ToolTipText = $"Pendulum - {ReminderStatus.GetNextReminderSummary()}";
     }
 
+    internal void NotifyFirstMinimizeToTray()
+    {
+        var settings = AppServices.Instance.Settings;
+        if (settings.HasShownTrayMinimizeHint)
+            return;
+
+        settings.HasShownTrayMinimizeHint = true;
+        _trayIcon?.ShowNotification("Pendulum", "Still running in the system tray. Click the tray icon to reopen, or right-click it to exit.");
+    }
+
     private void NotifyMissedReminders(List<string> missed)
     {
         var message = missed.Count switch

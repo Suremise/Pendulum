@@ -20,6 +20,7 @@ public partial class AlertWindow : Window
         SubtitleText.Text = subtitle;
         SnoozeButton.Visibility = canSnooze ? Visibility.Visible : Visibility.Collapsed;
 
+        SourceInitialized += (_, __) => Win32Interop.MakeNonActivating(new WindowInteropHelper(this).Handle);
         Loaded += (_, __) => PositionBottomRight();
 
         _topmostReinforcer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };

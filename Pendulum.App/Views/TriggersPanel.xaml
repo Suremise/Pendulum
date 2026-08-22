@@ -20,6 +20,9 @@
         <SolidColorBrush x:Key="RepeatsBadgeBrush" Color="#337C6AE0"/>
         <SolidColorBrush x:Key="OneTimeBadgeBrush" Color="#333B82F6"/>
         <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
+        <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
+        <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
+        <SolidColorBrush x:Key="SpeechOnlyBadgeBrush" Color="#33E0529A"/>
         <Style x:Key="TagBadge" TargetType="Border">
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="6,1"/>
@@ -27,6 +30,20 @@
         <Style x:Key="TagBadgeText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="ModeBadge" TargetType="Border" BasedOn="{StaticResource TagBadge}">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Mode}" Value="SoundOnly">
+                    <Setter Property="Background" Value="{StaticResource SoundOnlyBadgeBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Mode}" Value="SoundAndSpeech">
+                    <Setter Property="Background" Value="{StaticResource SoundSpeechBadgeBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Mode}" Value="SpeechOnly">
+                    <Setter Property="Background" Value="{StaticResource SpeechOnlyBadgeBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
         <CollectionViewSource x:Key="SortedTriggers" Source="{Binding Triggers}">
             <CollectionViewSource.SortDescriptions>
@@ -61,7 +78,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="ListViewItem">
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                            <GridViewRowPresenter Margin="10,0"/>
+                            <GridViewRowPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -152,7 +169,7 @@
                             <GridViewColumn Header="NAME" Width="220">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource NameLinkButton}"
+                                        <Button Style="{StaticResource NameLinkButton}" Margin="10,0,0,0"
                                                 Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}">
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
@@ -165,7 +182,7 @@
                             <GridViewColumn Header="TAGS" Width="100">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                                             <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}"
                                                     Visibility="{Binding HasFired, Converter={StaticResource BoolToVis}}">
                                                 <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}"
@@ -195,26 +212,28 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="TRIGGERS AT" Width="200">
+                            <GridViewColumn Header="TRIGGERS ON" Width="200">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding TriggerAt, StringFormat='{}{0:ddd, dd MMM yyyy  HH:mm}'}" VerticalAlignment="Center"
+                                        <TextBlock Text="{Binding TriggerAt, StringFormat='{}{0:ddd, dd MMM yyyy  HH:mm}'}" VerticalAlignment="Center" Margin="5,0,0,0"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="MODE" Width="120">
+                            <GridViewColumn Header="MODE" Width="150">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Mode, Converter={StaticResource EnumSpaced}}" VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                        <Border Style="{StaticResource ModeBadge}" Margin="6,0,0,0">
+                                            <TextBlock Text="{Binding Mode, Converter={StaticResource EnumSpaced}}" Style="{StaticResource TagBadgeText}"
+                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                        </Border>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
                             <GridViewColumn Header="SOUND" Width="110">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding SoundFileName}" VerticalAlignment="Center"
+                                        <TextBlock Text="{Binding SoundFileName}" VerticalAlignment="Center" Margin="6,0,0,0"
                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>

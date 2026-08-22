@@ -33,4 +33,9 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
     [ObservableProperty] private AlertStyle alertStyle = AlertStyle.TopmostWindow;
     [ObservableProperty] private bool use24HourTime = true;
+
+    /// Internal bookkeeping (not a user-facing setting): whether the "still running in
+    /// the tray" toast has been shown yet. Fires once, the first time the window is
+    /// ever minimized to the tray rather than closed.
+    [ObservableProperty] private bool hasShownTrayMinimizeHint;
 }
