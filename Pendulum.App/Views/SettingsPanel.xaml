@@ -1,0 +1,170 @@
+<UserControl x:Class="Pendulum.App.Views.SettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
+             xmlns:conv="clr-namespace:Pendulum.App.Converters">
+    <UserControl.DataContext>
+        <vm:SettingsViewModel/>
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
+        <conv:InverseBooleanConverter x:Key="InverseBool"/>
+        <Style x:Key="SectionHeader" TargetType="StackPanel">
+            <Setter Property="Orientation" Value="Horizontal"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="FieldLabel">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="ComboBox" x:Key="FieldCombo" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Width" Value="240"/>
+        </Style>
+        <Style x:Key="FieldTextBox" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Width" Value="240"/>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Width="{Binding ActualWidth, ElementName=RootScrollViewer}" MaxWidth="700" HorizontalAlignment="Center" Margin="0,0,0,4">
+        <TextBlock Text="Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,2"/>
+        <TextBlock Text="Configure sounds, speech, and alert behavior." FontSize="12"
+                   Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE713;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="General" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <CheckBox Content="Launch on Windows startup" IsChecked="{Binding Settings.LaunchOnWindowsStartup}" Margin="0,0,0,6"/>
+
+                        <TextBlock Text="Time format" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Style="{StaticResource FieldCombo}" SelectedIndex="{Binding TimeFormatIndex}" Margin="0,0,0,12">
+                            <ComboBoxItem Content="12-hour (AM/PM)"/>
+                            <ComboBoxItem Content="24-hour"/>
+                        </ComboBox>
+
+                        <ui:Button Content="Reset to Defaults" Appearance="Secondary" HorizontalAlignment="Left"
+                                   Command="{Binding ResetToDefaultsCommand}"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Default sound for new timers" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card>
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Back up all settings and reminders to a file — everything you need to move Pendulum to another computer." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="Export Backup..." Appearance="Secondary" Command="{Binding ExportBackupCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Restore Backup..." Appearance="Secondary" Command="{Binding RestoreBackupCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2">
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Alerts" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Alert style" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding AlertStyles}" SelectedItem="{Binding Settings.AlertStyle}" Margin="0,0,0,10">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumSpaced}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="Snooze duration (minutes)" Style="{StaticResource FieldLabel}"/>
+                        <ui:TextBox Style="{StaticResource FieldTextBox}" Width="80" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>
+
+                        <CheckBox Content="Repeat alert until dismissed" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}" Margin="0,0,0,10"/>
+
+                        <TextBlock Text="Auto-resolve after (minutes), when not repeating" Style="{StaticResource FieldLabel}"/>
+                        <ui:TextBox Style="{StaticResource FieldTextBox}" Width="80"
+                                    Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                    IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card>
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE8AF;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Text-to-Speech" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Voice" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding VoiceNames}" SelectedItem="{Binding Settings.TtsVoiceName}" Margin="0,0,0,6"/>
+
+                        <Grid Width="240" HorizontalAlignment="Left" Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Rate" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Settings.TtsRate}" Style="{StaticResource FieldLabel}"/>
+                        </Grid>
+                        <Slider Width="240" HorizontalAlignment="Left" Minimum="-10" Maximum="10" Value="{Binding Settings.TtsRate}" Margin="0,0,0,8"/>
+
+                        <Grid Width="240" HorizontalAlignment="Left" Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Volume" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Settings.TtsVolume}" Style="{StaticResource FieldLabel}"/>
+                        </Grid>
+                        <Slider Width="240" HorizontalAlignment="Left" Minimum="0" Maximum="100" Value="{Binding Settings.TtsVolume}" Margin="0,0,0,10"/>
+
+                        <ui:Button Content="Test Voice" Appearance="Secondary" Command="{Binding TestVoiceCommand}" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </ui:Card>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+    </ScrollViewer>
+</UserControl>
