@@ -105,6 +105,7 @@ public partial class TriggerEditWindow : FluentWindow
         VolumeSlider.Value = t.Volume;
         VolumeValueText.Text = t.Volume.ToString();
         EnabledBox.IsChecked = t.Enabled;
+        DisabledHint.Visibility = t.Enabled ? Visibility.Collapsed : Visibility.Visible;
 
         _recurrence = t.Recurrence;
         UpdateRecurrenceSummary();
@@ -262,6 +263,19 @@ public partial class TriggerEditWindow : FluentWindow
             _target.TriggerAt = scheduledAt;
             _target.HasFired = true;
             _target.Enabled = false;
+
+            // The user asked for this to be enabled, but the date/time they set is in the
+            // past (e.g. only the time was changed and the date field was left stale after
+            // midnight). Say so instead of quietly overriding their choice.
+            if (enabledByUser)
+            {
+                System.Windows.MessageBox.Show(
+                    this,
+                    $"The date/time you set ({scheduledAt:ddd, dd MMM yyyy  HH:mm}) is in the past, so this reminder has been saved as Spent instead of enabled.\n\nSet a future date/time to activate it.",
+                    "Pendulum",
+                    System.Windows.MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
         }
 
         Result = _target;
