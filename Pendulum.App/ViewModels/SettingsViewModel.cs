@@ -17,7 +17,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private List<string> voiceNames = new();
     [ObservableProperty] private List<string> soundFiles = new();
 
-    public IEnumerable<AlertStyle> AlertStyles => Enum.GetValues<AlertStyle>();
+    public IEnumerable<ThemeMode> ThemeModes => Enum.GetValues<ThemeMode>();
 
     public int TimeFormatIndex
     {
@@ -38,6 +38,8 @@ public partial class SettingsViewModel : ObservableObject
         {
             if (e.PropertyName == nameof(AppSettings.LaunchOnWindowsStartup))
                 StartupRegistration.SetEnabled(Settings.LaunchOnWindowsStartup);
+            if (e.PropertyName == nameof(AppSettings.Theme))
+                AppThemeManager.Apply(Settings.Theme);
         };
     }
 
@@ -172,7 +174,6 @@ public partial class SettingsViewModel : ObservableObject
         Settings.RepeatAlertUntilDismissed = source.RepeatAlertUntilDismissed;
         Settings.AutoResolveMinutes = source.AutoResolveMinutes;
         Settings.Theme = source.Theme;
-        Settings.AlertStyle = source.AlertStyle;
         Settings.Use24HourTime = source.Use24HourTime;
 
         OnPropertyChanged(nameof(TimeFormatIndex));

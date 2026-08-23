@@ -27,6 +27,7 @@ public partial class CountdownViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SetDurationCommand))]
     private bool isRunning;
 
     [ObservableProperty] private bool isPausedState;
@@ -52,12 +53,11 @@ public partial class CountdownViewModel : ObservableObject
 
     private AlertMode Mode => SpeakPhrase ? AlertMode.SoundAndSpeech : AlertMode.SoundOnly;
 
-    [RelayCommand]
+    private bool CanSetDuration() => !IsRunning;
+
+    [RelayCommand(CanExecute = nameof(CanSetDuration))]
     private void SetDuration()
     {
-        if (IsRunning)
-            return;
-
         _committedDuration = InputDuration;
         HasSetDuration = _committedDuration > TimeSpan.Zero;
         DisplayRemaining = FormatSpan(_committedDuration);

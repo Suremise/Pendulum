@@ -6,16 +6,19 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace Pendulum.App.ViewModels;
 
+public sealed record LapEntry(int Number, string Time);
+
 public partial class StopwatchViewModel : ObservableObject
 {
     private readonly Stopwatch _stopwatch = new();
     private readonly DispatcherTimer _timer;
+    private int _lapCount;
 
     [ObservableProperty] private string displayTime = "00:00:00.0";
     [ObservableProperty] private bool isRunning;
     [ObservableProperty] private string startPauseLabel = "Start";
 
-    public ObservableCollection<string> Laps { get; } = new();
+    public ObservableCollection<LapEntry> Laps { get; } = new();
 
     public bool HasLaps => Laps.Count > 0;
 
@@ -58,6 +61,7 @@ public partial class StopwatchViewModel : ObservableObject
         IsRunning = false;
         StartPauseLabel = "Start";
         Laps.Clear();
+        _lapCount = 0;
         UpdateDisplay();
     }
 
@@ -65,6 +69,6 @@ public partial class StopwatchViewModel : ObservableObject
     private void Lap()
     {
         if (IsRunning)
-            Laps.Insert(0, DisplayTime);
+            Laps.Insert(0, new LapEntry(++_lapCount, DisplayTime));
     }
 }

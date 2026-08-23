@@ -9,13 +9,6 @@ public enum ThemeMode
     Dark
 }
 
-public enum AlertStyle
-{
-    TopmostWindow,
-    ToastOnly,
-    Both
-}
-
 public partial class AppSettings : ObservableObject
 {
     [ObservableProperty] private string defaultSoundFileName = "chime.wav";
@@ -31,7 +24,6 @@ public partial class AppSettings : ObservableObject
     /// outcome as if the user had clicked Dismiss. Has no effect when RepeatAlertUntilDismissed is true.
     [ObservableProperty] private int autoResolveMinutes = 30;
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
-    [ObservableProperty] private AlertStyle alertStyle = AlertStyle.TopmostWindow;
     [ObservableProperty] private bool use24HourTime = true;
 
     /// Internal bookkeeping (not a user-facing setting): whether the "still running in

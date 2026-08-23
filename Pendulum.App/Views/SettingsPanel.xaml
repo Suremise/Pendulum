@@ -8,8 +8,8 @@
         <vm:SettingsViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
-        <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
         <conv:InverseBooleanConverter x:Key="InverseBool"/>
+        <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
         <Style x:Key="SectionHeader" TargetType="StackPanel">
             <Setter Property="Orientation" Value="Horizontal"/>
             <Setter Property="Margin" Value="0,0,0,6"/>
@@ -57,6 +57,15 @@
                         <ComboBox Style="{StaticResource FieldCombo}" SelectedIndex="{Binding TimeFormatIndex}" Margin="0,0,0,12">
                             <ComboBoxItem Content="12-hour (AM/PM)"/>
                             <ComboBoxItem Content="24-hour"/>
+                        </ComboBox>
+
+                        <TextBlock Text="Theme" Style="{StaticResource FieldLabel}"/>
+                        <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding ThemeModes}" SelectedItem="{Binding Settings.Theme}" Margin="0,0,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Converter={StaticResource EnumSpaced}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
                         </ComboBox>
 
                         <ui:Button Content="Reset to Defaults" Appearance="Secondary" HorizontalAlignment="Left"
@@ -107,15 +116,6 @@
                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
                             <TextBlock Text="Alerts" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
-
-                        <TextBlock Text="Alert style" Style="{StaticResource FieldLabel}"/>
-                        <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding AlertStyles}" SelectedItem="{Binding Settings.AlertStyle}" Margin="0,0,0,10">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Converter={StaticResource EnumSpaced}}"/>
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
 
                         <TextBlock Text="Snooze duration (minutes)" Style="{StaticResource FieldLabel}"/>
                         <ui:TextBox Style="{StaticResource FieldTextBox}" Width="80" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10"/>

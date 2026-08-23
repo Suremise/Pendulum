@@ -1,14 +1,12 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using H.NotifyIcon;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
-using Wpf.Ui.Appearance;
 
 namespace Pendulum.App;
 
@@ -83,11 +81,7 @@ public partial class App : Application
             AppServices.Instance.Engine.TriggerFired += OnTriggerFired;
             AppServices.Instance.Engine.TickFailed += ex => CrashLog.Write("TimerEngine.Tick", ex);
 
-            ApplicationAccentColorManager.Apply(
-                (Color)ColorConverter.ConvertFromString("#7C6AE0")!,
-                (Color)ColorConverter.ConvertFromString("#8F7FF0")!,
-                (Color)ColorConverter.ConvertFromString("#6552D0")!,
-                (Color)ColorConverter.ConvertFromString("#4C3BAE")!);
+            AppThemeManager.Apply(AppServices.Instance.Settings.Theme);
 
             var iconUri = new Uri("pack://application:,,,/Resources/pendulum.ico", UriKind.Absolute);
             var iconImage = new BitmapImage(iconUri);
