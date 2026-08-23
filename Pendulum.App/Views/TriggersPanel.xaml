@@ -382,7 +382,10 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="SOUND" Width="110">
+                            <GridViewColumn Width="110">
+                                <GridViewColumn.Header>
+                                    <TextBlock Text="SOUND" Style="{StaticResource ColumnFilterLabel}"/>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding SoundFileName}" VerticalAlignment="Center" Margin="6,0,0,0"
