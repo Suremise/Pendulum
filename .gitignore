@@ -20,3 +20,6 @@ Thumbs.db
 
 # Runtime-generated app data (only present if the exe has been run from the repo)
 Data/
+
+# Local archive of retired code/tooling — kept on disk, never in source control
+ARCHIVE/

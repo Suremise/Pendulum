@@ -13,10 +13,7 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 
 ## Getting Pendulum
 
-Two ways to run it, both self-contained (no separate .NET install required):
-
-- **Portable** — no install, no admin rights, zero footprint outside its own folder. Grab the `Pendulum-portable-win-x64` build, unzip anywhere, run `Pendulum.exe`. All state lives in a `Data\` folder created next to the exe.
-- **Installer** — a proper `PendulumSetup-<version>.exe` that installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller.
+A self-contained `PendulumSetup-<version>.exe` (no separate .NET install required) that installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller.
 
 ## Building from source
 
@@ -31,7 +28,6 @@ Produces a self-contained win-x64 build at `Pendulum.App\bin\Release\net8.0-wind
 To cut a distributable release:
 
 ```
-.\build-portable.ps1     # -> dist\Pendulum-portable-win-x64\
 .\build-installer.ps1    # -> installer\Output\PendulumSetup-<version>.exe (requires Inno Setup 6)
 ```
 
