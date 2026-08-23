@@ -36,7 +36,7 @@ To cut a distributable release:
 - **Pendulum.App** — WPF UI (WPF-UI Fluent design), MVVM via CommunityToolkit.Mvvm, tray icon via H.NotifyIcon.
 - **Pendulum.Core** — models, the timer engine, recurrence calculation, audio (NAudio) and speech (System.Speech/SAPI5) services, and JSON persistence. No UI dependencies.
 
-## Portable data model
+## Portable-style data model
 
 No `%AppData%`, no registry, no installer footprint (aside from the one opt-in "Launch on Windows startup" toggle, which writes a single registry `Run` key). Everything lives next to the exe:
 

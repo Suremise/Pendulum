@@ -105,7 +105,7 @@ class AppSettings
 }
 ```
 
-**Portable storage**: no `%AppData%`, no registry, no installer. All state lives in folders next to the exe, resolved at runtime via `AppContext.BaseDirectory`:
+**Portable-style storage**: no `%AppData%`, no data in the registry. All state lives in folders next to the exe, resolved at runtime via `AppContext.BaseDirectory` — true whether the exe got there via the installer or just got copied somewhere:
 
 ```
 Pendulum\
@@ -126,7 +126,7 @@ Copy the `Pendulum` folder anywhere (including a USB stick), run the exe, and ev
 
 ## 5. Sounds
 
-- **Folder**: the `Sounds\` subfolder next to the exe (path overridable in Settings if you ever want to point elsewhere), pre-seeded with a few default alert tones shipped as part of the portable release.
+- **Folder**: the `Sounds\` subfolder next to the exe (path overridable in Settings if you ever want to point elsewhere), pre-seeded with a few default alert tones shipped with the installer.
 - **Formats supported**: **WAV** (uncompressed, zero-latency, always works) and **MP3** (common, small, user-friendly for custom tones). NAudio handles both without extra native dependencies. Settings panel has an "Open Sounds Folder" button and a "Add Sound…" file picker that copies the chosen file into that folder.
 - Timers reference a sound by filename; Settings panel lists everything currently in the folder in a dropdown, auto-refreshed when the folder changes.
 
@@ -185,38 +185,24 @@ Concept: a minimalist flat-Fluent pendulum-clock mark — a stylized swinging pe
 - Default sound for new timers
 - TTS voice, rate, volume (+ Test Voice)
 - Snooze duration
-- Launch on Windows startup (opt-in only; writes a Registry `Run` key pointing at the exe's *current* path — since the app is portable, moving the folder after enabling this means re-toggling it once at the new location)
+- Launch on Windows startup (opt-in only; writes a Registry `Run` key pointing at the exe's *current* path — reinstalling to a different location means re-toggling it once at the new location)
 - Alert style: Topmost window / Toast only / Both
 - Theme: Light / Dark / Follow system
 
-## 13. Packaging — portable, no installer, zero footprint on the machine
+## 13. Packaging — per-user installer, no admin rights, still no `%AppData%`/registry footprint
 
-No MSI, no Setup.exe, no install step, no temp-folder extraction cache. Self-contained **multi-file** publish — every dependency, including the .NET runtime itself, sits as plain DLLs in the folder next to `Pendulum.exe`:
+Distributed as a proper `PendulumSetup-<version>.exe`, built via `build-installer.ps1`: `dotnet publish` (self-contained, multi-file win-x64) feeds into an Inno Setup script (`installer\Pendulum.iss`) that produces the installer.
 
 ```
 dotnet publish -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=false
 ```
 
-Deliberately *not* using `PublishSingleFile` here: single-file mode still unpacks its bundled native libraries into a per-version cache under `%TEMP%\.net\...` on first run. Going multi-file instead means nothing is written anywhere outside the app's own folder — not `%TEMP%`, not `%AppData%`, not the registry — until you explicitly opt into "Launch on Windows startup" in Settings (the one deliberate exception, user-initiated and one line in the registry, cleanly reversible from the same toggle).
+Deliberately *not* using `PublishSingleFile` here: single-file mode still unpacks its bundled native libraries into a per-version cache under `%TEMP%\.net\...` on first run. Multi-file instead means the only things written outside the app's install folder are the Start Menu/uninstaller entries Inno Setup registers, and the one deliberate registry line if you opt into "Launch on Windows startup" in Settings — everything else (`Data\`, `Sounds\`) still lives next to `Pendulum.exe`, resolved the same portable-storage way described in section 3.
 
-Release layout:
+Install is per-user, under `%LocalAppData%\Programs\Pendulum` — `PrivilegesRequired=lowest` in the Inno script means no admin/UAC prompt, and it keeps `Data\`/`Sounds\` writable without elevation. Uninstalling goes through the normal Windows "Add or remove programs" entry, which Inno Setup registers automatically.
 
-```
-Pendulum\                  ← this whole folder is "the app"; zip it, copy it, run it anywhere
-├── Pendulum.exe
-├── Pendulum.dll                    (managed app code)
-├── *.dll                           (all managed + native dependencies: WPF/.NET runtime,
-│                                     H.NotifyIcon, NAudio, System.Speech, WPF-UI, etc.)
-├── Pendulum.deps.json / .runtimeconfig.json
-└── Sounds\                ← default tones, pre-seeded
-    ├── chime.wav
-    └── bell.wav
-```
-
-(`Data\` is not shipped — it's created on first launch, inside this same folder.)
-
-Folder will be larger than a single-file build (~100-150MB vs ~60-100MB, since nothing is compressed into one exe) and looks busier with all the DLLs visible — the tradeoff for genuinely leaving nothing behind on the host machine. For distribution/testing, the release artifact is `Pendulum-portable-win-x64.zip` containing the folder above — unzip, run `Pendulum.exe`, no admin rights needed. Uninstalling is just deleting the folder.
+An earlier iteration of this project also shipped a zip-and-run "portable" build with no installer at all; that option was dropped once the installer covered the same no-admin, no-`%AppData%` goals with a more familiar install/uninstall experience. `ARCHIVE/build-portable.ps1` (gitignored, kept locally) still has that script if it's ever needed again.
 
 ---
 
