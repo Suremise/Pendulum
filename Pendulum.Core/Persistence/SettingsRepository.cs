@@ -5,8 +5,8 @@ namespace Pendulum.Core.Persistence;
 public class SettingsRepository
 {
     public AppSettings Load() =>
-        JsonStore.Load<AppSettings>(PortablePaths.SettingsFile) ?? new AppSettings();
+        JsonStore.Load<AppSettings>(AppPaths.SettingsFile) ?? new AppSettings();
 
     public void Save(AppSettings settings) =>
-        JsonStore.Save(PortablePaths.SettingsFile, settings);
+        JsonStore.Save(AppPaths.SettingsFile, settings);
 }

@@ -11,8 +11,8 @@ public static class CrashLog
     {
         try
         {
-            PortablePaths.EnsureDirectories();
-            var path = Path.Combine(PortablePaths.DataDirectory, "crash.log");
+            AppPaths.EnsureDirectories();
+            var path = Path.Combine(AppPaths.DataDirectory, "crash.log");
             var entry = $"{DateTime.Now:O} [{context}] {ex}\n---\n";
             File.AppendAllText(path, entry);
         }

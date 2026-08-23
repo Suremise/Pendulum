@@ -4,7 +4,7 @@ namespace Pendulum.App.Services;
 
 /// Opt-in "launch on Windows startup" toggle. Writes a Registry Run key
 /// pointing at the exe's current path — the one deliberate registry touch
-/// in an otherwise fully portable app.
+/// the app makes; everything else lives in its own Data\ folder.
 public static class StartupRegistration
 {
     private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";

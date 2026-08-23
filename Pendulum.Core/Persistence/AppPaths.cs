@@ -1,6 +1,6 @@
 namespace Pendulum.Core.Persistence;
 
-public static class PortablePaths
+public static class AppPaths
 {
     public static string BaseDirectory => AppContext.BaseDirectory;
     public static string DataDirectory => Path.Combine(BaseDirectory, "Data");

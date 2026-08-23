@@ -37,7 +37,7 @@ public sealed class AppServices
     /// of replaying a stale alert. Returns the names of triggers that were reconciled this way.
     public List<string> Initialize()
     {
-        PortablePaths.EnsureDirectories();
+        AppPaths.EnsureDirectories();
 
         Settings = SettingsRepository.Load();
         Settings.PropertyChanged += OnSettingsChanged;
@@ -118,15 +118,15 @@ public sealed class AppServices
     {
         if (string.IsNullOrWhiteSpace(fileName))
             return string.Empty;
-        return Path.Combine(PortablePaths.SoundsDirectory, fileName);
+        return Path.Combine(AppPaths.SoundsDirectory, fileName);
     }
 
     public List<string> GetAvailableSoundFiles()
     {
-        if (!Directory.Exists(PortablePaths.SoundsDirectory))
+        if (!Directory.Exists(AppPaths.SoundsDirectory))
             return new List<string>();
 
-        return Directory.EnumerateFiles(PortablePaths.SoundsDirectory)
+        return Directory.EnumerateFiles(AppPaths.SoundsDirectory)
             .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
             .Select(Path.GetFileName)
             .Where(f => f is not null)

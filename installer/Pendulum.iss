@@ -23,7 +23,7 @@ DefaultGroupName=Pendulum
 DisableProgramGroupPage=yes
 ; Per-user install under LocalAppData - no admin/UAC prompt needed, and it keeps
 ; the app's own Data\ and Sounds\ folders (created next to the exe) writable
-; without elevation, exactly like the portable build.
+; without elevation.
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible

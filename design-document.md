@@ -105,7 +105,7 @@ class AppSettings
 }
 ```
 
-**Portable-style storage**: no `%AppData%`, no data in the registry. All state lives in folders next to the exe, resolved at runtime via `AppContext.BaseDirectory` — true whether the exe got there via the installer or just got copied somewhere:
+**Local storage**: no `%AppData%`, no data in the registry. All state lives in folders next to the exe, resolved at runtime via `AppContext.BaseDirectory`:
 
 ```
 Pendulum\
@@ -198,11 +198,9 @@ dotnet publish -c Release -r win-x64 --self-contained true `
   -p:PublishSingleFile=false
 ```
 
-Deliberately *not* using `PublishSingleFile` here: single-file mode still unpacks its bundled native libraries into a per-version cache under `%TEMP%\.net\...` on first run. Multi-file instead means the only things written outside the app's install folder are the Start Menu/uninstaller entries Inno Setup registers, and the one deliberate registry line if you opt into "Launch on Windows startup" in Settings — everything else (`Data\`, `Sounds\`) still lives next to `Pendulum.exe`, resolved the same portable-storage way described in section 3.
+Deliberately *not* using `PublishSingleFile` here: single-file mode still unpacks its bundled native libraries into a per-version cache under `%TEMP%\.net\...` on first run. Multi-file instead means the only things written outside the app's install folder are the Start Menu/uninstaller entries Inno Setup registers, and the one deliberate registry line if you opt into "Launch on Windows startup" in Settings — everything else (`Data\`, `Sounds\`) still lives next to `Pendulum.exe`, resolved the same way described in section 3.
 
 Install is per-user, under `%LocalAppData%\Programs\Pendulum` — `PrivilegesRequired=lowest` in the Inno script means no admin/UAC prompt, and it keeps `Data\`/`Sounds\` writable without elevation. Uninstalling goes through the normal Windows "Add or remove programs" entry, which Inno Setup registers automatically.
-
-An earlier iteration of this project also shipped a zip-and-run "portable" build with no installer at all; that option was dropped once the installer covered the same no-admin, no-`%AppData%` goals with a more familiar install/uninstall experience. `ARCHIVE/build-portable.ps1` (gitignored, kept locally) still has that script if it's ever needed again.
 
 ---
 

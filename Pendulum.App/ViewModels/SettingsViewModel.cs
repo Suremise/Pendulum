@@ -49,7 +49,7 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void OpenSoundsFolder()
     {
-        Process.Start(new ProcessStartInfo(PortablePaths.SoundsDirectory) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(AppPaths.SoundsDirectory) { UseShellExecute = true });
     }
 
     [RelayCommand]
@@ -63,7 +63,7 @@ public partial class SettingsViewModel : ObservableObject
 
         if (dialog.ShowDialog() == true)
         {
-            var destination = Path.Combine(PortablePaths.SoundsDirectory, Path.GetFileName(dialog.FileName));
+            var destination = Path.Combine(AppPaths.SoundsDirectory, Path.GetFileName(dialog.FileName));
             File.Copy(dialog.FileName, destination, overwrite: true);
             RefreshSoundFiles();
         }
