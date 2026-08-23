@@ -31,8 +31,7 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         <Style x:Key="FieldTextBox" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Width" Value="240"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
     </UserControl.Resources>
 
@@ -92,9 +91,9 @@
                 <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
+                            <TextBlock Text="Alerts" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
 
                         <Grid Style="{StaticResource FieldRow}">
@@ -102,13 +101,22 @@
                                 <ColumnDefinition Width="130"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
-                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
+                            <TextBlock Grid.Column="0" Text="Snooze duration (minutes)" Style="{StaticResource FieldLabelInline}"/>
+                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
-                        <StackPanel Orientation="Horizontal">
-                            <ui:Button Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}" Margin="0,0,10,0"/>
-                            <ui:Button Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}"/>
-                        </StackPanel>
+
+                        <CheckBox Content="Repeat alert until dismissed" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Auto-resolve after (minutes), when not repeating" Style="{StaticResource FieldLabelInline}"/>
+                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}"
+                                        Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                        IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}"/>
+                        </Grid>
                     </StackPanel>
                 </ui:Card>
 
@@ -134,9 +142,9 @@
                 <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Alerts" FontSize="15" FontWeight="SemiBold"/>
+                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
 
                         <Grid Style="{StaticResource FieldRow}">
@@ -144,26 +152,21 @@
                                 <ColumnDefinition Width="130"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Snooze duration (minutes)" Style="{StaticResource FieldLabelInline}"/>
-                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" Width="80" HorizontalAlignment="Left" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
                         </Grid>
-
-                        <CheckBox Content="Repeat alert until dismissed" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}" Margin="0,0,0,10"/>
-
-                        <Grid Margin="0,0,0,2">
+                        <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Auto-resolve after (minutes), when not repeating" Style="{StaticResource FieldLabelInline}"/>
-                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" Width="80" HorizontalAlignment="Left"
-                                        Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
-                                        IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}"/>
+                            <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
+                            <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
                         </Grid>
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card>
+                <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE8AF;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
@@ -216,7 +219,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="0,10,0,0">
+                <ui:Card>
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
