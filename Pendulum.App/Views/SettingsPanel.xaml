@@ -38,6 +38,7 @@
 
         <!-- Each section's label column width is independent — tweak one without affecting the others. -->
         <GridLength x:Key="GeneralLabelWidth">200</GridLength>
+        <GridLength x:Key="RemindersLabelWidth">200</GridLength>
         <GridLength x:Key="SoundsLabelWidth">200</GridLength>
         <GridLength x:Key="TtsLabelWidth">200</GridLength>
     </UserControl.Resources>
@@ -69,19 +70,7 @@
                             <CheckBox Content="Start minimized" IsChecked="{Binding Settings.StartMinimized}"/>
                         </StackPanel>
 
-                        <Grid Style="{StaticResource FieldRow}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Time format" Style="{StaticResource FieldLabelInline}"/>
-                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" SelectedIndex="{Binding TimeFormatIndex}">
-                                <ComboBoxItem Content="12-hour (AM/PM)"/>
-                                <ComboBoxItem Content="24-hour"/>
-                            </ComboBox>
-                        </Grid>
-
-                        <Grid Style="{StaticResource FieldRow}">
+                        <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
@@ -95,12 +84,34 @@
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
                         </Grid>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE823;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Reminders" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource RemindersLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Time format" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" SelectedIndex="{Binding TimeFormatIndex}">
+                                <ComboBoxItem Content="12-hour (AM/PM)"/>
+                                <ComboBoxItem Content="24-hour"/>
+                            </ComboBox>
+                        </Grid>
 
                         <CheckBox Content="Enable quick-add hotkey" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}" Margin="0,0,0,10"/>
 
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
+                                <ColumnDefinition Width="{StaticResource RemindersLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Quick-add hotkey" Style="{StaticResource FieldLabelInline}"/>
