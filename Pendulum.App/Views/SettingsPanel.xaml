@@ -31,12 +31,19 @@
             <Setter Property="HorizontalAlignment" Value="Stretch"/>
         </Style>
         <Style x:Key="FieldTextBox" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Width" Value="56"/>
         </Style>
+
+        <!-- Each section's label column width is independent — tweak one without affecting the others. -->
+        <GridLength x:Key="GeneralLabelWidth">200</GridLength>
+        <GridLength x:Key="SoundsLabelWidth">200</GridLength>
+        <GridLength x:Key="TtsLabelWidth">200</GridLength>
     </UserControl.Resources>
 
     <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-    <StackPanel Width="{Binding ActualWidth, ElementName=RootScrollViewer}" MaxWidth="820" HorizontalAlignment="Center" Margin="0,0,0,4">
+    <StackPanel Width="{Binding ActualWidth, ElementName=RootScrollViewer}" MaxWidth="920" HorizontalAlignment="Center" Margin="0,0,0,4">
         <TextBlock Text="Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,2"/>
         <TextBlock Text="Configure sounds, speech, and alert behavior." FontSize="12"
                    Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
@@ -61,7 +68,7 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Time format" Style="{StaticResource FieldLabelInline}"/>
@@ -73,7 +80,7 @@
 
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Theme" Style="{StaticResource FieldLabelInline}"/>
@@ -98,22 +105,22 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="56"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Snooze duration (minutes)" Style="{StaticResource FieldLabelInline}"/>
-                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"/>
+                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" HorizontalAlignment="Stretch" MaxLength="3" ClearButtonEnabled="False" Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"/>
                         </Grid>
 
                         <CheckBox Content="Repeat alert until dismissed" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}" Margin="0,0,0,10"/>
 
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="56"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Auto-resolve after (minutes), when not repeating" Style="{StaticResource FieldLabelInline}"/>
-                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}"
+                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" HorizontalAlignment="Stretch" MaxLength="3" ClearButtonEnabled="False"
                                         Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
                                         IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}"/>
                         </Grid>
@@ -149,7 +156,7 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource SoundsLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
@@ -176,7 +183,7 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Voice" Style="{StaticResource FieldLabelInline}"/>
@@ -185,7 +192,7 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Rate" Style="{StaticResource FieldLabelInline}"/>
@@ -201,7 +208,7 @@
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Volume" Style="{StaticResource FieldLabelInline}"/>
