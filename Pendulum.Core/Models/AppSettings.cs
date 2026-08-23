@@ -16,6 +16,7 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private int ttsRate;
     [ObservableProperty] private int ttsVolume = 100;
     [ObservableProperty] private bool launchOnWindowsStartup;
+    [ObservableProperty] private bool startMinimized;
     [ObservableProperty] private int snoozeMinutes = 5;
     [ObservableProperty] private bool repeatAlertUntilDismissed = true;
 
@@ -24,7 +25,9 @@ public partial class AppSettings : ObservableObject
     /// outcome as if the user had clicked Dismiss. Has no effect when RepeatAlertUntilDismissed is true.
     [ObservableProperty] private int autoResolveMinutes = 30;
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
-    [ObservableProperty] private bool use24HourTime = true;
+    [ObservableProperty] private bool use24HourTime;
+    [ObservableProperty] private bool quickAddHotkeyEnabled = true;
+    [ObservableProperty] private string quickAddHotkeyGesture = "Ctrl+Shift+R";
 
     /// Internal bookkeeping (not a user-facing setting): whether the "still running in
     /// the tray" toast has been shown yet. Fires once, the first time the window is

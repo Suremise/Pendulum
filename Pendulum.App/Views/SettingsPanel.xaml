@@ -64,7 +64,10 @@
                             <TextBlock Text="General" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
 
-                        <CheckBox Content="Launch on Windows startup" IsChecked="{Binding Settings.LaunchOnWindowsStartup}" Margin="0,0,0,10"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <CheckBox Content="Launch on Windows startup" IsChecked="{Binding Settings.LaunchOnWindowsStartup}" Margin="0,0,20,0"/>
+                            <CheckBox Content="Start minimized" IsChecked="{Binding Settings.StartMinimized}"/>
+                        </StackPanel>
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
@@ -78,7 +81,7 @@
                             </ComboBox>
                         </Grid>
 
-                        <Grid Margin="0,0,0,2">
+                        <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
@@ -91,6 +94,22 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
+                        </Grid>
+
+                        <CheckBox Content="Enable quick-add hotkey" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource GeneralLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Quick-add hotkey" Style="{StaticResource FieldLabelInline}"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Padding="10,6" Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding Settings.QuickAddHotkeyGesture}" FontFamily="Consolas"/>
+                                </Border>
+                                <ui:Button Content="Change..." Appearance="Secondary" Command="{Binding ChangeHotkeyCommand}"/>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </ui:Card>

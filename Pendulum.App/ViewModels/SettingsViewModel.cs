@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using Pendulum.App.Services;
+using Pendulum.App.Views;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
 
@@ -146,6 +147,14 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ChangeHotkey()
+    {
+        var dialog = new HotkeyCaptureWindow(Settings.QuickAddHotkeyGesture) { Owner = Application.Current.MainWindow };
+        if (dialog.ShowDialog() == true && dialog.Result is not null)
+            Settings.QuickAddHotkeyGesture = dialog.Result;
+    }
+
+    [RelayCommand]
     private void ResetToDefaults()
     {
         var result = MessageBox.Show(
@@ -170,11 +179,14 @@ public partial class SettingsViewModel : ObservableObject
         Settings.TtsRate = source.TtsRate;
         Settings.TtsVolume = source.TtsVolume;
         Settings.LaunchOnWindowsStartup = source.LaunchOnWindowsStartup;
+        Settings.StartMinimized = source.StartMinimized;
         Settings.SnoozeMinutes = source.SnoozeMinutes;
         Settings.RepeatAlertUntilDismissed = source.RepeatAlertUntilDismissed;
         Settings.AutoResolveMinutes = source.AutoResolveMinutes;
         Settings.Theme = source.Theme;
         Settings.Use24HourTime = source.Use24HourTime;
+        Settings.QuickAddHotkeyEnabled = source.QuickAddHotkeyEnabled;
+        Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;
 
         OnPropertyChanged(nameof(TimeFormatIndex));
     }

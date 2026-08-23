@@ -23,6 +23,28 @@
         <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
         <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
         <SolidColorBrush x:Key="SpeechOnlyBadgeBrush" Color="#33E0529A"/>
+        <SolidColorBrush x:Key="SpentTextBrush" Color="#D9534F"/>
+        <!-- ControlFillColorDefaultBrush (the panel's own background) is intentionally
+             slightly translucent, which lets row content bleed through when it's reused
+             inside an AllowsTransparency popup. This is that same colour forced fully
+             opaque so the filter dropdowns render solid. -->
+        <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
+        <Style x:Key="NameText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource SpentTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TriggersOnText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource SpentTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="TagBadge" TargetType="Border">
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="6,1"/>
@@ -63,11 +85,52 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="GridViewColumnHeader">
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
-                            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}"/>
+                            <ContentPresenter VerticalAlignment="Top"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        <Style x:Key="ColumnFilterLabel" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+        </Style>
+        <Style x:Key="ColumnFilterDropdownButton" TargetType="ToggleButton">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Margin" Value="0,6,10,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ColumnFilterPopupBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource ColumnFilterPopupOpaqueBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Opacity="0.35" BlurRadius="16" ShadowDepth="3" Direction="270"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ColumnFilterCheckBox" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style TargetType="ListViewItem">
             <Setter Property="Padding" Value="0,6"/>
@@ -88,11 +151,6 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="Opacity" Value="0.55"/>
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
         <Style x:Key="NameLinkButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -145,6 +203,8 @@
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Content="Filters" Appearance="Secondary" Icon="{ui:SymbolIcon Filter24}" Margin="0,0,10,0"
+                           Command="{Binding ToggleFilterRowCommand}"/>
                 <ui:Button Content="Add Reminder" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
                            Command="{Binding AddCommand}"/>
             </StackPanel>
@@ -166,20 +226,59 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="NAME" Width="220">
+                            <GridViewColumn Width="220">
+                                <GridViewColumn.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="NAME" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ui:TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}"
+                                                    PlaceholderText="Filter..." FontSize="12" FontWeight="Normal"
+                                                    Padding="6,4" Margin="0,6,10,0"
+                                                    Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                    </StackPanel>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Style="{StaticResource NameLinkButton}" Margin="10,0,0,0"
                                                 Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 CommandParameter="{Binding}">
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                       Style="{StaticResource NameText}"
                                                        TextDecorations="Underline"/>
                                         </Button>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="TAGS" Width="100">
+                            <GridViewColumn Width="100">
+                                <GridViewColumn.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="TAGS" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ToggleButton x:Name="TagsFilterToggle" Content="{Binding TagFilterSummary}"
+                                                      Style="{StaticResource ColumnFilterDropdownButton}"
+                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                        <Popup PlacementTarget="{Binding ElementName=TagsFilterToggle}" IsOpen="{Binding IsChecked, ElementName=TagsFilterToggle}"
+                                               StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
+                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                                <StackPanel>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TagFilterSpent}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                                            <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TagFilterRepeats}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource RepeatsBadgeBrush}">
+                                                            <TextBlock Text="Repeats" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding TagFilterOneTime}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource OneTimeBadgeBrush}">
+                                                            <TextBlock Text="One-time" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </StackPanel>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
@@ -212,15 +311,68 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="TRIGGERS ON" Width="200">
+                            <GridViewColumn Width="200">
+                                <GridViewColumn.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="TRIGGERS ON" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
+                                                      Style="{StaticResource ColumnFilterDropdownButton}"
+                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                        <Popup PlacementTarget="{Binding ElementName=DateFilterToggle}" IsOpen="{Binding IsChecked, ElementName=DateFilterToggle}"
+                                               StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
+                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                                <StackPanel Width="190">
+                                                    <TextBlock Text="From" FontSize="11" FontWeight="Normal"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                                    <DatePicker SelectedDate="{Binding TriggerFromFilter}" Margin="0,0,0,10"/>
+                                                    <TextBlock Text="To" FontSize="11" FontWeight="Normal"
+                                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+                                                    <DatePicker SelectedDate="{Binding TriggerToFilter}" Margin="0,0,0,10"/>
+                                                    <ui:Button Content="Clear" Appearance="Secondary" HorizontalAlignment="Left"
+                                                               Command="{Binding ClearTriggerFilterCommand}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </StackPanel>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding TriggerAt, StringFormat='{}{0:ddd, dd MMM yyyy  HH:mm}'}" VerticalAlignment="Center" Margin="5,0,0,0"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                   Style="{StaticResource TriggersOnText}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="MODE" Width="150">
+                            <GridViewColumn Width="150">
+                                <GridViewColumn.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="MODE" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
+                                                      Style="{StaticResource ColumnFilterDropdownButton}"
+                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                        <Popup PlacementTarget="{Binding ElementName=ModeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=ModeFilterToggle}"
+                                               StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
+                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                                <StackPanel>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding ModeFilterSoundOnly}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundOnlyBadgeBrush}">
+                                                            <TextBlock Text="Sound only" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding ModeFilterSoundAndSpeech}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundSpeechBadgeBrush}">
+                                                            <TextBlock Text="Sound + speech" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding ModeFilterSpeechOnly}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SpeechOnlyBadgeBrush}">
+                                                            <TextBlock Text="Speech only" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </StackPanel>
+                                </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource ModeBadge}" Margin="6,0,0,0">
@@ -265,6 +417,15 @@
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center"/>
                     <TextBlock Text="No reminders yet" FontSize="16" FontWeight="SemiBold" Margin="0,14,0,4" HorizontalAlignment="Center"/>
                     <TextBlock Text="Click &quot;Add Reminder&quot; to create your first alarm." FontSize="12"
+                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel x:Name="NoFilterResultsPanel" Visibility="Collapsed"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,60">
+                    <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="40"
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="No reminders match these filters" FontSize="16" FontWeight="SemiBold" Margin="0,14,0,4" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Try adjusting or clearing the filters above." FontSize="12"
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Grid>

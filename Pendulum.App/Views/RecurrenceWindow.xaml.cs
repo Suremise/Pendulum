@@ -36,6 +36,7 @@ public partial class RecurrenceWindow : FluentWindow
         DailyIntervalBox.Text = rule.Interval.ToString();
         WeeklyIntervalBox.Text = rule.Interval.ToString();
         MonthlyIntervalBox.Text = rule.Interval.ToString();
+        YearlyIntervalBox.Text = rule.Interval.ToString();
 
         MonthlyDayBox.Text = (rule.DayOfMonth > 0 ? rule.DayOfMonth : _anchor.Day).ToString();
         YearlyDayBox.Text = (rule.DayOfMonth > 0 ? rule.DayOfMonth : _anchor.Day).ToString();
@@ -123,7 +124,7 @@ public partial class RecurrenceWindow : FluentWindow
         else if (YearlyRadio.IsChecked == true)
         {
             rule.Frequency = RecurrenceFrequency.Yearly;
-            rule.Interval = 1;
+            rule.Interval = ParseIntOrDefault(YearlyIntervalBox.Text, 1);
             rule.Month = YearlyMonthBox.SelectedIndex >= 0 ? YearlyMonthBox.SelectedIndex + 1 : _anchor.Month;
             rule.DayOfMonth = Math.Clamp(ParseIntOrDefault(YearlyDayBox.Text, _anchor.Day), 1, 31);
         }

@@ -68,7 +68,9 @@ public static class RecurrenceCalculator
             RecurrenceFrequency.Monthly => rule.Interval <= 1
                 ? $"Monthly on day {rule.DayOfMonth}"
                 : $"Every {rule.Interval} months on day {rule.DayOfMonth}",
-            RecurrenceFrequency.Yearly => $"Annually on {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}",
+            RecurrenceFrequency.Yearly => rule.Interval <= 1
+                ? $"Annually on {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}"
+                : $"Every {rule.Interval} years on {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}",
             _ => "Does not repeat"
         };
 

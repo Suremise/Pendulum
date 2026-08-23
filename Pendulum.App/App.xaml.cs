@@ -1,12 +1,14 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using H.NotifyIcon;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
+using Pendulum.Core.Models;
 
 namespace Pendulum.App;
 
@@ -20,6 +22,7 @@ public partial class App : Application
     private EventWaitHandle? _wakeEvent;
     private TaskbarIcon? _trayIcon;
     private DispatcherTimer? _trayTooltipTimer;
+    private HotkeyManager? _hotkeyManager;
     internal bool IsExiting { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -105,7 +108,23 @@ public partial class App : Application
 
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
-            mainWindow.Show();
+
+            // Force the window's handle to exist (needed for hotkey registration) without
+            // making it visible, so "Start minimized" can skip Show() entirely and launch
+            // straight into the tray instead of flashing the window open first.
+            new WindowInteropHelper(mainWindow).EnsureHandle();
+            if (!AppServices.Instance.Settings.StartMinimized)
+                mainWindow.Show();
+
+            _hotkeyManager = new HotkeyManager();
+            _hotkeyManager.Attach(mainWindow);
+            _hotkeyManager.Pressed += () => Dispatcher.BeginInvoke(ShowQuickAdd);
+            ApplyHotkeySetting();
+            AppServices.Instance.Settings.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName is nameof(AppSettings.QuickAddHotkeyEnabled) or nameof(AppSettings.QuickAddHotkeyGesture))
+                    ApplyHotkeySetting();
+            };
 
             if (missed.Count > 0)
                 NotifyMissedReminders(missed);
@@ -124,6 +143,24 @@ public partial class App : Application
     {
         if (_trayIcon is not null)
             _trayIcon.ToolTipText = $"Pendulum - {ReminderStatus.GetNextReminderSummary()}";
+    }
+
+    private void ApplyHotkeySetting()
+    {
+        var settings = AppServices.Instance.Settings;
+        if (settings.QuickAddHotkeyEnabled)
+            _hotkeyManager?.Register(settings.QuickAddHotkeyGesture);
+        else
+            _hotkeyManager?.Unregister();
+    }
+
+    private void ShowQuickAdd()
+    {
+        if (IsExiting)
+            return;
+
+        var popup = new QuickAddWindow { Owner = MainWindow };
+        popup.ShowDialog();
     }
 
     internal void NotifyFirstMinimizeToTray()
@@ -163,6 +200,12 @@ public partial class App : Application
                 volumePercent: trigger.Volume,
                 onSnooze: () =>
                 {
+                    // TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a
+                    // snooze re-fires the same occurrence rather than starting a new one — undo
+                    // that count here so "end after N occurrences" isn't exhausted early by snoozing.
+                    if (trigger.Recurrence is not null)
+                        trigger.Recurrence.OccurrencesSoFar = Math.Max(0, trigger.Recurrence.OccurrencesSoFar - 1);
+
                     trigger.TriggerAt = DateTime.Now.AddMinutes(services.Settings.SnoozeMinutes);
                     trigger.HasFired = false;
                     services.RefreshTriggers();
@@ -212,6 +255,7 @@ public partial class App : Application
         if (_ownsMutex)
         {
             _trayTooltipTimer?.Stop();
+            _hotkeyManager?.Dispose();
             _trayIcon?.Dispose();
             AppServices.Instance.Shutdown();
             _singleInstanceMutex?.ReleaseMutex();

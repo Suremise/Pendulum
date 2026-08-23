@@ -23,6 +23,103 @@ public partial class TriggersViewModel : ObservableObject
 
     public string SelectToggleLabel => IsSelecting ? "Cancel" : "Select";
 
+    [ObservableProperty] private bool isFilterRowVisible;
+    [ObservableProperty] private string nameFilter = string.Empty;
+
+    [ObservableProperty] private bool tagFilterSpent;
+    [ObservableProperty] private bool tagFilterRepeats;
+    [ObservableProperty] private bool tagFilterOneTime;
+
+    [ObservableProperty] private bool modeFilterSoundOnly;
+    [ObservableProperty] private bool modeFilterSoundAndSpeech;
+    [ObservableProperty] private bool modeFilterSpeechOnly;
+
+    [ObservableProperty] private DateTime? triggerFromFilter;
+    [ObservableProperty] private DateTime? triggerToFilter;
+
+    private bool HasActiveTagFilter => TagFilterSpent || TagFilterRepeats || TagFilterOneTime;
+    private bool HasActiveModeFilter => ModeFilterSoundOnly || ModeFilterSoundAndSpeech || ModeFilterSpeechOnly;
+
+    public string TriggerFilterSummary => (TriggerFromFilter, TriggerToFilter) switch
+    {
+        (null, null) => "Any date",
+        ({ } from, null) => $"From {from:dd MMM}",
+        (null, { } to) => $"Until {to:dd MMM}",
+        ({ } from, { } to) => $"{from:dd MMM} – {to:dd MMM}"
+    };
+
+    partial void OnTriggerFromFilterChanged(DateTime? value) => OnPropertyChanged(nameof(TriggerFilterSummary));
+    partial void OnTriggerToFilterChanged(DateTime? value) => OnPropertyChanged(nameof(TriggerFilterSummary));
+
+    [RelayCommand]
+    private void ClearTriggerFilter()
+    {
+        TriggerFromFilter = null;
+        TriggerToFilter = null;
+    }
+
+    public string TagFilterSummary => (TagFilterSpent, TagFilterRepeats, TagFilterOneTime) switch
+    {
+        (false, false, false) => "All tags",
+        (true, false, false) => "Spent",
+        (false, true, false) => "Repeats",
+        (false, false, true) => "One-time",
+        _ => "Multiple"
+    };
+
+    public string ModeFilterSummary => (ModeFilterSoundOnly, ModeFilterSoundAndSpeech, ModeFilterSpeechOnly) switch
+    {
+        (false, false, false) => "All modes",
+        (true, false, false) => "Sound only",
+        (false, true, false) => "Sound + speech",
+        (false, false, true) => "Speech only",
+        _ => "Multiple"
+    };
+
+    partial void OnTagFilterSpentChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
+    partial void OnTagFilterRepeatsChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
+    partial void OnTagFilterOneTimeChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
+    partial void OnModeFilterSoundOnlyChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
+    partial void OnModeFilterSoundAndSpeechChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
+    partial void OnModeFilterSpeechOnlyChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
+
+    [RelayCommand]
+    private void ToggleFilterRow() => IsFilterRowVisible = !IsFilterRowVisible;
+
+    /// Whether a reminder should be visible in the (view-only) filtered list — the underlying
+    /// Triggers collection, selection state, and bulk actions are all unaffected by filtering.
+    public bool PassesFilter(TriggerTimer t)
+    {
+        if (!string.IsNullOrWhiteSpace(NameFilter) && t.Name.IndexOf(NameFilter, StringComparison.OrdinalIgnoreCase) < 0)
+            return false;
+
+        if (HasActiveTagFilter)
+        {
+            var isSpent = t.HasFired;
+            var isRepeats = !t.HasFired && t.Recurrence is not null;
+            var isOneTime = !t.HasFired && t.Recurrence is null;
+
+            if (!((TagFilterSpent && isSpent) || (TagFilterRepeats && isRepeats) || (TagFilterOneTime && isOneTime)))
+                return false;
+        }
+
+        if (HasActiveModeFilter)
+        {
+            if (!((ModeFilterSoundOnly && t.Mode == AlertMode.SoundOnly)
+                  || (ModeFilterSoundAndSpeech && t.Mode == AlertMode.SoundAndSpeech)
+                  || (ModeFilterSpeechOnly && t.Mode == AlertMode.SpeechOnly)))
+                return false;
+        }
+
+        if (TriggerFromFilter is not null && t.TriggerAt.Date < TriggerFromFilter.Value.Date)
+            return false;
+
+        if (TriggerToFilter is not null && t.TriggerAt.Date > TriggerToFilter.Value.Date)
+            return false;
+
+        return true;
+    }
+
     public TriggersViewModel()
     {
         Triggers.CollectionChanged += OnTriggersCollectionChanged;
