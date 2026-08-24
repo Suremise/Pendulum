@@ -27,7 +27,7 @@ public partial class TriggerEditWindow : FluentWindow
     // that controller may be actively sounding a real, currently-firing alert, and sharing it here
     // would let closing this dialog (Save/Cancel) cut that live alert off.
     private readonly AudioService _previewAudio = new();
-    private readonly SpeechService _previewSpeech = new();
+    private readonly ITextToSpeechEngine _previewSpeech;
     private readonly AlertPlaybackController _previewPlayback;
 
     public TriggerTimer? Result { get; private set; }
@@ -41,10 +41,7 @@ public partial class TriggerEditWindow : FluentWindow
         Title = isNew ? "New Reminder" : "Edit Reminder";
         EditorTitleBar.Title = Title;
 
-        var settings = AppServices.Instance.Settings;
-        _previewSpeech.SetVoice(settings.TtsVoiceName);
-        _previewSpeech.SetRate(settings.TtsRate);
-        _previewSpeech.SetVolume(settings.TtsVolume);
+        _previewSpeech = AppServices.Instance.CreateSpeechEngine();
         _previewPlayback = new AlertPlaybackController(_previewAudio, _previewSpeech);
         Closed += (_, __) =>
         {

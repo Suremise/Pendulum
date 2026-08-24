@@ -58,6 +58,19 @@
                 </StackPanel>
             </ui:Card>
 
+            <ui:Card Margin="0,0,0,18">
+                <StackPanel Margin="4">
+                    <TextBlock Text="THIRD-PARTY SOFTWARE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
+                        Built on CommunityToolkit.Mvvm, WPF-UI, NAudio, H.NotifyIcon, System.Speech,
+                        and Whisper.net/whisper.cpp — all MIT licensed. The optional Whisper and Piper
+                        speech engines and their voice models are downloaded separately by you, not
+                        bundled with Pendulum; both are MIT licensed too.
+                    </TextBlock>
+                    <ui:Button Content="View Third-Party Notices" Appearance="Secondary" HorizontalAlignment="Left" Click="ThirdPartyNoticesButton_Click"/>
+                </StackPanel>
+            </ui:Card>
+
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
                 <Run Text="Contributors: "/><Run Text="Claude (Sonnet 5)" FontWeight="SemiBold"/>
             </TextBlock>

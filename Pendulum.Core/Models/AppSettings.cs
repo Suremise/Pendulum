@@ -15,6 +15,12 @@ public enum SpeechToTextEngine
     Whisper
 }
 
+public enum TextToSpeechEngine
+{
+    WindowsSpeechSynthesis,
+    Piper
+}
+
 public partial class AppSettings : ObservableObject
 {
     [ObservableProperty] private string defaultSoundFileName = "chime.wav";
@@ -40,6 +46,12 @@ public partial class AppSettings : ObservableObject
     /// File name (not full path) of the .bin ggml model in AppPaths.WhisperModelsDirectory
     /// to use when SpeechToTextEngine is Whisper. Null if none has been picked yet.
     [ObservableProperty] private string? whisperModelFileName;
+
+    [ObservableProperty] private TextToSpeechEngine textToSpeechEngine = TextToSpeechEngine.WindowsSpeechSynthesis;
+
+    /// File name (not full path) of the .onnx voice model in AppPaths.PiperModelsDirectory
+    /// to use when TextToSpeechEngine is Piper. Null if none has been picked yet.
+    [ObservableProperty] private string? piperVoiceModelFileName;
 
     /// 0 disables cleanup. When greater than 0, Spent reminders whose trigger time is more
     /// than this many days in the past are permanently deleted on startup.

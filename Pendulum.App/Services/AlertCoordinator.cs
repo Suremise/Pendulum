@@ -29,10 +29,7 @@ public static class AlertCoordinator
         // singletons — a shared controller's Start() stops whatever it was already playing, so
         // two reminders firing close together would silently cut each other's sound/speech off.
         var audio = new AudioService();
-        var speech = new SpeechService();
-        speech.SetVoice(services.Settings.TtsVoiceName);
-        speech.SetRate(services.Settings.TtsRate);
-        speech.SetVolume(services.Settings.TtsVolume);
+        var speech = services.CreateSpeechEngine();
         var playback = new AlertPlaybackController(audio, speech);
         playback.Start(soundPath, mode, phrase, repeat, volume);
 

@@ -49,6 +49,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 ; Excludes debug symbols and any Data\ folder that might exist in a dev build output -
 ; Data\ and Sounds\ (beyond the shipped defaults) are created fresh on first run.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "*.pdb,Data\*"; Flags: recursesubdirs ignoreversion
+Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Pendulum"; Filename: "{app}\Pendulum.exe"

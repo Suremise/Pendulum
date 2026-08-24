@@ -9,10 +9,10 @@ namespace Pendulum.Core.Engine;
 public class AlertPlaybackController : IDisposable
 {
     private readonly AudioService _audio;
-    private readonly SpeechService _speech;
+    private readonly ITextToSpeechEngine _speech;
     private CancellationTokenSource? _cts;
 
-    public AlertPlaybackController(AudioService audio, SpeechService speech)
+    public AlertPlaybackController(AudioService audio, ITextToSpeechEngine speech)
     {
         _audio = audio;
         _speech = speech;

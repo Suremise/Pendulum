@@ -35,4 +35,13 @@ public partial class AboutWindow : FluentWindow
         Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
         e.Handled = true;
     }
+
+    private void ThirdPartyNoticesButton_Click(object sender, RoutedEventArgs e)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.md");
+        if (File.Exists(path))
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        else
+            System.Windows.MessageBox.Show(this, "THIRD-PARTY-NOTICES.md wasn't found next to the app.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
+    }
 }

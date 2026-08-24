@@ -40,7 +40,7 @@
         <GridLength x:Key="GeneralLabelWidth">200</GridLength>
         <GridLength x:Key="RemindersLabelWidth">200</GridLength>
         <GridLength x:Key="SoundsLabelWidth">200</GridLength>
-        <GridLength x:Key="TtsLabelWidth">200</GridLength>
+        <GridLength x:Key="TtsLabelWidth">110</GridLength>
         <GridLength x:Key="SttLabelWidth">110</GridLength>
     </UserControl.Resources>
 
@@ -171,6 +171,33 @@
                 <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource SoundsLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
+                            <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
                                        Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
                             <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
@@ -262,7 +289,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="0,0,0,10">
+                <ui:Card>
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE8AF;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
@@ -270,14 +297,46 @@
                             <TextBlock Text="Text-to-Speech" FontSize="15" FontWeight="SemiBold"/>
                         </StackPanel>
 
+                        <TextBlock Text="Used for spoken alert phrases and the Test Voice button." Style="{StaticResource FieldLabel}"/>
+
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Voice" Style="{StaticResource FieldLabelInline}"/>
+                            <TextBlock Grid.Column="0" Text="Engine" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding TextToSpeechEngines}" SelectedItem="{Binding Settings.TextToSpeechEngine}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource EnumSpaced}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Windows voice" Style="{StaticResource FieldLabelInline}"/>
                             <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding VoiceNames}" SelectedItem="{Binding Settings.TtsVoiceName}"/>
                         </Grid>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource TtsLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Piper voice" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" Margin="0,0,8,0"
+                                      ItemsSource="{Binding PiperModels}" SelectedItem="{Binding Settings.PiperVoiceModelFileName}"
+                                      IsEnabled="{Binding IsPiperAvailable}"/>
+                            <ui:Button Grid.Column="2" Content="Refresh" Appearance="Secondary" Command="{Binding RefreshPiperModelsCommand}"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding PiperStatusText}" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
 
                         <Grid Style="{StaticResource FieldRow}">
                             <Grid.ColumnDefinitions>
@@ -311,34 +370,26 @@
                             </Grid>
                         </Grid>
 
-                        <ui:Button Content="Test Voice" Appearance="Secondary" Command="{Binding TestVoiceCommand}" HorizontalAlignment="Left"/>
-                    </StackPanel>
-                </ui:Card>
+                        <ui:Button Content="Test Voice" Appearance="Secondary" Command="{Binding TestVoiceCommand}" HorizontalAlignment="Left" Margin="0,0,0,10"/>
 
-                <ui:Card>
-                    <StackPanel Margin="4">
-                        <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
-                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource FieldLabel}">
+                            Piper runs fully offline and sounds noticeably more natural than the Windows voice,
+                            especially with accents. To use it: download Piper below and extract the whole zip
+                            into the Piper Models folder (it contains piper.exe and its supporting files), then
+                            download a voice below — each voice is a pair of files, e.g. en_US-lessac-medium.onnx
+                            and en_US-lessac-medium.onnx.json — and drop both into the same folder, then click
+                            Refresh.
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource FieldLabel}" Margin="0,4,0,10">
+                            Runs on CPU (no GPU needed). Note: the portable Windows build is a few years old
+                            (Piper has since moved to a Python-based tool) but still works well for this.
+                        </TextBlock>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:Button Content="Download Piper..." Appearance="Secondary" Command="{Binding OpenPiperEnginePageCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Download Voices..." Appearance="Secondary" Command="{Binding OpenPiperVoicePageCommand}"/>
                         </StackPanel>
-
-                        <Grid Style="{StaticResource FieldRow}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource SoundsLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
-                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
-                        </Grid>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
-                            <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <ui:Button Content="Open Models Folder" Appearance="Secondary" HorizontalAlignment="Left" Command="{Binding OpenPiperModelsFolderCommand}"/>
                     </StackPanel>
                 </ui:Card>
             </StackPanel>

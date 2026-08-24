@@ -8,6 +8,7 @@ using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
+using Pendulum.Core.Speech;
 
 namespace Pendulum.App.ViewModels;
 
@@ -18,9 +19,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private List<string> voiceNames = new();
     [ObservableProperty] private List<string> soundFiles = new();
     [ObservableProperty] private List<string> whisperModels = new();
+    [ObservableProperty] private List<string> piperModels = new();
 
     public IEnumerable<ThemeMode> ThemeModes => Enum.GetValues<ThemeMode>();
     public IEnumerable<SpeechToTextEngine> SpeechToTextEngines => Enum.GetValues<SpeechToTextEngine>();
+    public IEnumerable<TextToSpeechEngine> TextToSpeechEngines => Enum.GetValues<TextToSpeechEngine>();
 
     public bool IsWhisperAvailable => WhisperModels.Count > 0;
 
@@ -29,6 +32,17 @@ public partial class SettingsViewModel : ObservableObject
         0 => "No Whisper models found yet — download one below and drop it into the Whisper Models folder, then click Refresh.",
         1 => "1 model found.",
         var n => $"{n} models found."
+    };
+
+    public bool IsPiperExecutableAvailable => AppServices.Instance.IsPiperExecutableAvailable;
+    public bool IsPiperAvailable => IsPiperExecutableAvailable && PiperModels.Count > 0;
+
+    public string PiperStatusText => (IsPiperExecutableAvailable, PiperModels.Count) switch
+    {
+        (false, _) => "piper.exe not found yet — download it below and extract it into the Piper Models folder, then click Refresh.",
+        (true, 0) => "piper.exe found, but no voices yet — download one below and drop it into the Piper Models folder, then click Refresh.",
+        (true, 1) => "Ready — 1 voice found.",
+        (true, var n) => $"Ready — {n} voices found."
     };
 
     public int TimeFormatIndex
@@ -46,6 +60,7 @@ public partial class SettingsViewModel : ObservableObject
 
         RefreshSoundFiles();
         RefreshWhisperModels();
+        RefreshPiperModels();
 
         Settings.PropertyChanged += (_, e) =>
         {
@@ -60,6 +75,12 @@ public partial class SettingsViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsWhisperAvailable));
         OnPropertyChanged(nameof(WhisperStatusText));
+    }
+
+    partial void OnPiperModelsChanged(List<string> value)
+    {
+        OnPropertyChanged(nameof(IsPiperAvailable));
+        OnPropertyChanged(nameof(PiperStatusText));
     }
 
     private void RefreshSoundFiles() => SoundFiles = AppServices.Instance.GetAvailableSoundFiles();
@@ -93,6 +114,42 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void RefreshPiperModels()
+    {
+        AppPaths.EnsureDirectories();
+        PiperModels = Directory.EnumerateFiles(AppPaths.PiperModelsDirectory, "*.onnx")
+            .Select(Path.GetFileName)
+            .Where(f => f is not null)
+            .Select(f => f!)
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        OnPropertyChanged(nameof(IsPiperExecutableAvailable));
+
+        if (Settings.PiperVoiceModelFileName is null || !PiperModels.Contains(Settings.PiperVoiceModelFileName))
+            Settings.PiperVoiceModelFileName = PiperModels.FirstOrDefault();
+    }
+
+    [RelayCommand]
+    private void OpenPiperModelsFolder()
+    {
+        AppPaths.EnsureDirectories();
+        Process.Start(new ProcessStartInfo(AppPaths.PiperModelsDirectory) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void OpenPiperEnginePage()
+    {
+        Process.Start(new ProcessStartInfo("https://github.com/rhasspy/piper/releases/latest") { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void OpenPiperVoicePage()
+    {
+        Process.Start(new ProcessStartInfo("https://huggingface.co/rhasspy/piper-voices/tree/main") { UseShellExecute = true });
+    }
+
+    [RelayCommand]
     private void OpenSoundsFolder()
     {
         Process.Start(new ProcessStartInfo(AppPaths.SoundsDirectory) { UseShellExecute = true });
@@ -118,7 +175,20 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void TestVoice()
     {
-        _ = AppServices.Instance.Speech.SpeakAndWaitAsync("This is how Pendulum will sound.", CancellationToken.None);
+        var engine = AppServices.Instance.CreateSpeechEngine();
+        _ = SpeakThenDisposeAsync(engine);
+    }
+
+    private static async Task SpeakThenDisposeAsync(ITextToSpeechEngine engine)
+    {
+        try
+        {
+            await engine.SpeakAndWaitAsync("This is how Pendulum will sound.", CancellationToken.None);
+        }
+        finally
+        {
+            engine.Dispose();
+        }
     }
 
     [RelayCommand]
@@ -235,6 +305,8 @@ public partial class SettingsViewModel : ObservableObject
         Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;
         Settings.SpeechToTextEngine = source.SpeechToTextEngine;
         Settings.WhisperModelFileName = source.WhisperModelFileName;
+        Settings.TextToSpeechEngine = source.TextToSpeechEngine;
+        Settings.PiperVoiceModelFileName = source.PiperVoiceModelFileName;
 
         OnPropertyChanged(nameof(TimeFormatIndex));
     }

@@ -112,6 +112,38 @@ public sealed class AppServices
         Speech.SetVolume(Settings.TtsVolume);
     }
 
+    public string PiperExecutablePath => Path.Combine(AppPaths.PiperModelsDirectory, "piper.exe");
+
+    public bool IsPiperExecutableAvailable => File.Exists(PiperExecutablePath);
+
+    /// Builds a fresh, disposable text-to-speech engine matching Settings.TextToSpeechEngine,
+    /// configured with the current voice/rate/volume settings. Falls back to the Windows engine
+    /// if Piper is selected but not actually usable yet (missing piper.exe, or no voice model
+    /// chosen/present) — callers never need to check availability themselves.
+    public ITextToSpeechEngine CreateSpeechEngine()
+    {
+        if (Settings.TextToSpeechEngine == TextToSpeechEngine.Piper
+            && IsPiperExecutableAvailable
+            && Settings.PiperVoiceModelFileName is { } modelFileName)
+        {
+            var modelPath = Path.Combine(AppPaths.PiperModelsDirectory, modelFileName);
+            if (File.Exists(modelPath))
+            {
+                // SAPI's Rate is -10 (slowest) to +10 (fastest); Piper's length_scale is the
+                // opposite shape (a multiplier where lower is faster, 1.0 is normal) — this maps
+                // the same slider onto both rather than needing a second, Piper-only control.
+                var speakingRate = 1f - (Settings.TtsRate / 20f);
+                return new PiperSpeechService(PiperExecutablePath, modelPath, speakingRate, Settings.TtsVolume / 100f);
+            }
+        }
+
+        var speech = new SpeechService();
+        speech.SetVoice(Settings.TtsVoiceName);
+        speech.SetRate(Settings.TtsRate);
+        speech.SetVolume(Settings.TtsVolume);
+        return speech;
+    }
+
     private void WireItem(TriggerTimer t) => t.PropertyChanged += (_, e) =>
     {
         // Bulk-select checkboxes are UI-only state — don't churn a disk write for every click.

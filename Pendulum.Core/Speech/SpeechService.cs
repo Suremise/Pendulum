@@ -2,7 +2,7 @@ using System.Speech.Synthesis;
 
 namespace Pendulum.Core.Speech;
 
-public class SpeechService : IDisposable
+public class SpeechService : IDisposable, ITextToSpeechEngine
 {
     private readonly SpeechSynthesizer _synth = new();
 
