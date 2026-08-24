@@ -17,9 +17,11 @@
         <conv:BoolToSelectColumnWidthConverter x:Key="SelectColumnWidth"/>
         <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
         <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
+        <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
         <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
         <SolidColorBrush x:Key="FixedBadgeBrush" Color="#333B82F6"/>
         <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
+        <SolidColorBrush x:Key="DisabledBadgeBrush" Color="#33F59E0B"/>
         <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
         <SolidColorBrush x:Key="FilterActiveBrush" Color="#4048A0FA"/>
         <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
@@ -412,9 +414,14 @@
                                                             <TextBlock Text="Upcoming" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding StatusFilterSpent}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding StatusFilterSpent}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}">
                                                             <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding StatusFilterDisabled}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource DisabledBadgeBrush}">
+                                                            <TextBlock Text="Disabled" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
                                                 </StackPanel>
@@ -430,9 +437,24 @@
                                                 <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}"
-                                                    Visibility="{Binding HasFired, Converter={StaticResource InverseBoolToVis}}">
+                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}">
+                                                <Border.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ReminderStatusVis}">
+                                                        <Binding Path="Enabled"/>
+                                                        <Binding Path="HasFired"/>
+                                                    </MultiBinding>
+                                                </Border.Visibility>
                                                 <TextBlock Text="Upcoming" Style="{StaticResource TagBadgeText}"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            </Border>
+                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource DisabledBadgeBrush}">
+                                                <Border.Visibility>
+                                                    <MultiBinding Converter="{StaticResource ReminderStatusVis}" ConverterParameter="Disabled">
+                                                        <Binding Path="Enabled"/>
+                                                        <Binding Path="HasFired"/>
+                                                    </MultiBinding>
+                                                </Border.Visibility>
+                                                <TextBlock Text="Disabled" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             </Border>
                                         </StackPanel>

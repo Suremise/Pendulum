@@ -31,6 +31,7 @@ public partial class TriggersViewModel : ObservableObject
 
     [ObservableProperty] private bool statusFilterUpcoming;
     [ObservableProperty] private bool statusFilterSpent;
+    [ObservableProperty] private bool statusFilterDisabled;
 
     [ObservableProperty] private bool modeFilterSoundOnly;
     [ObservableProperty] private bool modeFilterSoundAndSpeech;
@@ -40,7 +41,7 @@ public partial class TriggersViewModel : ObservableObject
     [ObservableProperty] private DateTime? triggerToFilter;
 
     private bool HasActiveTypeFilter => TypeFilterFixed || TypeFilterScheduled;
-    private bool HasActiveStatusFilter => StatusFilterUpcoming || StatusFilterSpent;
+    private bool HasActiveStatusFilter => StatusFilterUpcoming || StatusFilterSpent || StatusFilterDisabled;
     private bool HasActiveModeFilter => ModeFilterSoundOnly || ModeFilterSoundAndSpeech || ModeFilterSpeechOnly;
 
     /// Whether any filter is currently narrowing the list — drives the Filters button's
@@ -89,13 +90,23 @@ public partial class TriggersViewModel : ObservableObject
         _ => "Multiple"
     };
 
-    public string StatusFilterSummary => (StatusFilterUpcoming, StatusFilterSpent) switch
+    public string StatusFilterSummary
     {
-        (false, false) => "All status",
-        (true, false) => "Upcoming",
-        (false, true) => "Spent",
-        _ => "Multiple"
-    };
+        get
+        {
+            var active = new List<string>();
+            if (StatusFilterUpcoming) active.Add("Upcoming");
+            if (StatusFilterSpent) active.Add("Spent");
+            if (StatusFilterDisabled) active.Add("Disabled");
+
+            return active.Count switch
+            {
+                0 => "All status",
+                1 => active[0],
+                _ => "Multiple"
+            };
+        }
+    }
 
     public string ModeFilterSummary => (ModeFilterSoundOnly, ModeFilterSoundAndSpeech, ModeFilterSpeechOnly) switch
     {
@@ -130,6 +141,13 @@ public partial class TriggersViewModel : ObservableObject
     partial void OnStatusFilterSpentChanged(bool value)
     {
         AppServices.Instance.Settings.ReminderFilterStatusSpent = value;
+        OnPropertyChanged(nameof(StatusFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnStatusFilterDisabledChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterStatusDisabled = value;
         OnPropertyChanged(nameof(StatusFilterSummary));
         NotifyFilterActivityChanged();
     }
@@ -185,7 +203,10 @@ public partial class TriggersViewModel : ObservableObject
 
         if (HasActiveStatusFilter)
         {
-            if (!((StatusFilterUpcoming && !t.HasFired) || (StatusFilterSpent && t.HasFired)))
+            var isDisabled = !t.Enabled && !t.HasFired;
+            var isUpcoming = t.Enabled && !t.HasFired;
+
+            if (!((StatusFilterUpcoming && isUpcoming) || (StatusFilterSpent && t.HasFired) || (StatusFilterDisabled && isDisabled)))
                 return false;
         }
 
@@ -218,6 +239,7 @@ public partial class TriggersViewModel : ObservableObject
         typeFilterScheduled = settings.ReminderFilterTypeScheduled;
         statusFilterUpcoming = settings.ReminderFilterStatusUpcoming;
         statusFilterSpent = settings.ReminderFilterStatusSpent;
+        statusFilterDisabled = settings.ReminderFilterStatusDisabled;
         modeFilterSoundOnly = settings.ReminderFilterModeSoundOnly;
         modeFilterSoundAndSpeech = settings.ReminderFilterModeSoundAndSpeech;
         modeFilterSpeechOnly = settings.ReminderFilterModeSpeechOnly;

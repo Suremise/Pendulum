@@ -46,6 +46,7 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private bool reminderFilterTypeScheduled;
     [ObservableProperty] private bool reminderFilterStatusUpcoming;
     [ObservableProperty] private bool reminderFilterStatusSpent;
+    [ObservableProperty] private bool reminderFilterStatusDisabled;
     [ObservableProperty] private bool reminderFilterModeSoundOnly;
     [ObservableProperty] private bool reminderFilterModeSoundAndSpeech;
     [ObservableProperty] private bool reminderFilterModeSpeechOnly;

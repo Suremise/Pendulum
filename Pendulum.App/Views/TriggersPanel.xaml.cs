@@ -44,6 +44,7 @@ public partial class TriggersPanel : UserControl
             {
                 liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Name));
                 liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.HasFired));
+                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Enabled));
                 liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Recurrence));
                 liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Mode));
                 liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.TriggerAt));
