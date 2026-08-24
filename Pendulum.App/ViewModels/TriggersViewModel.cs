@@ -255,6 +255,12 @@ public partial class TriggersViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasTriggers));
 
+        // Deleting selected items removes them from Triggers entirely rather than clearing
+        // their IsSelectedForBulk flag, so OnTriggerPropertyChanged never fires for them —
+        // without this, HasSelection (and the bulk Delete button's "active" styling bound to
+        // it) stays stuck on whatever it was before the deletion.
+        OnPropertyChanged(nameof(HasSelection));
+
         if (e.OldItems is not null)
             foreach (TriggerTimer t in e.OldItems)
                 t.PropertyChanged -= OnTriggerPropertyChanged;
