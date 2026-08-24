@@ -43,6 +43,12 @@
                         spoken phrase, or both, and an adjustable per-timer volume.
                     </TextBlock>
 
+                    <TextBlock FontSize="13" FontWeight="SemiBold" Text="Calendar" Margin="0,0,0,2"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
+                        A month view of every reminder, with navigable months/years and
+                        click-to-edit on any reminder shown on it.
+                    </TextBlock>
+
                     <TextBlock FontSize="13" FontWeight="SemiBold" Text="Settings" Margin="0,0,0,2"/>
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
                         Manage the sound library, text-to-speech voice/rate/volume, alert

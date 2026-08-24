@@ -5,6 +5,7 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 ## Features
 
 - **Reminders** — alarms set for an exact date and time, with sound, text-to-speech, or both. Supports Outlook-style recurrence (daily/weekly/monthly/yearly), bulk select/delete/export, and reminders-only or whole-app backup & restore.
+- **Calendar** — a month view of every reminder, with navigable months/years and click-to-edit on any reminder shown on it.
 - **Settings** — sound library management, TTS voice/rate/volume, alert style, snooze duration, an auto-resolve timeout for unanswered alerts, 12/24-hour time format, and launch-on-startup.
 - **Tray integration** — minimizes to the system tray instead of closing; the tray icon's tooltip shows the next upcoming reminder.
 - **Resilient by design** — reminders that come due while the app is closed, or that go unanswered, resolve themselves sensibly (reschedule if recurring, mark spent otherwise) instead of getting stuck.

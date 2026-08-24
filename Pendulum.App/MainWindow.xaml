@@ -99,6 +99,9 @@
             <TabItem x:Name="FixedTriggersTab" Header="Reminders" Tag="&#xE823;" Style="{StaticResource PendulumTabItem}">
                 <views:TriggersPanel x:Name="TriggersPanelControl"/>
             </TabItem>
+            <TabItem Header="Calendar" Tag="&#xE787;" Style="{StaticResource PendulumTabItem}">
+                <views:CalendarPanel/>
+            </TabItem>
             <TabItem Header="Settings" Tag="&#xE713;" Style="{StaticResource PendulumTabItem}">
                 <views:SettingsPanel/>
             </TabItem>

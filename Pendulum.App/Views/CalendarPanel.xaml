@@ -1,0 +1,237 @@
+<UserControl x:Class="Pendulum.App.Views.CalendarPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:Pendulum.App.ViewModels">
+    <UserControl.DataContext>
+        <vm:CalendarViewModel/>
+    </UserControl.DataContext>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
+        <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
+        <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
+        <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
+
+        <Style x:Key="ReminderPillBadge" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="5,0,5,1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+            <Setter Property="Background" Value="{StaticResource UpcomingBadgeBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ReminderPillText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- Invisible chrome so a Button can host a badge-styled pill and still be clickable. -->
+        <Style x:Key="PillButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="OverflowChip" TargetType="ToggleButton">
+            <Setter Property="Padding" Value="5,0,5,1"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Background" Value="{StaticResource ScheduledBadgeBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="OverflowPopupBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource ColumnFilterPopupOpaqueBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Opacity="0.35" BlurRadius="16" ShadowDepth="3" Direction="270"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="NavButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Appearance" Value="Secondary"/>
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+
+        <DataTemplate x:Key="DayCellTemplate">
+            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0.6" Padding="6,4">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Width="19" Height="19" CornerRadius="10" HorizontalAlignment="Left" Margin="0,0,0,2">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource PendulumAccentBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock Text="{Binding Date.Day}" FontSize="12" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsCurrentMonth}" Value="False">
+                                            <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                            <Setter Property="Foreground" Value="White"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Border>
+
+                    <StackPanel Grid.Row="1">
+                        <ItemsControl ItemsSource="{Binding VisibleReminders}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource PillButton}"
+                                            Command="{Binding DataContext.EditReminderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}">
+                                        <Border Style="{StaticResource ReminderPillBadge}">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource ReminderPillText}"/>
+                                        </Border>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <ToggleButton x:Name="OverflowToggle" Style="{StaticResource OverflowChip}"
+                                      Visibility="{Binding HasOverflow, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="{Binding OverflowCount, StringFormat='+{0} more'}"
+                                       FontSize="10" FontWeight="SemiBold"/>
+                        </ToggleButton>
+                        <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
+                               StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
+                            <Border Style="{StaticResource OverflowPopupBorder}" MinWidth="160" MaxWidth="260">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Date, StringFormat='{}{0:ddd, dd MMM yyyy}'}" FontSize="11" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
+                                    <ItemsControl ItemsSource="{Binding Reminders}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Style="{StaticResource PillButton}" Margin="0,0,0,4"
+                                                        Command="{Binding DataContext.EditReminderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Border Style="{StaticResource ReminderPillBadge}" Margin="0" HorizontalAlignment="Left">
+                                                        <TextBlock Text="{Binding Name}" Style="{StaticResource ReminderPillText}"/>
+                                                    </Border>
+                                                </Button>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Calendar" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="See your reminders laid out by day." FontSize="12"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Content="Today" Appearance="Secondary" Margin="0,0,10,0" Command="{Binding TodayCommand}"/>
+                <ui:Button Content="&#xE76B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Style="{StaticResource NavButton}"
+                           Margin="0,0,6,0" Command="{Binding PreviousMonthCommand}"/>
+                <ComboBox ItemsSource="{Binding MonthNames}" SelectedIndex="{Binding SelectedMonthIndex}"
+                          Width="120" Margin="0,0,6,0"/>
+                <ComboBox ItemsSource="{Binding Years}" SelectedItem="{Binding SelectedYear}"
+                          Width="80" Margin="0,0,6,0"/>
+                <ui:Button Content="&#xE76C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Style="{StaticResource NavButton}"
+                           Command="{Binding NextMonthCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="8" Padding="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <ItemsControl Grid.Row="0" ItemsSource="{Binding WeekdayHeaders}" Margin="0,10,0,6">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="1" Columns="7"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl Grid.Row="1" ItemsSource="{Binding Days}" ItemTemplate="{StaticResource DayCellTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="6" Columns="7"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
