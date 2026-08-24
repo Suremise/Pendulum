@@ -50,6 +50,4 @@ Sounds\
 
 ---
 
-Built by [](mailto:) with Claude (Sonnet 5).
-
 **Surmise Software** — **Sure**mised it right. — [surmise.it](https://surmise.it)
