@@ -72,6 +72,7 @@ public partial class TriggersPanel : UserControl
                     or nameof(TriggersViewModel.TypeFilterScheduled)
                     or nameof(TriggersViewModel.StatusFilterUpcoming)
                     or nameof(TriggersViewModel.StatusFilterSpent)
+                    or nameof(TriggersViewModel.StatusFilterDisabled)
                     or nameof(TriggersViewModel.ModeFilterSoundOnly)
                     or nameof(TriggersViewModel.ModeFilterSoundAndSpeech)
                     or nameof(TriggersViewModel.ModeFilterSpeechOnly)
