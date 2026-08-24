@@ -25,6 +25,10 @@ DisableProgramGroupPage=yes
 ; the app's own Data\ and Sounds\ folders (created next to the exe) writable
 ; without elevation.
 PrivilegesRequired=lowest
+; Matches App.xaml.cs's single-instance mutex name — Setup checks for it at startup
+; (and again just before installing) and shows a clear "close the app first" prompt
+; instead of silently hanging on the locked exe/DLLs.
+AppMutex=Pendulum.SingleInstance.Mutex
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=Output

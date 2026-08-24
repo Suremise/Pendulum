@@ -41,6 +41,7 @@
         <GridLength x:Key="RemindersLabelWidth">200</GridLength>
         <GridLength x:Key="SoundsLabelWidth">200</GridLength>
         <GridLength x:Key="TtsLabelWidth">200</GridLength>
+        <GridLength x:Key="SttLabelWidth">110</GridLength>
     </UserControl.Resources>
 
     <ScrollViewer x:Name="RootScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -135,7 +136,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card>
+                <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
@@ -166,9 +167,101 @@
                         </Grid>
                     </StackPanel>
                 </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Back up all settings and reminders to a file — everything you need to move Pendulum to another computer." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="Export Backup..." Appearance="Secondary" Command="{Binding ExportBackupCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Restore Backup..." Appearance="Secondary" Command="{Binding RestoreBackupCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card>
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Reset" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Restore all settings on this page to their original defaults. Your reminders are not affected." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                        <ui:Button Content="Reset to Defaults" Appearance="Secondary" HorizontalAlignment="Left"
+                                   Command="{Binding ResetToDefaultsCommand}"/>
+                    </StackPanel>
+                </ui:Card>
             </StackPanel>
 
             <StackPanel Grid.Column="2">
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE720;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Speech-to-Text" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Used by the microphone button in Quick Reminder." Style="{StaticResource FieldLabel}"/>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource SttLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Engine" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SpeechToTextEngines}" SelectedItem="{Binding Settings.SpeechToTextEngine}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Converter={StaticResource EnumSpaced}}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource SttLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Whisper model" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" Margin="0,0,8,0"
+                                      ItemsSource="{Binding WhisperModels}" SelectedItem="{Binding Settings.WhisperModelFileName}"
+                                      IsEnabled="{Binding IsWhisperAvailable}"/>
+                            <ui:Button Grid.Column="2" Content="Refresh" Appearance="Secondary" Command="{Binding RefreshWhisperModelsCommand}"/>
+                        </Grid>
+
+                        <TextBlock Text="{Binding WhisperStatusText}" Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource FieldLabel}">
+                            Whisper runs fully offline and is usually far more accurate with accents than Windows'
+                            built-in recognizer. To use it: download a .bin model file below (names ending in
+                            ".en", e.g. ggml-base.en.bin, are English-only; names with no suffix, e.g.
+                            ggml-base.bin, are multilingual), then drop it into the Whisper Models folder and
+                            click Refresh. The "base" or "small" models are a good balance of speed and accuracy —
+                            larger models are slower and use more memory for little benefit on short phrases.
+                        </TextBlock>
+                        <TextBlock TextWrapping="Wrap" Style="{StaticResource FieldLabel}" Margin="0,4,0,10">
+                            Runs on CPU (no GPU needed) — briefly uses CPU while transcribing, but sits idle
+                            otherwise, so it's not a background drain.
+                        </TextBlock>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="Download Models..." Appearance="Secondary" Command="{Binding OpenWhisperModelPageCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Open Models Folder" Appearance="Secondary" Command="{Binding OpenWhisperModelsFolderCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ui:Card>
+
                 <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
@@ -222,7 +315,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="0,0,0,10">
+                <ui:Card>
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
@@ -246,38 +339,6 @@
                             <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
                             <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
                         </Grid>
-                    </StackPanel>
-                </ui:Card>
-
-                <ui:Card Margin="0,0,0,10">
-                    <StackPanel Margin="4">
-                        <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
-                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-
-                        <TextBlock Text="Back up all settings and reminders to a file — everything you need to move Pendulum to another computer." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <ui:Button Content="Export Backup..." Appearance="Secondary" Command="{Binding ExportBackupCommand}" Margin="0,0,10,0"/>
-                            <ui:Button Content="Restore Backup..." Appearance="Secondary" Command="{Binding RestoreBackupCommand}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </ui:Card>
-
-                <ui:Card>
-                    <StackPanel Margin="4">
-                        <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
-                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Reset" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-
-                        <TextBlock Text="Restore all settings on this page to their original defaults. Your reminders are not affected." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                        <ui:Button Content="Reset to Defaults" Appearance="Secondary" HorizontalAlignment="Left"
-                                   Command="{Binding ResetToDefaultsCommand}"/>
                     </StackPanel>
                 </ui:Card>
             </StackPanel>

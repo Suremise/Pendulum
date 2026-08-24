@@ -5,6 +5,7 @@ public static class AppPaths
     public static string BaseDirectory => AppContext.BaseDirectory;
     public static string DataDirectory => Path.Combine(BaseDirectory, "Data");
     public static string SoundsDirectory => Path.Combine(BaseDirectory, "Sounds");
+    public static string WhisperModelsDirectory => Path.Combine(DataDirectory, "WhisperModels");
     public static string TriggersFile => Path.Combine(DataDirectory, "triggers.json");
     public static string SettingsFile => Path.Combine(DataDirectory, "settings.json");
 
@@ -12,5 +13,6 @@ public static class AppPaths
     {
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(SoundsDirectory);
+        Directory.CreateDirectory(WhisperModelsDirectory);
     }
 }

@@ -17,8 +17,19 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] private List<string> voiceNames = new();
     [ObservableProperty] private List<string> soundFiles = new();
+    [ObservableProperty] private List<string> whisperModels = new();
 
     public IEnumerable<ThemeMode> ThemeModes => Enum.GetValues<ThemeMode>();
+    public IEnumerable<SpeechToTextEngine> SpeechToTextEngines => Enum.GetValues<SpeechToTextEngine>();
+
+    public bool IsWhisperAvailable => WhisperModels.Count > 0;
+
+    public string WhisperStatusText => WhisperModels.Count switch
+    {
+        0 => "No Whisper models found yet — download one below and drop it into the Whisper Models folder, then click Refresh.",
+        1 => "1 model found.",
+        var n => $"{n} models found."
+    };
 
     public int TimeFormatIndex
     {
@@ -34,6 +45,7 @@ public partial class SettingsViewModel : ObservableObject
             Settings.TtsVoiceName = VoiceNames[0];
 
         RefreshSoundFiles();
+        RefreshWhisperModels();
 
         Settings.PropertyChanged += (_, e) =>
         {
@@ -44,7 +56,41 @@ public partial class SettingsViewModel : ObservableObject
         };
     }
 
+    partial void OnWhisperModelsChanged(List<string> value)
+    {
+        OnPropertyChanged(nameof(IsWhisperAvailable));
+        OnPropertyChanged(nameof(WhisperStatusText));
+    }
+
     private void RefreshSoundFiles() => SoundFiles = AppServices.Instance.GetAvailableSoundFiles();
+
+    [RelayCommand]
+    private void RefreshWhisperModels()
+    {
+        AppPaths.EnsureDirectories();
+        WhisperModels = Directory.EnumerateFiles(AppPaths.WhisperModelsDirectory, "*.bin")
+            .Select(Path.GetFileName)
+            .Where(f => f is not null)
+            .Select(f => f!)
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (Settings.WhisperModelFileName is null || !WhisperModels.Contains(Settings.WhisperModelFileName))
+            Settings.WhisperModelFileName = WhisperModels.FirstOrDefault();
+    }
+
+    [RelayCommand]
+    private void OpenWhisperModelsFolder()
+    {
+        AppPaths.EnsureDirectories();
+        Process.Start(new ProcessStartInfo(AppPaths.WhisperModelsDirectory) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void OpenWhisperModelPage()
+    {
+        Process.Start(new ProcessStartInfo("https://huggingface.co/ggerganov/whisper.cpp/tree/main") { UseShellExecute = true });
+    }
 
     [RelayCommand]
     private void OpenSoundsFolder()
@@ -187,6 +233,8 @@ public partial class SettingsViewModel : ObservableObject
         Settings.Use24HourTime = source.Use24HourTime;
         Settings.QuickAddHotkeyEnabled = source.QuickAddHotkeyEnabled;
         Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;
+        Settings.SpeechToTextEngine = source.SpeechToTextEngine;
+        Settings.WhisperModelFileName = source.WhisperModelFileName;
 
         OnPropertyChanged(nameof(TimeFormatIndex));
     }

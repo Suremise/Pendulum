@@ -1,15 +1,22 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using Pendulum.App.Services;
 using Pendulum.Core.Models;
 using Pendulum.Core.Parsing;
+using Pendulum.Core.Persistence;
+using Pendulum.Core.Speech;
 using Wpf.Ui.Controls;
 
 namespace Pendulum.App.Views;
 
 public partial class QuickAddWindow : FluentWindow
 {
+    private readonly SpeechRecognitionService _windowsSpeech = new();
+    private readonly WhisperRecognitionService _whisperSpeech = new();
+    private CancellationTokenSource? _listenCts;
+
     public QuickAddWindow()
     {
         InitializeComponent();
@@ -20,6 +27,69 @@ public partial class QuickAddWindow : FluentWindow
             Win32Interop.ForceForegroundWindow(new WindowInteropHelper(this).Handle);
             Keyboard.Focus(InputBox);
         };
+        Closed += (_, __) =>
+        {
+            _listenCts?.Cancel();
+            _windowsSpeech.Dispose();
+            _whisperSpeech.Dispose();
+        };
+    }
+
+    private async void MicButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_listenCts is not null)
+            return;
+
+        var settings = AppServices.Instance.Settings;
+        var whisperModel = settings.WhisperModelFileName;
+        var useWhisper = settings.SpeechToTextEngine == SpeechToTextEngine.Whisper && !string.IsNullOrEmpty(whisperModel);
+
+        ErrorText.Visibility = Visibility.Collapsed;
+        MicButton.IsEnabled = false;
+        MicButton.Icon = new SymbolIcon { Symbol = SymbolRegular.MicPulse24 };
+        MicButton.ToolTip = "Listening…";
+
+        _listenCts = new CancellationTokenSource();
+        try
+        {
+            string? text;
+            if (useWhisper)
+            {
+                var modelPath = Path.Combine(AppPaths.WhisperModelsDirectory, whisperModel!);
+                text = await _whisperSpeech.ListenOnceAsync(modelPath, () => MicButton.ToolTip = "Transcribing…", _listenCts.Token);
+            }
+            else
+            {
+                text = await _windowsSpeech.ListenOnceAsync(_listenCts.Token);
+            }
+
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                InputBox.Text = text;
+                InputBox.CaretIndex = InputBox.Text.Length;
+            }
+            else
+            {
+                ShowError("Didn't catch that — try again, or type it instead.");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Window closed mid-listen — nothing left to update.
+        }
+        catch (Exception)
+        {
+            ShowError("Couldn't start speech recognition. Make sure a microphone is set up in Windows.");
+        }
+        finally
+        {
+            _listenCts?.Dispose();
+            _listenCts = null;
+            MicButton.IsEnabled = true;
+            MicButton.Icon = new SymbolIcon { Symbol = SymbolRegular.Mic24 };
+            MicButton.ToolTip = "Speak a reminder";
+            Keyboard.Focus(InputBox);
+        }
     }
 
     private void InputBox_PreviewKeyDown(object sender, KeyEventArgs e)

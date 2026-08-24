@@ -9,6 +9,12 @@ public enum ThemeMode
     Dark
 }
 
+public enum SpeechToTextEngine
+{
+    WindowsSpeechRecognition,
+    Whisper
+}
+
 public partial class AppSettings : ObservableObject
 {
     [ObservableProperty] private string defaultSoundFileName = "chime.wav";
@@ -28,6 +34,12 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private bool use24HourTime;
     [ObservableProperty] private bool quickAddHotkeyEnabled = true;
     [ObservableProperty] private string quickAddHotkeyGesture = "Ctrl+Shift+R";
+
+    [ObservableProperty] private SpeechToTextEngine speechToTextEngine = SpeechToTextEngine.WindowsSpeechRecognition;
+
+    /// File name (not full path) of the .bin ggml model in AppPaths.WhisperModelsDirectory
+    /// to use when SpeechToTextEngine is Whisper. Null if none has been picked yet.
+    [ObservableProperty] private string? whisperModelFileName;
 
     /// 0 disables cleanup. When greater than 0, Spent reminders whose trigger time is more
     /// than this many days in the past are permanently deleted on startup.
