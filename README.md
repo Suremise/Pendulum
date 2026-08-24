@@ -17,7 +17,7 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 
 ## Getting Pendulum
 
-Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://github.com/Suremised/Pendulum/releases) page — self-contained (no separate .NET install required), installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller. See [CHANGELOG.md](CHANGELOG.md) for what's new in each version.
+Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://github.com/Suremise/Pendulum/releases) page — self-contained (no separate .NET install required), installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller. See [CHANGELOG.md](CHANGELOG.md) for what's new in each version.
 
 ## Building from source
 

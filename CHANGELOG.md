@@ -30,5 +30,5 @@ Initial public release.
   mark spent otherwise) instead of getting stuck.
 - Self-contained, no-admin Windows installer.
 
-[Unreleased]: https://github.com/Suremised/Pendulum/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Suremised/Pendulum/releases/tag/v1.0.0
+[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Suremise/Pendulum/releases/tag/v1.0.0
