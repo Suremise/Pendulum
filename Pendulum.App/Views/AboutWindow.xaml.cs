@@ -36,18 +36,24 @@ public partial class AboutWindow : FluentWindow
         e.Handled = true;
     }
 
-    private void ThirdPartyNoticesButton_Click(object sender, RoutedEventArgs e)
+    private void ThirdPartyNoticesButton_Click(object sender, RoutedEventArgs e) =>
+        OpenTextFileNextToApp("THIRD-PARTY-NOTICES.md");
+
+    private void LicenseButton_Click(object sender, RoutedEventArgs e) =>
+        OpenTextFileNextToApp("LICENSE");
+
+    private void OpenTextFileNextToApp(string fileName)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.md");
+        var path = Path.Combine(AppContext.BaseDirectory, fileName);
         if (!File.Exists(path))
         {
-            System.Windows.MessageBox.Show(this, "THIRD-PARTY-NOTICES.md wasn't found next to the app.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, $"{fileName} wasn't found next to the app.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         // Launch Notepad directly rather than UseShellExecute (which opens whatever's
-        // registered for .md) — on a dev machine that's often VS Code, which throws up its
-        // own "untrusted files" workspace-trust prompt for a file opened outside a workspace.
+        // registered for the extension) — on a dev machine that's often VS Code, which throws up
+        // its own "untrusted files" workspace-trust prompt for a file opened outside a workspace.
         Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\""));
     }
 }

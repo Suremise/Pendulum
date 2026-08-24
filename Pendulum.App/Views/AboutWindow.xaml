@@ -60,6 +60,16 @@
 
             <ui:Card Margin="0,0,0,18">
                 <StackPanel Margin="4">
+                    <TextBlock Text="LICENSE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
+                        Pendulum is released under the MIT License.
+                    </TextBlock>
+                    <ui:Button Content="View License" Appearance="Secondary" HorizontalAlignment="Left" Click="LicenseButton_Click"/>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Margin="0,0,0,18">
+                <StackPanel Margin="4">
                     <TextBlock Text="THIRD-PARTY SOFTWARE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
                         Built on CommunityToolkit.Mvvm, WPF-UI, NAudio, H.NotifyIcon, System.Speech,
@@ -72,10 +82,13 @@
             </ui:Card>
 
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
+                <Run Text="Author: "/><Run Text="Surmise" FontWeight="SemiBold"/>
+            </TextBlock>
+            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
                 <Run Text="Contributors: "/><Run Text="Claude (Sonnet 5)" FontWeight="SemiBold"/>
             </TextBlock>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20" TextWrapping="Wrap">
-                <Run Text="Surmise Software" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="Sure" FontWeight="Bold"/><Run Text="mised it right. — "/><Hyperlink NavigateUri="https://surmise.it" RequestNavigate="Hyperlink_RequestNavigate">surmise.it</Hyperlink>
+                <Run Text="Surmise" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="Sure" FontWeight="Bold"/><Run Text="mised it right. — "/><Hyperlink NavigateUri="https://surmise.it" RequestNavigate="Hyperlink_RequestNavigate">surmise.it</Hyperlink>
             </TextBlock>
 
             <ui:Button Content="Close" Appearance="Primary" HorizontalAlignment="Right" Click="CloseButton_Click"/>

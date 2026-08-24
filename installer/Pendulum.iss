@@ -14,10 +14,11 @@
 AppId={{287D517B-D89D-47D7-9BBC-BEA11618BDB3}
 AppName=Pendulum
 AppVersion={#MyAppVersion}
-AppPublisher=Surmise Software
+AppPublisher=Surmise
 AppPublisherURL=https://surmise.it
 AppSupportURL=https://surmise.it
 AppUpdatesURL=https://surmise.it
+LicenseFile=..\LICENSE
 DefaultDirName={localappdata}\Programs\Pendulum
 DefaultGroupName=Pendulum
 DisableProgramGroupPage=yes
@@ -50,6 +51,7 @@ Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription
 ; Data\ and Sounds\ (beyond the shipped defaults) are created fresh on first run.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "*.pdb,Data\*"; Flags: recursesubdirs ignoreversion
 Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Pendulum"; Filename: "{app}\Pendulum.exe"

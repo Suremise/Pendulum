@@ -12,7 +12,7 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 
 ## Getting Pendulum
 
-A self-contained `PendulumSetup-<version>.exe` (no separate .NET install required) that installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller.
+Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://github.com/Suremised/Pendulum/releases) page — self-contained (no separate .NET install required), installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller. See [CHANGELOG.md](CHANGELOG.md) for what's new in each version.
 
 ## Building from source
 
@@ -55,6 +55,10 @@ Sounds\
   chime.wav, bell.wav, ...
 ```
 
+## License
+
+Pendulum is released under the [MIT License](LICENSE).
+
 ## Third-party software
 
 Built on several open-source libraries, and optionally on the separately-downloaded
@@ -63,4 +67,4 @@ for the full list and licenses (all MIT).
 
 ---
 
-**Surmise Software** — **Sure**mised it right. — [surmise.it](https://surmise.it)
+**Surmise** — **Sure**mised it right. — [surmise.it](https://surmise.it)
