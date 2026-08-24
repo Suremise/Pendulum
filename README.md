@@ -37,7 +37,12 @@ To cut a distributable release:
 
 ## Data model
 
-No `%AppData%`, no registry, no installer footprint (aside from the one opt-in "Launch on Windows startup" toggle, which writes a single registry `Run` key). Everything lives next to the exe:
+The installer places everything under `%LocalAppData%\Programs\Pendulum` (no admin/UAC
+prompt needed, unlike a `Program Files` install) — but the important part isn't *where*
+that is, it's that the exe and its data aren't split apart. There's no separate roaming
+profile data folder and no registry use beyond the one opt-in "Launch on Windows startup"
+toggle (a single `Run` key); the app's data always lives right next to whichever copy of
+the exe is running it, dev build or installed:
 
 ```
 Pendulum.exe
