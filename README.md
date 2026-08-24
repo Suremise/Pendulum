@@ -2,6 +2,11 @@
 
 A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of the way in the system tray and surfaces alerts as a topmost popup with sound and/or spoken-phrase notifications, even while you're working in another window.
 
+<p align="center">
+  <img src="docs/screenshots/reminders.png" width="49%" alt="Reminders list" />
+  <img src="docs/screenshots/calendar.png" width="49%" alt="Calendar view" />
+</p>
+
 ## Features
 
 - **Reminders** — alarms set for an exact date and time, with sound, text-to-speech, or both. Supports Outlook-style recurrence (daily/weekly/monthly/yearly), bulk select/delete/export, and reminders-only or whole-app backup & restore.
