@@ -39,9 +39,15 @@ public partial class AboutWindow : FluentWindow
     private void ThirdPartyNoticesButton_Click(object sender, RoutedEventArgs e)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.md");
-        if (File.Exists(path))
-            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
-        else
+        if (!File.Exists(path))
+        {
             System.Windows.MessageBox.Show(this, "THIRD-PARTY-NOTICES.md wasn't found next to the app.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        // Launch Notepad directly rather than UseShellExecute (which opens whatever's
+        // registered for .md) — on a dev machine that's often VS Code, which throws up its
+        // own "untrusted files" workspace-trust prompt for a file opened outside a workspace.
+        Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\""));
     }
 }
