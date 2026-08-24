@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -167,9 +168,12 @@ public partial class App : Application
             // Already open — this happens if the hotkey fires again while it's up (WM_HOTKEY
             // still gets delivered and queued through ShowDialog's nested message pump, so a
             // second press used to spawn a second overlapping, both-Topmost window fighting
-            // the first for focus/Z-order instead of doing anything useful). Just refocus the
-            // existing one.
-            _quickAddWindow.Activate();
+            // the first for focus/Z-order instead of doing anything useful). Refocus the existing
+            // one using the same foreground-lock workaround QuickAddWindow's own Loaded handler
+            // uses — plain Activate() can be silently ignored by Windows here, since this hotkey
+            // handler's process doesn't already own foreground input focus.
+            Win32Interop.ForceForegroundWindow(new WindowInteropHelper(_quickAddWindow).Handle);
+            Keyboard.Focus(_quickAddWindow.InputBox);
             return;
         }
 

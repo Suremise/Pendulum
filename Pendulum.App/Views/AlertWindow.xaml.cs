@@ -7,6 +7,10 @@ namespace Pendulum.App.Views;
 
 public partial class AlertWindow : Window
 {
+    // Every currently-open AlertWindow, so simultaneous alerts stack in a column above the
+    // bottom-right corner instead of all rendering at the same spot and hiding each other.
+    private static readonly List<AlertWindow> OpenWindows = new();
+
     private readonly DispatcherTimer _topmostReinforcer;
 
     public event Action? Dismissed;
@@ -21,7 +25,11 @@ public partial class AlertWindow : Window
         SnoozeButton.Visibility = canSnooze ? Visibility.Visible : Visibility.Collapsed;
 
         SourceInitialized += (_, __) => Win32Interop.MakeNonActivating(new WindowInteropHelper(this).Handle);
-        Loaded += (_, __) => PositionBottomRight();
+        Loaded += (_, __) =>
+        {
+            OpenWindows.Add(this);
+            RestackOpenWindows();
+        };
 
         _topmostReinforcer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _topmostReinforcer.Tick += (_, __) =>
@@ -32,14 +40,29 @@ public partial class AlertWindow : Window
         };
         _topmostReinforcer.Start();
 
-        Closed += (_, __) => _topmostReinforcer.Stop();
+        Closed += (_, __) =>
+        {
+            _topmostReinforcer.Stop();
+            OpenWindows.Remove(this);
+            RestackOpenWindows();
+        };
     }
 
-    private void PositionBottomRight()
+    // Re-positions every open alert in a column above the bottom-right corner, most recently
+    // opened at the bottom — run whenever one opens or closes so the rest slide down/up to fill
+    // the gap rather than leaving new alerts to draw directly on top of existing ones.
+    private static void RestackOpenWindows()
     {
         var workArea = SystemParameters.WorkArea;
-        Left = workArea.Right - Width - 24;
-        Top = workArea.Bottom - ActualHeight - 24;
+        var bottom = workArea.Bottom - 24;
+
+        for (int i = OpenWindows.Count - 1; i >= 0; i--)
+        {
+            var w = OpenWindows[i];
+            w.Left = workArea.Right - w.Width - 24;
+            w.Top = bottom - w.ActualHeight;
+            bottom -= w.ActualHeight + 12;
+        }
     }
 
     private void DismissButton_Click(object sender, RoutedEventArgs e)

@@ -1,6 +1,9 @@
 using System.Windows.Threading;
 using Pendulum.App.Views;
+using Pendulum.Core.Audio;
+using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Speech;
 
 namespace Pendulum.App.Services;
 
@@ -22,18 +25,25 @@ public static class AlertCoordinator
         var repeat = services.Settings.RepeatAlertUntilDismissed;
         var volume = Math.Clamp(volumePercent, 0, 100) / 100f;
 
-        services.AlertPlayback.Start(soundPath, mode, phrase, repeat, volume);
+        // Each fired alert gets its own audio/speech stack instead of the shared AppServices
+        // singletons — a shared controller's Start() stops whatever it was already playing, so
+        // two reminders firing close together would silently cut each other's sound/speech off.
+        var audio = new AudioService();
+        var speech = new SpeechService();
+        speech.SetVoice(services.Settings.TtsVoiceName);
+        speech.SetRate(services.Settings.TtsRate);
+        speech.SetVolume(services.Settings.TtsVolume);
+        var playback = new AlertPlaybackController(audio, speech);
+        playback.Start(soundPath, mode, phrase, repeat, volume);
 
         var window = new AlertWindow(title, subtitle, canSnooze);
-        window.Dismissed += () =>
+        window.Dismissed += () => onDismiss?.Invoke();
+        window.Snoozed += () => onSnooze?.Invoke();
+        window.Closed += (_, __) =>
         {
-            services.AlertPlayback.Stop();
-            onDismiss?.Invoke();
-        };
-        window.Snoozed += () =>
-        {
-            services.AlertPlayback.Stop();
-            onSnooze?.Invoke();
+            playback.Dispose();
+            audio.Dispose();
+            speech.Dispose();
         };
 
         // A non-repeating alert plays its sound/phrase once and then just sits there —
@@ -45,7 +55,6 @@ public static class AlertCoordinator
             autoResolveTimer.Tick += (_, __) =>
             {
                 autoResolveTimer.Stop();
-                services.AlertPlayback.Stop();
                 onDismiss?.Invoke();
                 window.Close();
             };

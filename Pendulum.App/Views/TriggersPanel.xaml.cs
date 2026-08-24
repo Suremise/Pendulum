@@ -10,12 +10,21 @@ namespace Pendulum.App.Views;
 public partial class TriggersPanel : UserControl
 {
     private ICollectionView? _view;
+    private bool _initialized;
 
     public TriggersPanel()
     {
         InitializeComponent();
         Loaded += (_, __) =>
         {
+            // This panel instance is reused across every Reminders-tab revisit (the tab control
+            // keeps it alive rather than recreating it), so Loaded fires again on each revisit —
+            // only wire sorting/filtering once, or every revisit stacks another duplicate
+            // CollectionChanged/PropertyChanged subscription on top of the last.
+            if (_initialized)
+                return;
+            _initialized = true;
+
             EnableLiveSorting();
             SetupFiltering();
         };

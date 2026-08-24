@@ -149,11 +149,26 @@ public partial class CalendarViewModel : ObservableObject
             or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.Enabled) or nameof(TriggerTimer.Name)
             or nameof(TriggerTimer.Recurrence))
         {
-            RebuildGrid();
+            RunOnUiThread(RebuildGrid);
         }
     }
 
-    private void OnRecurrencePropertyChanged(object? sender, PropertyChangedEventArgs e) => RebuildGrid();
+    private void OnRecurrencePropertyChanged(object? sender, PropertyChangedEventArgs e) => RunOnUiThread(RebuildGrid);
+
+    // TimerEngine.Tick() mutates TriggerTimer/RecurrenceRule fields (HasFired, OccurrencesSoFar)
+    // on a background ThreadPool thread, which raises PropertyChanged synchronously from there —
+    // without this marshal, RebuildGrid()'s Days.Clear()/Add() would mutate a UI-bound collection
+    // off the Dispatcher thread, which WPF rejects with an exception. That exception used to abort
+    // TimerEngine.Tick() before it ever raised the alert for the trigger that just fired, silently
+    // marking it HasFired with no alert ever shown whenever the Calendar tab was open.
+    private static void RunOnUiThread(Action action)
+    {
+        var dispatcher = Application.Current.Dispatcher;
+        if (dispatcher.CheckAccess())
+            action();
+        else
+            dispatcher.BeginInvoke(action);
+    }
 
     private void RebuildGrid()
     {

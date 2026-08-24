@@ -21,7 +21,6 @@ public sealed class AppServices
     public SettingsRepository SettingsRepository { get; } = new();
     public AudioService Audio { get; } = new();
     public SpeechService Speech { get; } = new();
-    public AlertPlaybackController AlertPlayback { get; }
     public TimerEngine Engine { get; } = new();
 
     public ObservableCollection<TriggerTimer> Triggers { get; } = new();
@@ -34,7 +33,6 @@ public sealed class AppServices
 
     private AppServices()
     {
-        AlertPlayback = new AlertPlaybackController(Audio, Speech);
     }
 
     /// Loads settings and triggers, silently reconciling anything that was due while the
@@ -67,7 +65,17 @@ public sealed class AppServices
             if (t.Enabled && !t.HasFired && t.TriggerAt <= now)
             {
                 if (t.Recurrence is not null)
-                    t.Recurrence.OccurrencesSoFar++;
+                {
+                    // AdvancePastFiring can silently skip past several missed occurrences in one
+                    // jump (e.g. the app was closed for days over a daily reminder) — count
+                    // exactly how many were actually skipped instead of assuming just one, so
+                    // "end after N occurrences" reminders aren't undercounted and over-fire later.
+                    var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
+                        t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, now);
+                    t.Recurrence.OccurrencesSoFar += next is not null
+                        ? RecurrenceCalculator.CountOccurrencesBetween(t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, next.Value)
+                        : 1;
+                }
                 TriggerReconciler.AdvancePastFiring(t, now);
                 missed.Add(t.Name);
             }
@@ -208,12 +216,21 @@ public sealed class AppServices
         var backup = BackupRepository.Load(path)
             ?? throw new InvalidOperationException("That file isn't a valid Pendulum backup.");
 
-        RemoveTriggers(Triggers);
+        // Build the full replacement in memory and persist once at the end, instead of wiping
+        // triggers.json to empty and then saving again after every single re-added item — a
+        // crash partway through used to leave the user with an empty or partially-restored file.
+        // With a single save at the end, a crash before it completes leaves the pre-restore file
+        // on disk untouched.
+        foreach (var t in backup.Triggers)
+            t.Id = Guid.NewGuid();
+
+        Triggers.Clear();
         foreach (var t in backup.Triggers)
         {
-            t.Id = Guid.NewGuid();
-            AddTrigger(t);
+            WireItem(t);
+            Triggers.Add(t);
         }
+        RefreshTriggers();
 
         return backup;
     }
@@ -221,7 +238,6 @@ public sealed class AppServices
     public void Shutdown()
     {
         Engine.Dispose();
-        AlertPlayback.Dispose();
         Audio.Dispose();
         Speech.Dispose();
     }

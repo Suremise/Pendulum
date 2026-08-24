@@ -56,6 +56,28 @@ public static class RecurrenceCalculator
         return null;
     }
 
+    /// Counts how many scheduled occurrences lie in [from, to) — from itself counts as one, plus
+    /// every occurrence strictly between from and to (to itself is excluded, since it's the next
+    /// still-pending one, not yet consumed). Used when catching up a reminder that was missed for
+    /// a while, so OccurrencesSoFar is credited accurately even when several occurrences were
+    /// skipped in a single jump rather than just the one immediately due.
+    public static int CountOccurrencesBetween(RecurrenceRule rule, DateTime anchor, DateTime from, DateTime to)
+    {
+        var count = 1;
+        var candidate = from;
+        for (int i = 0; i < MaxIterations; i++)
+        {
+            var next = GetNextOccurrence(rule, anchor, candidate);
+            if (next is null || next.Value >= to)
+                break;
+
+            count++;
+            candidate = next.Value;
+        }
+
+        return count;
+    }
+
     /// Expands a trigger (one-shot or recurring) into every occurrence date that falls within
     /// [rangeStart, rangeEnd], inclusive — used to populate a calendar month view. A trigger
     /// that has already fired (HasFired) has nothing left scheduled by definition (see
@@ -79,13 +101,18 @@ public static class RecurrenceCalculator
 
         for (int i = 0; i < MaxIterations && occurrence <= rangeEnd; i++)
         {
+            // Checked before yielding (and with the same strict ">" as
+            // GetNextFutureOccurrenceWithinEndCondition) so this agrees with what the live engine
+            // would actually do — previously this yielded the occurrence first and only stopped
+            // afterward, showing one phantom occurrence past the recurrence's real end date.
+            if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && occurrence.Date > endDate.Date)
+                yield break;
+
             if (occurrence >= rangeStart)
                 yield return occurrence;
 
             count++;
             if (rule.EndType == RecurrenceEndType.AfterOccurrences && count >= rule.OccurrenceCount)
-                yield break;
-            if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && occurrence.Date >= endDate.Date)
                 yield break;
 
             var next = GetNextOccurrence(rule, trigger.RecurrenceAnchor, occurrence);
