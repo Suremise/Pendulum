@@ -18,7 +18,7 @@
 
         <StackPanel Grid.Row="1" Margin="28,4,28,28">
 
-            <ui:TextBox x:Name="NameBox" PlaceholderText="Reminder name" FontSize="18" Margin="0,0,0,20"/>
+            <ui:TextBox x:Name="NameBox" PlaceholderText="Reminder name" FontSize="18" Margin="0,0,0,20" ClearButtonEnabled="False"/>
 
             <ui:Card Margin="0,0,0,14">
                 <StackPanel Margin="4">
@@ -84,7 +84,7 @@
                             ValueChanged="VolumeSlider_ValueChanged"/>
 
                     <TextBlock x:Name="PhraseLabel" Text="Phrase to speak" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
-                    <ui:TextBox x:Name="PhraseBox" AcceptsReturn="True" TextWrapping="Wrap" Height="56"/>
+                    <ui:TextBox x:Name="PhraseBox" AcceptsReturn="True" TextWrapping="Wrap" Height="56" ClearButtonEnabled="False"/>
                 </StackPanel>
             </ui:Card>
 

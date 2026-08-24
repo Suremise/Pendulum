@@ -27,6 +27,11 @@ public sealed class AppServices
     public ObservableCollection<TriggerTimer> Triggers { get; } = new();
     public AppSettings Settings { get; private set; } = new();
 
+    /// True for the very first run after a fresh install (no settings.json on disk yet) —
+    /// used to show the main window once even though StartMinimized defaults to true, so a
+    /// first-time user isn't left wondering whether the install did anything.
+    public bool IsFirstLaunch { get; private set; }
+
     private AppServices()
     {
         AlertPlayback = new AlertPlaybackController(Audio, Speech);
@@ -39,9 +44,17 @@ public sealed class AppServices
     {
         AppPaths.EnsureDirectories();
 
+        IsFirstLaunch = !File.Exists(AppPaths.SettingsFile);
+
         Settings = SettingsRepository.Load();
         Settings.PropertyChanged += OnSettingsChanged;
         ApplySpeechSettings();
+
+        // Defaults are launch-on-startup enabled, but that default alone doesn't create the
+        // registry key — only an explicit change through Settings does. Create it here so a
+        // fresh install actually launches on startup, matching what the toggle already shows.
+        if (IsFirstLaunch && Settings.LaunchOnWindowsStartup)
+            StartupRegistration.SetEnabled(true);
 
         var missed = new List<string>();
         var now = DateTime.Now;
@@ -60,8 +73,18 @@ public sealed class AppServices
             }
         }
 
+        var removedSpent = 0;
+        if (Settings.AutoDeleteSpentAfterDays > 0)
+        {
+            var cutoff = now.AddDays(-Settings.AutoDeleteSpentAfterDays);
+            var stale = Triggers.Where(t => t.HasFired && t.TriggerAt < cutoff).ToList();
+            foreach (var t in stale)
+                Triggers.Remove(t);
+            removedSpent = stale.Count;
+        }
+
         Engine.SetTriggers(Triggers);
-        if (missed.Count > 0)
+        if (missed.Count > 0 || removedSpent > 0)
             TriggerRepository.Save(Triggers);
 
         return missed;

@@ -26,9 +26,11 @@ public partial class TriggersViewModel : ObservableObject
     [ObservableProperty] private bool isFilterRowVisible;
     [ObservableProperty] private string nameFilter = string.Empty;
 
-    [ObservableProperty] private bool tagFilterSpent;
-    [ObservableProperty] private bool tagFilterRepeats;
-    [ObservableProperty] private bool tagFilterOneTime;
+    [ObservableProperty] private bool typeFilterFixed;
+    [ObservableProperty] private bool typeFilterScheduled;
+
+    [ObservableProperty] private bool statusFilterUpcoming;
+    [ObservableProperty] private bool statusFilterSpent;
 
     [ObservableProperty] private bool modeFilterSoundOnly;
     [ObservableProperty] private bool modeFilterSoundAndSpeech;
@@ -37,8 +39,23 @@ public partial class TriggersViewModel : ObservableObject
     [ObservableProperty] private DateTime? triggerFromFilter;
     [ObservableProperty] private DateTime? triggerToFilter;
 
-    private bool HasActiveTagFilter => TagFilterSpent || TagFilterRepeats || TagFilterOneTime;
+    private bool HasActiveTypeFilter => TypeFilterFixed || TypeFilterScheduled;
+    private bool HasActiveStatusFilter => StatusFilterUpcoming || StatusFilterSpent;
     private bool HasActiveModeFilter => ModeFilterSoundOnly || ModeFilterSoundAndSpeech || ModeFilterSpeechOnly;
+
+    /// Whether any filter is currently narrowing the list — drives the small indicator dot
+    /// on the Filters button so it stays visible after the filter row is collapsed.
+    public bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(NameFilter) || HasActiveTypeFilter || HasActiveStatusFilter || HasActiveModeFilter
+        || TriggerFromFilter is not null || TriggerToFilter is not null;
+
+    public bool ShowFilterIndicator => HasActiveFilters && !IsFilterRowVisible;
+
+    private void NotifyFilterActivityChanged()
+    {
+        OnPropertyChanged(nameof(HasActiveFilters));
+        OnPropertyChanged(nameof(ShowFilterIndicator));
+    }
 
     public string TriggerFilterSummary => (TriggerFromFilter, TriggerToFilter) switch
     {
@@ -48,8 +65,19 @@ public partial class TriggersViewModel : ObservableObject
         ({ } from, { } to) => $"{from:dd MMM} – {to:dd MMM}"
     };
 
-    partial void OnTriggerFromFilterChanged(DateTime? value) => OnPropertyChanged(nameof(TriggerFilterSummary));
-    partial void OnTriggerToFilterChanged(DateTime? value) => OnPropertyChanged(nameof(TriggerFilterSummary));
+    partial void OnTriggerFromFilterChanged(DateTime? value)
+    {
+        AppServices.Instance.Settings.ReminderFilterFrom = value;
+        OnPropertyChanged(nameof(TriggerFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnTriggerToFilterChanged(DateTime? value)
+    {
+        AppServices.Instance.Settings.ReminderFilterTo = value;
+        OnPropertyChanged(nameof(TriggerFilterSummary));
+        NotifyFilterActivityChanged();
+    }
 
     [RelayCommand]
     private void ClearTriggerFilter()
@@ -58,12 +86,19 @@ public partial class TriggersViewModel : ObservableObject
         TriggerToFilter = null;
     }
 
-    public string TagFilterSummary => (TagFilterSpent, TagFilterRepeats, TagFilterOneTime) switch
+    public string TypeFilterSummary => (TypeFilterFixed, TypeFilterScheduled) switch
     {
-        (false, false, false) => "All tags",
-        (true, false, false) => "Spent",
-        (false, true, false) => "Repeats",
-        (false, false, true) => "One-time",
+        (false, false) => "All types",
+        (true, false) => "Fixed",
+        (false, true) => "Scheduled",
+        _ => "Multiple"
+    };
+
+    public string StatusFilterSummary => (StatusFilterUpcoming, StatusFilterSpent) switch
+    {
+        (false, false) => "All status",
+        (true, false) => "Upcoming",
+        (false, true) => "Spent",
         _ => "Multiple"
     };
 
@@ -76,15 +111,69 @@ public partial class TriggersViewModel : ObservableObject
         _ => "Multiple"
     };
 
-    partial void OnTagFilterSpentChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
-    partial void OnTagFilterRepeatsChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
-    partial void OnTagFilterOneTimeChanged(bool value) => OnPropertyChanged(nameof(TagFilterSummary));
-    partial void OnModeFilterSoundOnlyChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
-    partial void OnModeFilterSoundAndSpeechChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
-    partial void OnModeFilterSpeechOnlyChanged(bool value) => OnPropertyChanged(nameof(ModeFilterSummary));
+    partial void OnTypeFilterFixedChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterTypeFixed = value;
+        OnPropertyChanged(nameof(TypeFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnTypeFilterScheduledChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterTypeScheduled = value;
+        OnPropertyChanged(nameof(TypeFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnStatusFilterUpcomingChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterStatusUpcoming = value;
+        OnPropertyChanged(nameof(StatusFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnStatusFilterSpentChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterStatusSpent = value;
+        OnPropertyChanged(nameof(StatusFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnModeFilterSoundOnlyChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterModeSoundOnly = value;
+        OnPropertyChanged(nameof(ModeFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnModeFilterSoundAndSpeechChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterModeSoundAndSpeech = value;
+        OnPropertyChanged(nameof(ModeFilterSummary));
+        NotifyFilterActivityChanged();
+    }
+
+    partial void OnModeFilterSpeechOnlyChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterModeSpeechOnly = value;
+        OnPropertyChanged(nameof(ModeFilterSummary));
+        NotifyFilterActivityChanged();
+    }
 
     [RelayCommand]
     private void ToggleFilterRow() => IsFilterRowVisible = !IsFilterRowVisible;
+
+    partial void OnIsFilterRowVisibleChanged(bool value)
+    {
+        AppServices.Instance.Settings.ReminderFilterRowVisible = value;
+        OnPropertyChanged(nameof(ShowFilterIndicator));
+    }
+
+    partial void OnNameFilterChanged(string value)
+    {
+        AppServices.Instance.Settings.ReminderFilterName = value;
+        NotifyFilterActivityChanged();
+    }
 
     /// Whether a reminder should be visible in the (view-only) filtered list — the underlying
     /// Triggers collection, selection state, and bulk actions are all unaffected by filtering.
@@ -93,13 +182,18 @@ public partial class TriggersViewModel : ObservableObject
         if (!string.IsNullOrWhiteSpace(NameFilter) && t.Name.IndexOf(NameFilter, StringComparison.OrdinalIgnoreCase) < 0)
             return false;
 
-        if (HasActiveTagFilter)
+        if (HasActiveTypeFilter)
         {
-            var isSpent = t.HasFired;
-            var isRepeats = !t.HasFired && t.Recurrence is not null;
-            var isOneTime = !t.HasFired && t.Recurrence is null;
+            var isScheduled = t.Recurrence is not null;
+            var isFixed = t.Recurrence is null;
 
-            if (!((TagFilterSpent && isSpent) || (TagFilterRepeats && isRepeats) || (TagFilterOneTime && isOneTime)))
+            if (!((TypeFilterScheduled && isScheduled) || (TypeFilterFixed && isFixed)))
+                return false;
+        }
+
+        if (HasActiveStatusFilter)
+        {
+            if (!((StatusFilterUpcoming && !t.HasFired) || (StatusFilterSpent && t.HasFired)))
                 return false;
         }
 
@@ -122,6 +216,22 @@ public partial class TriggersViewModel : ObservableObject
 
     public TriggersViewModel()
     {
+        // Restore the last-used filter state directly via the backing fields, bypassing the
+        // generated setters (and their On*Changed side effects) since there's nothing new to
+        // persist or notify about here — we're just loading what was already saved.
+        var settings = AppServices.Instance.Settings;
+        isFilterRowVisible = settings.ReminderFilterRowVisible;
+        nameFilter = settings.ReminderFilterName;
+        typeFilterFixed = settings.ReminderFilterTypeFixed;
+        typeFilterScheduled = settings.ReminderFilterTypeScheduled;
+        statusFilterUpcoming = settings.ReminderFilterStatusUpcoming;
+        statusFilterSpent = settings.ReminderFilterStatusSpent;
+        modeFilterSoundOnly = settings.ReminderFilterModeSoundOnly;
+        modeFilterSoundAndSpeech = settings.ReminderFilterModeSoundAndSpeech;
+        modeFilterSpeechOnly = settings.ReminderFilterModeSpeechOnly;
+        triggerFromFilter = settings.ReminderFilterFrom;
+        triggerToFilter = settings.ReminderFilterTo;
+
         Triggers.CollectionChanged += OnTriggersCollectionChanged;
         foreach (var t in Triggers)
             t.PropertyChanged += OnTriggerPropertyChanged;

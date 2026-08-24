@@ -99,12 +99,6 @@
             <TabItem x:Name="FixedTriggersTab" Header="Reminders" Tag="&#xE823;" Style="{StaticResource PendulumTabItem}">
                 <views:TriggersPanel x:Name="TriggersPanelControl"/>
             </TabItem>
-            <TabItem Header="Stopwatch" Tag="&#xE121;" Style="{StaticResource PendulumTabItem}">
-                <views:StopwatchPanel/>
-            </TabItem>
-            <TabItem Header="Countdown" Tag="&#xE916;" Style="{StaticResource PendulumTabItem}">
-                <views:CountdownPanel/>
-            </TabItem>
             <TabItem Header="Settings" Tag="&#xE713;" Style="{StaticResource PendulumTabItem}">
                 <views:SettingsPanel/>
             </TabItem>

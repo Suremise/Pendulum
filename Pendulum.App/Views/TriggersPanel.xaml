@@ -15,11 +15,14 @@
         <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
         <conv:InverseBooleanConverter x:Key="InverseBool"/>
         <conv:BoolToSelectColumnWidthConverter x:Key="SelectColumnWidth"/>
-        <conv:ActiveRecurringVisibilityConverter x:Key="ActiveRecurringVis"/>
-        <conv:OneTimeVisibilityConverter x:Key="OneTimeVis"/>
-        <SolidColorBrush x:Key="RepeatsBadgeBrush" Color="#337C6AE0"/>
-        <SolidColorBrush x:Key="OneTimeBadgeBrush" Color="#333B82F6"/>
+        <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
+        <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
+        <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
+        <SolidColorBrush x:Key="FixedBadgeBrush" Color="#333B82F6"/>
+        <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
         <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
+        <SolidColorBrush x:Key="FilterActiveBrush" Color="#293B82F6"/>
+        <SolidColorBrush x:Key="FilterActiveDotBrush" Color="#FF3B82F6"/>
         <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
         <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
         <SolidColorBrush x:Key="SpeechOnlyBadgeBrush" Color="#33E0529A"/>
@@ -47,7 +50,9 @@
         </Style>
         <Style x:Key="TagBadge" TargetType="Border">
             <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="6,1"/>
+            <Setter Property="Padding" Value="6,0,6,2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
         </Style>
         <Style x:Key="TagBadgeText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
@@ -152,34 +157,51 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="NameLinkButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
+        <!-- Plain Button (not ui:Button) with its own ControlTemplate: ui:Button's built-in hover
+             state swaps its whole background to a fixed neutral grey regardless of what's set via
+             style triggers, which drowns out the green/red enabled state. This button dims its own
+             colour on hover/press instead, so it still reads as clickable without losing the colour. -->
+        <Style x:Key="EnableToggleButton" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="IsEnabled" Value="{Binding HasFired, Converter={StaticResource InverseBool}}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <ContentPresenter/>
+                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.65"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bg" Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-        <Style x:Key="EnableToggleButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
-            <Setter Property="Padding" Value="12,4"/>
-            <Setter Property="Margin" Value="8,0,0,0"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="IsEnabled" Value="{Binding HasFired, Converter={StaticResource InverseBool}}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Enabled}" Value="True">
-                    <Setter Property="Content" Value="Disable"/>
+                    <Setter Property="ToolTip" Value="Disable"/>
                     <Setter Property="Background" Value="#2E7D32"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Enabled}" Value="False">
-                    <Setter Property="Content" Value="Enable"/>
+                    <Setter Property="ToolTip" Value="Enable"/>
                     <Setter Property="Background" Value="#C0392B"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="FiltersToggleButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ShowFilterIndicator}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource FilterActiveBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -203,8 +225,15 @@
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="Filters" Appearance="Secondary" Icon="{ui:SymbolIcon Filter24}" Margin="0,0,10,0"
-                           Command="{Binding ToggleFilterRowCommand}"/>
+                <Grid Margin="0,0,10,0">
+                    <ui:Button Content="Filters" Icon="{ui:SymbolIcon Filter24}"
+                               Style="{StaticResource FiltersToggleButton}"
+                               Command="{Binding ToggleFilterRowCommand}"/>
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource FilterActiveDotBrush}"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0"
+                            IsHitTestVisible="False"
+                            Visibility="{Binding ShowFilterIndicator, Converter={StaticResource BoolToVis}}"/>
+                </Grid>
                 <ui:Button Content="Add Reminder" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
                            Command="{Binding AddCommand}"/>
             </StackPanel>
@@ -226,7 +255,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="220">
+                            <GridViewColumn Width="235">
                                 <GridViewColumn.Header>
                                     <StackPanel>
                                         <TextBlock Text="NAME" Style="{StaticResource ColumnFilterLabel}"/>
@@ -238,40 +267,30 @@
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button Style="{StaticResource NameLinkButton}" Margin="10,0,0,0"
-                                                Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                CommandParameter="{Binding}">
-                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
-                                                       Style="{StaticResource NameText}"
-                                                       TextDecorations="Underline"/>
-                                        </Button>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="10,0,0,0"
+                                                   Style="{StaticResource NameText}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="100">
+                            <GridViewColumn Width="128">
                                 <GridViewColumn.Header>
                                     <StackPanel>
-                                        <TextBlock Text="TAGS" Style="{StaticResource ColumnFilterLabel}"/>
-                                        <ToggleButton x:Name="TagsFilterToggle" Content="{Binding TagFilterSummary}"
+                                        <TextBlock Text="TYPE" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
                                                       Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
-                                        <Popup PlacementTarget="{Binding ElementName=TagsFilterToggle}" IsOpen="{Binding IsChecked, ElementName=TagsFilterToggle}"
+                                        <Popup PlacementTarget="{Binding ElementName=TypeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=TypeFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TagFilterSpent}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}">
-                                                            <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TypeFilterFixed}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource FixedBadgeBrush}">
+                                                            <TextBlock Text="Fixed" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TagFilterRepeats}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource RepeatsBadgeBrush}">
-                                                            <TextBlock Text="Repeats" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
-                                                        </Border>
-                                                    </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding TagFilterOneTime}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource OneTimeBadgeBrush}">
-                                                            <TextBlock Text="One-time" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding TypeFilterScheduled}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource ScheduledBadgeBrush}">
+                                                            <TextBlock Text="Scheduled" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
                                                 </StackPanel>
@@ -282,36 +301,21 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
-                                            <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                                                    Visibility="{Binding HasFired, Converter={StaticResource BoolToVis}}">
-                                                <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}"
-                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                                            </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource RepeatsBadgeBrush}">
-                                                <Border.Visibility>
-                                                    <MultiBinding Converter="{StaticResource ActiveRecurringVis}">
-                                                        <Binding Path="Recurrence"/>
-                                                        <Binding Path="HasFired"/>
-                                                    </MultiBinding>
-                                                </Border.Visibility>
-                                                <TextBlock Text="Repeats" Style="{StaticResource TagBadgeText}"
+                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource FixedBadgeBrush}"
+                                                    Visibility="{Binding Recurrence, Converter={StaticResource FixedVis}}">
+                                                <TextBlock Text="Fixed" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource OneTimeBadgeBrush}">
-                                                <Border.Visibility>
-                                                    <MultiBinding Converter="{StaticResource OneTimeVis}">
-                                                        <Binding Path="Recurrence"/>
-                                                        <Binding Path="HasFired"/>
-                                                    </MultiBinding>
-                                                </Border.Visibility>
-                                                <TextBlock Text="One-time" Style="{StaticResource TagBadgeText}"
+                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource ScheduledBadgeBrush}"
+                                                    Visibility="{Binding Recurrence, Converter={StaticResource ScheduledVis}}">
+                                                <TextBlock Text="Scheduled" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             </Border>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="200">
+                            <GridViewColumn Width="177">
                                 <GridViewColumn.Header>
                                     <StackPanel>
                                         <TextBlock Text="TRIGGERS ON" Style="{StaticResource ColumnFilterLabel}"/>
@@ -382,7 +386,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="110">
+                            <GridViewColumn Width="87">
                                 <GridViewColumn.Header>
                                     <TextBlock Text="SOUND" Style="{StaticResource ColumnFilterLabel}"/>
                                 </GridViewColumn.Header>
@@ -393,7 +397,50 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="" Width="230">
+                            <GridViewColumn Width="118">
+                                <GridViewColumn.Header>
+                                    <StackPanel>
+                                        <TextBlock Text="STATUS" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
+                                                      Style="{StaticResource ColumnFilterDropdownButton}"
+                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                        <Popup PlacementTarget="{Binding ElementName=StatusFilterToggle}" IsOpen="{Binding IsChecked, ElementName=StatusFilterToggle}"
+                                               StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
+                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                                <StackPanel>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding StatusFilterUpcoming}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}">
+                                                            <TextBlock Text="Upcoming" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding StatusFilterSpent}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}">
+                                                            <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        </Border>
+                                                    </CheckBox>
+                                                </StackPanel>
+                                            </Border>
+                                        </Popup>
+                                    </StackPanel>
+                                </GridViewColumn.Header>
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
+                                            <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}"
+                                                    Visibility="{Binding HasFired, Converter={StaticResource BoolToVis}}">
+                                                <TextBlock Text="Spent" Style="{StaticResource TagBadgeText}"
+                                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                            </Border>
+                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}"
+                                                    Visibility="{Binding HasFired, Converter={StaticResource InverseBoolToVis}}">
+                                                <TextBlock Text="Upcoming" Style="{StaticResource TagBadgeText}"
+                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                            <GridViewColumn Header="" Width="185">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -403,9 +450,9 @@
                                             <ui:Button Content="Delete" Appearance="Secondary" Padding="12,4" Margin="8,0,0,0"
                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                        CommandParameter="{Binding}"/>
-                                            <ui:Button Style="{StaticResource EnableToggleButton}"
-                                                       Command="{Binding DataContext.ToggleEnabledCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                       CommandParameter="{Binding}"/>
+                                            <Button Style="{StaticResource EnableToggleButton}"
+                                                    Command="{Binding DataContext.ToggleEnabledCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>

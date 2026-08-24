@@ -43,17 +43,6 @@
                         spoken phrase, or both, and an adjustable per-timer volume.
                     </TextBlock>
 
-                    <TextBlock FontSize="13" FontWeight="SemiBold" Text="Stopwatch" Margin="0,0,0,2"/>
-                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
-                        A standard count-up stopwatch with start/pause, reset, and lap recording.
-                    </TextBlock>
-
-                    <TextBlock FontSize="13" FontWeight="SemiBold" Text="Countdown" Margin="0,0,0,2"/>
-                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,10">
-                        A configurable days/hours/minutes/seconds countdown with the same
-                        sound and speech alert options as Reminders.
-                    </TextBlock>
-
                     <TextBlock FontSize="13" FontWeight="SemiBold" Text="Settings" Margin="0,0,0,2"/>
                     <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
                         Manage the sound library, text-to-speech voice/rate/volume, alert
@@ -70,7 +59,7 @@
                 <Run Text="Contributors: "/><Run Text="Claude (Sonnet 5)" FontWeight="SemiBold"/>
             </TextBlock>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20" TextWrapping="Wrap">
-                <Run Text="Surmise Software" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="Sure" FontWeight="Bold" Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/><Run Text="mised it right. — "/><Hyperlink NavigateUri="https://surmise.it" RequestNavigate="Hyperlink_RequestNavigate">surmise.it</Hyperlink>
+                <Run Text="Surmise Software" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="Sure" FontWeight="Bold"/><Run Text="mised it right. — "/><Hyperlink NavigateUri="https://surmise.it" RequestNavigate="Hyperlink_RequestNavigate">surmise.it</Hyperlink>
             </TextBlock>
 
             <ui:Button Content="Close" Appearance="Primary" HorizontalAlignment="Right" Click="CloseButton_Click"/>

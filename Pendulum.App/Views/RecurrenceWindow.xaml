@@ -34,14 +34,14 @@
 
                     <StackPanel x:Name="DailyPanel" Orientation="Horizontal">
                         <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="DailyIntervalBox" Width="50" TextAlignment="Center" Text="1"/>
+                        <ui:TextBox x:Name="DailyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                         <TextBlock Text="day(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     </StackPanel>
 
                     <StackPanel x:Name="WeeklyPanel">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                             <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ui:TextBox x:Name="WeeklyIntervalBox" Width="50" TextAlignment="Center" Text="1"/>
+                            <ui:TextBox x:Name="WeeklyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                             <TextBlock Text="week(s) on:" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                         <WrapPanel>
@@ -57,18 +57,18 @@
 
                     <StackPanel x:Name="MonthlyPanel" Orientation="Horizontal">
                         <TextBlock Text="Day" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="MonthlyDayBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,16,0"/>
+                        <ui:TextBox x:Name="MonthlyDayBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,16,0" ClearButtonEnabled="False"/>
                         <TextBlock Text="of every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="MonthlyIntervalBox" Width="50" TextAlignment="Center" Text="1"/>
+                        <ui:TextBox x:Name="MonthlyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                         <TextBlock Text="month(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     </StackPanel>
 
                     <StackPanel x:Name="YearlyPanel" Orientation="Horizontal">
                         <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="YearlyIntervalBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,8,0"/>
+                        <ui:TextBox x:Name="YearlyIntervalBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,8,0" ClearButtonEnabled="False"/>
                         <TextBlock Text="year(s) on" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ComboBox x:Name="YearlyMonthBox" Width="120" Margin="0,0,16,0"/>
-                        <ui:TextBox x:Name="YearlyDayBox" Width="50" TextAlignment="Center" Text="1"/>
+                        <ui:TextBox x:Name="YearlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                     </StackPanel>
                 </StackPanel>
             </ui:Card>
@@ -81,7 +81,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                         <RadioButton x:Name="EndAfterRadio" Content="End after" GroupName="End" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="EndAfterCountBox" Width="50" TextAlignment="Center" Text="10" Margin="0,0,8,0"/>
+                        <ui:TextBox x:Name="EndAfterCountBox" Width="50" TextAlignment="Center" Text="10" Margin="0,0,8,0" ClearButtonEnabled="False"/>
                         <TextBlock Text="occurrences" VerticalAlignment="Center"/>
                     </StackPanel>
 

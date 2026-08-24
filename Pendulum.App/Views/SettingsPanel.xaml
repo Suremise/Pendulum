@@ -109,7 +109,7 @@
 
                         <CheckBox Content="Enable quick-add hotkey" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}" Margin="0,0,0,10"/>
 
-                        <Grid Margin="0,0,0,2">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="{StaticResource RemindersLabelWidth}"/>
                                 <ColumnDefinition Width="*"/>
@@ -122,10 +122,20 @@
                                 <ui:Button Content="Change..." Appearance="Secondary" Command="{Binding ChangeHotkeyCommand}"/>
                             </StackPanel>
                         </Grid>
+
+                        <Grid Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="56"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Auto-delete spent reminders after (days, 0 = never)" Style="{StaticResource FieldLabelInline}"/>
+                            <ui:TextBox Grid.Column="1" Style="{StaticResource FieldTextBox}" HorizontalAlignment="Stretch" MaxLength="4" ClearButtonEnabled="False"
+                                        Text="{Binding Settings.AutoDeleteSpentAfterDays, UpdateSourceTrigger=PropertyChanged}"/>
+                        </Grid>
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Margin="0,0,0,10">
+                <ui:Card>
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
                             <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
@@ -156,53 +166,9 @@
                         </Grid>
                     </StackPanel>
                 </ui:Card>
-
-                <ui:Card>
-                    <StackPanel Margin="4">
-                        <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
-                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-
-                        <TextBlock Text="Back up all settings and reminders to a file — everything you need to move Pendulum to another computer." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
-
-                        <StackPanel Orientation="Horizontal">
-                            <ui:Button Content="Export Backup..." Appearance="Secondary" Command="{Binding ExportBackupCommand}" Margin="0,0,10,0"/>
-                            <ui:Button Content="Restore Backup..." Appearance="Secondary" Command="{Binding RestoreBackupCommand}"/>
-                        </StackPanel>
-                    </StackPanel>
-                </ui:Card>
             </StackPanel>
 
             <StackPanel Grid.Column="2">
-                <ui:Card Margin="0,0,0,10">
-                    <StackPanel Margin="4">
-                        <StackPanel Style="{StaticResource SectionHeader}">
-                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
-                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
-                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
-                        </StackPanel>
-
-                        <Grid Style="{StaticResource FieldRow}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="{StaticResource SoundsLabelWidth}"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
-                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
-                        </Grid>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
-                            <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
-                        </Grid>
-                    </StackPanel>
-                </ui:Card>
-
                 <ui:Card Margin="0,0,0,10">
                     <StackPanel Margin="4">
                         <StackPanel Style="{StaticResource SectionHeader}">
@@ -253,6 +219,50 @@
                         </Grid>
 
                         <ui:Button Content="Test Voice" Appearance="Secondary" Command="{Binding TestVoiceCommand}" HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE8D6;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Sounds" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{StaticResource SoundsLabelWidth}"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Default sound for new timers" Style="{StaticResource FieldLabelInline}"/>
+                            <ComboBox Grid.Column="1" Style="{StaticResource FieldCombo}" ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"/>
+                        </Grid>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <ui:Button Grid.Column="0" Content="Open Sounds Folder" Appearance="Secondary" Command="{Binding OpenSoundsFolderCommand}"/>
+                            <ui:Button Grid.Column="1" Content="Add Sound..." Appearance="Secondary" Command="{Binding AddSoundCommand}" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </StackPanel>
+                </ui:Card>
+
+                <ui:Card Margin="0,0,0,10">
+                    <StackPanel Margin="4">
+                        <StackPanel Style="{StaticResource SectionHeader}">
+                            <TextBlock Text="&#xE74E;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" Margin="0,0,10,0"
+                                       Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                            <TextBlock Text="Backup &amp; Restore" FontSize="15" FontWeight="SemiBold"/>
+                        </StackPanel>
+
+                        <TextBlock Text="Back up all settings and reminders to a file — everything you need to move Pendulum to another computer." Style="{StaticResource FieldLabel}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                        <StackPanel Orientation="Horizontal">
+                            <ui:Button Content="Export Backup..." Appearance="Secondary" Command="{Binding ExportBackupCommand}" Margin="0,0,10,0"/>
+                            <ui:Button Content="Restore Backup..." Appearance="Secondary" Command="{Binding RestoreBackupCommand}"/>
+                        </StackPanel>
                     </StackPanel>
                 </ui:Card>
 

@@ -58,9 +58,10 @@ public partial class TriggersPanel : UserControl
             vm.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName is nameof(TriggersViewModel.NameFilter)
-                    or nameof(TriggersViewModel.TagFilterSpent)
-                    or nameof(TriggersViewModel.TagFilterRepeats)
-                    or nameof(TriggersViewModel.TagFilterOneTime)
+                    or nameof(TriggersViewModel.TypeFilterFixed)
+                    or nameof(TriggersViewModel.TypeFilterScheduled)
+                    or nameof(TriggersViewModel.StatusFilterUpcoming)
+                    or nameof(TriggersViewModel.StatusFilterSpent)
                     or nameof(TriggersViewModel.ModeFilterSoundOnly)
                     or nameof(TriggersViewModel.ModeFilterSoundAndSpeech)
                     or nameof(TriggersViewModel.ModeFilterSpeechOnly)

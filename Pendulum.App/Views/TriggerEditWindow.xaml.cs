@@ -1,7 +1,9 @@
 using System.Windows;
 using Pendulum.App.Services;
+using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Speech;
 using Wpf.Ui.Controls;
 
 namespace Pendulum.App.Views;
@@ -21,6 +23,13 @@ public partial class TriggerEditWindow : FluentWindow
     private bool _isLoading;
     private RecurrenceRule? _recurrence;
 
+    // The Test button previews sound/speech independently of AppServices.Instance.AlertPlayback —
+    // that controller may be actively sounding a real, currently-firing alert, and sharing it here
+    // would let closing this dialog (Save/Cancel) cut that live alert off.
+    private readonly AudioService _previewAudio = new();
+    private readonly SpeechService _previewSpeech = new();
+    private readonly AlertPlaybackController _previewPlayback;
+
     public TriggerTimer? Result { get; private set; }
 
     public TriggerEditWindow(TriggerTimer target, bool isNew)
@@ -31,6 +40,18 @@ public partial class TriggerEditWindow : FluentWindow
         _isNew = isNew;
         Title = isNew ? "New Reminder" : "Edit Reminder";
         EditorTitleBar.Title = Title;
+
+        var settings = AppServices.Instance.Settings;
+        _previewSpeech.SetVoice(settings.TtsVoiceName);
+        _previewSpeech.SetRate(settings.TtsRate);
+        _previewSpeech.SetVolume(settings.TtsVolume);
+        _previewPlayback = new AlertPlaybackController(_previewAudio, _previewSpeech);
+        Closed += (_, __) =>
+        {
+            _previewPlayback.Dispose();
+            _previewAudio.Dispose();
+            _previewSpeech.Dispose();
+        };
 
         SetupTimeFormat();
         for (int m = 0; m < 60; m++)
@@ -215,9 +236,8 @@ public partial class TriggerEditWindow : FluentWindow
     private void TestButton_Click(object sender, RoutedEventArgs e)
     {
         var (soundFile, mode, phrase, volume) = BuildAlertSettings();
-        var services = AppServices.Instance;
-        var soundPath = services.ResolveSoundPath(soundFile);
-        services.AlertPlayback.Start(soundPath, mode, phrase, repeatUntilDismissed: false, volume: volume / 100f);
+        var soundPath = AppServices.Instance.ResolveSoundPath(soundFile);
+        _previewPlayback.Start(soundPath, mode, phrase, repeatUntilDismissed: false, volume: volume / 100f);
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -228,13 +248,37 @@ public partial class TriggerEditWindow : FluentWindow
             return;
         }
 
-        AppServices.Instance.AlertPlayback.Stop();
-
         var (soundFile, mode, phrase, volume) = BuildAlertSettings();
 
         var scheduledAt = BuildDateTime();
         var now = DateTime.Now;
         var enabledByUser = EnabledBox.IsChecked == true;
+
+        DateTime? firstOccurrence = scheduledAt > now
+            ? scheduledAt
+            : _recurrence is not null
+                ? RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(_recurrence, scheduledAt, scheduledAt, now)
+                : null;
+
+        // The user asked for this to be enabled, but the date/time they set is in the past
+        // (e.g. only the time was changed and the date field was left stale after midnight) —
+        // ask before quietly overriding their choice, rather than saving as Spent and leaving
+        // them to hunt through the list to fix it.
+        if (firstOccurrence is null && enabledByUser)
+        {
+            var choice = System.Windows.MessageBox.Show(
+                this,
+                $"The date/time you set ({scheduledAt:ddd, dd MMM yyyy  HH:mm}) is in the past, so this reminder would be saved as Spent instead of enabled.\n\nSave it as Spent anyway, or go back and change the date/time?",
+                "Pendulum",
+                System.Windows.MessageBoxButton.YesNo,
+                MessageBoxImage.Warning,
+                System.Windows.MessageBoxResult.No);
+
+            if (choice == System.Windows.MessageBoxResult.No)
+                return;
+        }
+
+        _previewPlayback.Stop();
 
         _target.Name = NameBox.Text.Trim();
         _target.RecurrenceAnchor = scheduledAt;
@@ -243,12 +287,6 @@ public partial class TriggerEditWindow : FluentWindow
         _target.SoundFileName = soundFile;
         _target.Phrase = phrase;
         _target.Volume = volume;
-
-        DateTime? firstOccurrence = scheduledAt > now
-            ? scheduledAt
-            : _recurrence is not null
-                ? RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(_recurrence, scheduledAt, scheduledAt, now)
-                : null;
 
         if (firstOccurrence is not null)
         {
@@ -263,19 +301,6 @@ public partial class TriggerEditWindow : FluentWindow
             _target.TriggerAt = scheduledAt;
             _target.HasFired = true;
             _target.Enabled = false;
-
-            // The user asked for this to be enabled, but the date/time they set is in the
-            // past (e.g. only the time was changed and the date field was left stale after
-            // midnight). Say so instead of quietly overriding their choice.
-            if (enabledByUser)
-            {
-                System.Windows.MessageBox.Show(
-                    this,
-                    $"The date/time you set ({scheduledAt:ddd, dd MMM yyyy  HH:mm}) is in the past, so this reminder has been saved as Spent instead of enabled.\n\nSet a future date/time to activate it.",
-                    "Pendulum",
-                    System.Windows.MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-            }
         }
 
         Result = _target;
@@ -284,7 +309,7 @@ public partial class TriggerEditWindow : FluentWindow
 
     private void CancelButton_Click(object sender, RoutedEventArgs e)
     {
-        AppServices.Instance.AlertPlayback.Stop();
+        _previewPlayback.Stop();
         DialogResult = false;
     }
 }

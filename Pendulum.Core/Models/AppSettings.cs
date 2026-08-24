@@ -15,8 +15,8 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private string? ttsVoiceName;
     [ObservableProperty] private int ttsRate;
     [ObservableProperty] private int ttsVolume = 100;
-    [ObservableProperty] private bool launchOnWindowsStartup;
-    [ObservableProperty] private bool startMinimized;
+    [ObservableProperty] private bool launchOnWindowsStartup = true;
+    [ObservableProperty] private bool startMinimized = true;
     [ObservableProperty] private int snoozeMinutes = 5;
     [ObservableProperty] private bool repeatAlertUntilDismissed = true;
 
@@ -29,8 +29,26 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private bool quickAddHotkeyEnabled = true;
     [ObservableProperty] private string quickAddHotkeyGesture = "Ctrl+Shift+R";
 
+    /// 0 disables cleanup. When greater than 0, Spent reminders whose trigger time is more
+    /// than this many days in the past are permanently deleted on startup.
+    [ObservableProperty] private int autoDeleteSpentAfterDays;
+
     /// Internal bookkeeping (not a user-facing setting): whether the "still running in
     /// the tray" toast has been shown yet. Fires once, the first time the window is
     /// ever minimized to the tray rather than closed.
     [ObservableProperty] private bool hasShownTrayMinimizeHint;
+
+    /// Internal bookkeeping: the Reminders list's filter state, restored on the next launch
+    /// so the user doesn't have to reapply filters every time they open the app.
+    [ObservableProperty] private bool reminderFilterRowVisible;
+    [ObservableProperty] private string reminderFilterName = string.Empty;
+    [ObservableProperty] private bool reminderFilterTypeFixed;
+    [ObservableProperty] private bool reminderFilterTypeScheduled;
+    [ObservableProperty] private bool reminderFilterStatusUpcoming;
+    [ObservableProperty] private bool reminderFilterStatusSpent;
+    [ObservableProperty] private bool reminderFilterModeSoundOnly;
+    [ObservableProperty] private bool reminderFilterModeSoundAndSpeech;
+    [ObservableProperty] private bool reminderFilterModeSpeechOnly;
+    [ObservableProperty] private DateTime? reminderFilterFrom;
+    [ObservableProperty] private DateTime? reminderFilterTo;
 }
