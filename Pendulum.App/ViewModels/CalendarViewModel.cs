@@ -84,6 +84,14 @@ public partial class CalendarViewModel : ObservableObject
     [RelayCommand]
     private void Today() => DisplayedMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
 
+    /// The initial RebuildGrid() in the constructor runs before this panel is ever part of the
+    /// live visual tree (Calendar isn't the initially-selected tab), which can leave the day
+    /// grid's ItemsControl having missed painting its first population — it only recovers once
+    /// something else forces a fresh Days.Clear()+re-add (e.g. changing month). Call this from
+    /// the view's Loaded event so the grid gets a guaranteed fresh build once it's actually
+    /// on screen, regardless of any timing race during startup.
+    public void RefreshForDisplay() => RebuildGrid();
+
     [RelayCommand]
     private void EditReminder(TriggerTimer? trigger)
     {

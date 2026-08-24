@@ -43,19 +43,14 @@ public partial class TriggersViewModel : ObservableObject
     private bool HasActiveStatusFilter => StatusFilterUpcoming || StatusFilterSpent;
     private bool HasActiveModeFilter => ModeFilterSoundOnly || ModeFilterSoundAndSpeech || ModeFilterSpeechOnly;
 
-    /// Whether any filter is currently narrowing the list — drives the small indicator dot
-    /// on the Filters button so it stays visible after the filter row is collapsed.
+    /// Whether any filter is currently narrowing the list — drives the Filters button's
+    /// active (blue + dot) styling, regardless of whether the filter row is expanded or
+    /// collapsed.
     public bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(NameFilter) || HasActiveTypeFilter || HasActiveStatusFilter || HasActiveModeFilter
         || TriggerFromFilter is not null || TriggerToFilter is not null;
 
-    public bool ShowFilterIndicator => HasActiveFilters && !IsFilterRowVisible;
-
-    private void NotifyFilterActivityChanged()
-    {
-        OnPropertyChanged(nameof(HasActiveFilters));
-        OnPropertyChanged(nameof(ShowFilterIndicator));
-    }
+    private void NotifyFilterActivityChanged() => OnPropertyChanged(nameof(HasActiveFilters));
 
     public string TriggerFilterSummary => (TriggerFromFilter, TriggerToFilter) switch
     {
@@ -163,11 +158,8 @@ public partial class TriggersViewModel : ObservableObject
     [RelayCommand]
     private void ToggleFilterRow() => IsFilterRowVisible = !IsFilterRowVisible;
 
-    partial void OnIsFilterRowVisibleChanged(bool value)
-    {
+    partial void OnIsFilterRowVisibleChanged(bool value) =>
         AppServices.Instance.Settings.ReminderFilterRowVisible = value;
-        OnPropertyChanged(nameof(ShowFilterIndicator));
-    }
 
     partial void OnNameFilterChanged(string value)
     {

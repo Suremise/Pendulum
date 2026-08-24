@@ -23,6 +23,7 @@ public partial class App : Application
     private TaskbarIcon? _trayIcon;
     private DispatcherTimer? _trayTooltipTimer;
     private HotkeyManager? _hotkeyManager;
+    private QuickAddWindow? _quickAddWindow;
     internal bool IsExiting { get; private set; }
 
     protected override void OnStartup(StartupEventArgs e)
@@ -161,8 +162,26 @@ public partial class App : Application
         if (IsExiting)
             return;
 
-        var popup = new QuickAddWindow { Owner = MainWindow };
-        popup.ShowDialog();
+        if (_quickAddWindow is not null)
+        {
+            // Already open — this happens if the hotkey fires again while it's up (WM_HOTKEY
+            // still gets delivered and queued through ShowDialog's nested message pump, so a
+            // second press used to spawn a second overlapping, both-Topmost window fighting
+            // the first for focus/Z-order instead of doing anything useful). Just refocus the
+            // existing one.
+            _quickAddWindow.Activate();
+            return;
+        }
+
+        _quickAddWindow = new QuickAddWindow { Owner = MainWindow };
+        try
+        {
+            _quickAddWindow.ShowDialog();
+        }
+        finally
+        {
+            _quickAddWindow = null;
+        }
     }
 
     internal void NotifyFirstMinimizeToTray()

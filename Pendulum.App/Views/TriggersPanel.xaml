@@ -21,8 +21,7 @@
         <SolidColorBrush x:Key="FixedBadgeBrush" Color="#333B82F6"/>
         <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
         <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
-        <SolidColorBrush x:Key="FilterActiveBrush" Color="#293B82F6"/>
-        <SolidColorBrush x:Key="FilterActiveDotBrush" Color="#FF3B82F6"/>
+        <SolidColorBrush x:Key="FilterActiveBrush" Color="#4048A0FA"/>
         <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
         <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
         <SolidColorBrush x:Key="SpeechOnlyBadgeBrush" Color="#33E0529A"/>
@@ -200,7 +199,7 @@
         <Style x:Key="FiltersToggleButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
             <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding ShowFilterIndicator}" Value="True">
+                <DataTrigger Binding="{Binding HasActiveFilters}" Value="True">
                     <Setter Property="Background" Value="{StaticResource FilterActiveBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -229,10 +228,10 @@
                     <ui:Button Content="Filters" Icon="{ui:SymbolIcon Filter24}"
                                Style="{StaticResource FiltersToggleButton}"
                                Command="{Binding ToggleFilterRowCommand}"/>
-                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource FilterActiveDotBrush}"
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource PendulumAccentBrush}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0"
                             IsHitTestVisible="False"
-                            Visibility="{Binding ShowFilterIndicator, Converter={StaticResource BoolToVis}}"/>
+                            Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}"/>
                 </Grid>
                 <ui:Button Content="Add Reminder" Appearance="Primary" Icon="{ui:SymbolIcon Add24}"
                            Command="{Binding AddCommand}"/>
