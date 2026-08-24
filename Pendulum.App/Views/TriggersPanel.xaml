@@ -4,8 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
-             xmlns:conv="clr-namespace:Pendulum.App.Converters"
-             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase">
+             xmlns:conv="clr-namespace:Pendulum.App.Converters">
     <UserControl.DataContext>
         <vm:TriggersViewModel/>
     </UserControl.DataContext>
@@ -73,11 +72,10 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <CollectionViewSource x:Key="SortedTriggers" Source="{Binding Triggers}">
-            <CollectionViewSource.SortDescriptions>
-                <scm:SortDescription PropertyName="TriggerAt" Direction="Ascending"/>
-            </CollectionViewSource.SortDescriptions>
-        </CollectionViewSource>
+        <!-- Initial sort (TriggerAt ascending) is applied in code-behind (ApplySort, called from
+             Loaded) rather than declared here, so there's one source of truth shared with the
+             column-header click-to-sort logic instead of two independent starting points. -->
+        <CollectionViewSource x:Key="SortedTriggers" Source="{Binding Triggers}"/>
         <Style x:Key="CleanGridViewColumnHeader" TargetType="GridViewColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -258,13 +256,18 @@
                             </GridViewColumn>
                             <GridViewColumn Width="235">
                                 <GridViewColumn.Header>
-                                    <StackPanel>
-                                        <TextBlock Text="NAME" Style="{StaticResource ColumnFilterLabel}"/>
-                                        <ui:TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}"
-                                                    PlaceholderText="Filter..." FontSize="12" FontWeight="Normal"
-                                                    Padding="6,4" Margin="0,6,10,0"
-                                                    Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
-                                    </StackPanel>
+                                    <GridViewColumnHeader Tag="Name" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="NAME" Style="{StaticResource ColumnFilterLabel}"/>
+                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            </StackPanel>
+                                            <ui:TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}"
+                                                        PlaceholderText="Filter..." FontSize="12" FontWeight="Normal"
+                                                        Padding="6,4" Margin="0,6,10,0"
+                                                        Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                        </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -275,8 +278,12 @@
                             </GridViewColumn>
                             <GridViewColumn Width="128">
                                 <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="IsScheduled" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
-                                        <TextBlock Text="TYPE" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="TYPE" Style="{StaticResource ColumnFilterLabel}"/>
+                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                        </StackPanel>
                                         <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
                                                       Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
@@ -298,6 +305,7 @@
                                             </Border>
                                         </Popup>
                                     </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -318,8 +326,12 @@
                             </GridViewColumn>
                             <GridViewColumn Width="177">
                                 <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="TriggerAt" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
-                                        <TextBlock Text="TRIGGERS ON" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="TRIGGERS ON" Style="{StaticResource ColumnFilterLabel}"/>
+                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                        </StackPanel>
                                         <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
                                                       Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
@@ -339,6 +351,7 @@
                                             </Border>
                                         </Popup>
                                     </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -349,8 +362,12 @@
                             </GridViewColumn>
                             <GridViewColumn Width="150">
                                 <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="Mode" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
-                                        <TextBlock Text="MODE" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="MODE" Style="{StaticResource ColumnFilterLabel}"/>
+                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                        </StackPanel>
                                         <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
                                                       Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
@@ -377,6 +394,7 @@
                                             </Border>
                                         </Popup>
                                     </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -389,7 +407,12 @@
                             </GridViewColumn>
                             <GridViewColumn Width="87">
                                 <GridViewColumn.Header>
-                                    <TextBlock Text="SOUND" Style="{StaticResource ColumnFilterLabel}"/>
+                                    <GridViewColumnHeader Tag="SoundFileName" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="SOUND" Style="{StaticResource ColumnFilterLabel}"/>
+                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                        </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
@@ -400,8 +423,12 @@
                             </GridViewColumn>
                             <GridViewColumn Width="118">
                                 <GridViewColumn.Header>
+                                    <GridViewColumnHeader Tag="StatusSortOrder" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
-                                        <TextBlock Text="STATUS" Style="{StaticResource ColumnFilterLabel}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="STATUS" Style="{StaticResource ColumnFilterLabel}"/>
+                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                        </StackPanel>
                                         <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
                                                       Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
@@ -428,6 +455,7 @@
                                             </Border>
                                         </Popup>
                                     </StackPanel>
+                                    </GridViewColumnHeader>
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>

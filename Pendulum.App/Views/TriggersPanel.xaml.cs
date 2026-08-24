@@ -11,6 +11,8 @@ public partial class TriggersPanel : UserControl
 {
     private ICollectionView? _view;
     private bool _initialized;
+    private string _sortProperty = nameof(TriggerTimer.TriggerAt);
+    private ListSortDirection _sortDirection = ListSortDirection.Ascending;
 
     public TriggersPanel()
     {
@@ -27,6 +29,7 @@ public partial class TriggersPanel : UserControl
 
             EnableLiveSorting();
             SetupFiltering();
+            ApplySort();
         };
     }
 
@@ -37,7 +40,12 @@ public partial class TriggersPanel : UserControl
 
         if (cvs.View is ICollectionViewLiveShaping liveShaping && liveShaping.CanChangeLiveSorting)
         {
+            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.Name));
+            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.IsScheduled));
             liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.TriggerAt));
+            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.Mode));
+            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.SoundFileName));
+            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.StatusSortOrder));
             liveShaping.IsLiveSorting = true;
 
             if (liveShaping.CanChangeLiveFiltering)
@@ -51,6 +59,40 @@ public partial class TriggersPanel : UserControl
                 liveShaping.IsLiveFiltering = true;
             }
         }
+    }
+
+    private void ColumnHeader_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not GridViewColumnHeader { Tag: string propertyName })
+            return;
+
+        _sortDirection = _sortProperty == propertyName && _sortDirection == ListSortDirection.Ascending
+            ? ListSortDirection.Descending
+            : ListSortDirection.Ascending;
+        _sortProperty = propertyName;
+
+        ApplySort();
+    }
+
+    private void ApplySort()
+    {
+        if (_view is null)
+            return;
+
+        _view.SortDescriptions.Clear();
+        _view.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
+        UpdateSortArrows();
+    }
+
+    private void UpdateSortArrows()
+    {
+        var arrow = _sortDirection == ListSortDirection.Ascending ? "▲" : "▼";
+        NameSortArrow.Text = _sortProperty == nameof(TriggerTimer.Name) ? arrow : string.Empty;
+        TypeSortArrow.Text = _sortProperty == nameof(TriggerTimer.IsScheduled) ? arrow : string.Empty;
+        TriggersOnSortArrow.Text = _sortProperty == nameof(TriggerTimer.TriggerAt) ? arrow : string.Empty;
+        ModeSortArrow.Text = _sortProperty == nameof(TriggerTimer.Mode) ? arrow : string.Empty;
+        SoundSortArrow.Text = _sortProperty == nameof(TriggerTimer.SoundFileName) ? arrow : string.Empty;
+        StatusSortArrow.Text = _sortProperty == nameof(TriggerTimer.StatusSortOrder) ? arrow : string.Empty;
     }
 
     private void SetupFiltering()

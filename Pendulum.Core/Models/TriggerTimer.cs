@@ -27,4 +27,20 @@ public partial class TriggerTimer : ObservableObject
     [ObservableProperty]
     [property: JsonIgnore]
     private bool isSelectedForBulk;
+
+    /// UI-only: a stable, sortable proxy for Fixed (false) vs Scheduled (true) in the
+    /// Reminders list — Recurrence itself is a reference type CollectionView sorting can't
+    /// compare directly. Never persisted.
+    [JsonIgnore]
+    public bool IsScheduled => Recurrence is not null;
+
+    /// UI-only: a stable, sortable proxy for the Reminders list's three-way status badge
+    /// (0=Upcoming, 1=Disabled, 2=Spent — matches the order they'd naturally read left to
+    /// right if laid out as a spectrum). Never persisted.
+    [JsonIgnore]
+    public int StatusSortOrder => HasFired ? 2 : (Enabled ? 0 : 1);
+
+    partial void OnRecurrenceChanged(RecurrenceRule? value) => OnPropertyChanged(nameof(IsScheduled));
+    partial void OnHasFiredChanged(bool value) => OnPropertyChanged(nameof(StatusSortOrder));
+    partial void OnEnabledChanged(bool value) => OnPropertyChanged(nameof(StatusSortOrder));
 }
