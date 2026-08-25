@@ -6,7 +6,7 @@
     <Version>1.1.0</Version>
     <Product>Pendulum</Product>
     <Company>Surmise</Company>
-    <Copyright>Copyright © 2026 Surmise</Copyright>
+    <Copyright>Copyright © 2026 Darren Marshall</Copyright>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
