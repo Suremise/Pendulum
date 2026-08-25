@@ -21,6 +21,5 @@ Thumbs.db
 # Runtime-generated app data (only present if the exe has been run from the repo)
 Data/
 
-# Local-only material kept on disk for reference/convenience — retired code, planning
-# notes, the surmise.it site, downloaded speech models — never part of this project.
+# Local-only material kept on disk for reference/convenience
 excluded/
