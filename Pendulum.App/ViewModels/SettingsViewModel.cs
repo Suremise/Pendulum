@@ -300,6 +300,7 @@ public partial class SettingsViewModel : ObservableObject
         Settings.RepeatAlertUntilDismissed = source.RepeatAlertUntilDismissed;
         Settings.AutoResolveMinutes = source.AutoResolveMinutes;
         Settings.Theme = source.Theme;
+        Settings.CheckForUpdatesOnStartup = source.CheckForUpdatesOnStartup;
         Settings.Use24HourTime = source.Use24HourTime;
         Settings.QuickAddHotkeyEnabled = source.QuickAddHotkeyEnabled;
         Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;

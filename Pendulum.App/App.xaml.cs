@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +11,7 @@ using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Services;
 
 namespace Pendulum.App;
 
@@ -132,6 +134,9 @@ public partial class App : Application
 
             if (missed.Count > 0)
                 NotifyMissedReminders(missed);
+
+            if (AppServices.Instance.Settings.CheckForUpdatesOnStartup)
+                _ = CheckForUpdateAsync(mainWindow);
         }
         catch (Exception ex)
         {
@@ -208,6 +213,22 @@ public partial class App : Application
         };
 
         _trayIcon?.ShowNotification("Pendulum", message);
+    }
+
+    private static async Task CheckForUpdateAsync(MainWindow mainWindow)
+    {
+        try
+        {
+            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            var newerVersion = await UpdateCheckService.CheckForNewerVersionAsync(AppServices.Instance.Settings, currentVersion, CancellationToken.None);
+            if (newerVersion is not null)
+                await mainWindow.Dispatcher.BeginInvoke(() => mainWindow.ShowUpdateAvailable(newerVersion));
+        }
+        catch (Exception ex)
+        {
+            // Background nicety — never worth crashing or bothering the user over.
+            CrashLog.Write("CheckForUpdateAsync", ex);
+        }
     }
 
     private void OnTriggerFired(Pendulum.Core.Models.TriggerTimer trigger)

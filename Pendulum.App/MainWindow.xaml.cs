@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using Pendulum.App.Services;
@@ -10,6 +11,7 @@ namespace Pendulum.App;
 public partial class MainWindow : FluentWindow
 {
     private readonly DispatcherTimer _statusTimer;
+    private string? _updateReleaseVersion;
 
     public MainWindow()
     {
@@ -22,6 +24,24 @@ public partial class MainWindow : FluentWindow
     }
 
     private void UpdateStatusText() => StatusText.Text = ReminderStatus.GetNextReminderSummary();
+
+    /// Shown in the status bar, left of the About button, once a background check finds a
+    /// newer version on GitHub. Never a popup — just a small, persistent line that clears
+    /// itself naturally once the user's actually on the newer build.
+    public void ShowUpdateAvailable(string version)
+    {
+        _updateReleaseVersion = version;
+        UpdateAvailableRun.Text = $"Version {version} available — ";
+        UpdateAvailableText.Visibility = Visibility.Visible;
+    }
+
+    private void UpdateAvailableLink_Click(object sender, RoutedEventArgs e)
+    {
+        var uri = _updateReleaseVersion is null
+            ? "https://github.com/Suremise/Pendulum/releases/latest"
+            : $"https://github.com/Suremise/Pendulum/releases/tag/v{_updateReleaseVersion}";
+        Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
+    }
 
     private void FluentWindow_Closing(object sender, CancelEventArgs e)
     {

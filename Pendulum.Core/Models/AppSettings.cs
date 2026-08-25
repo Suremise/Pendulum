@@ -37,6 +37,13 @@ public partial class AppSettings : ObservableObject
     /// outcome as if the user had clicked Dismiss. Has no effect when RepeatAlertUntilDismissed is true.
     [ObservableProperty] private int autoResolveMinutes = 30;
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
+    [ObservableProperty] private bool checkForUpdatesOnStartup = true;
+
+    /// Cache for UpdateCheckService, so it only actually hits GitHub once a day rather than
+    /// on every launch. Null until the first check ever runs.
+    [ObservableProperty] private DateTime? lastUpdateCheckUtc;
+    [ObservableProperty] private string? lastKnownLatestVersion;
+
     [ObservableProperty] private bool use24HourTime;
     [ObservableProperty] private bool quickAddHotkeyEnabled = true;
     [ObservableProperty] private string quickAddHotkeyGesture = "Ctrl+Shift+R";
