@@ -3,10 +3,14 @@
 A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of the way in the system tray and surfaces alerts as a topmost popup with sound and/or spoken-phrase notifications, even while you're working in another window.
 
 <p align="center">
-  <img src="docs/screenshots/reminders.png" width="49%" alt="Reminders list" />
-  <img src="docs/screenshots/calendar.png" width="49%" alt="Calendar view" />
-  <img src="docs/screenshots/settings.png" width="49%" alt="Settings" />
-  <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" />
+  <img src="docs/screenshots/reminders.png" width="32%" alt="Reminders list" />
+  <img src="docs/screenshots/calendar.png" width="32%" alt="Calendar view" />
+  <img src="docs/screenshots/settings.png" width="32%" alt="Settings" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" /><br/>
+  <sub>When a reminder comes due, it surfaces as a small topmost popup — sound and/or a spoken phrase, with one click to snooze or dismiss.</sub>
 </p>
 
 ## Features
