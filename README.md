@@ -5,6 +5,8 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 <p align="center">
   <img src="docs/screenshots/reminders.png" width="49%" alt="Reminders list" />
   <img src="docs/screenshots/calendar.png" width="49%" alt="Calendar view" />
+  <img src="docs/screenshots/settings.png" width="49%" alt="Settings" />
+  <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" />
 </p>
 
 ## Features
