@@ -28,5 +28,5 @@ ARCHIVE/
 # testing/backup, never in source control (large binaries, not worth the repo/LFS cost).
 resources/
 
-# surmise.it landing site — lives in its own separate repo/deploy, not this one.
-website/
+# Local planning notes, not ready to publish as part of the project.
+TODO.md
