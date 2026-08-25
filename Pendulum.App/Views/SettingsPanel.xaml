@@ -124,6 +124,9 @@
                             </StackPanel>
                         </Grid>
 
+                        <CheckBox Content="Start listening automatically when Quick Reminder opens"
+                                  IsChecked="{Binding Settings.QuickAddAutoListen}" Margin="0,0,0,10"/>
+
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

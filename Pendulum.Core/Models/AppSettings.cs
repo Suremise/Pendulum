@@ -40,6 +40,7 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private bool use24HourTime;
     [ObservableProperty] private bool quickAddHotkeyEnabled = true;
     [ObservableProperty] private string quickAddHotkeyGesture = "Ctrl+Shift+R";
+    [ObservableProperty] private bool quickAddAutoListen;
 
     [ObservableProperty] private SpeechToTextEngine speechToTextEngine = SpeechToTextEngine.WindowsSpeechRecognition;
 

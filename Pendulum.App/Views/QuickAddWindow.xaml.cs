@@ -26,6 +26,9 @@ public partial class QuickAddWindow : FluentWindow
             // this window to the foreground so keystrokes land in the input box immediately.
             Win32Interop.ForceForegroundWindow(new WindowInteropHelper(this).Handle);
             Keyboard.Focus(InputBox);
+
+            if (AppServices.Instance.Settings.QuickAddAutoListen)
+                _ = StartListeningAsync();
         };
         Closed += (_, __) =>
         {
@@ -35,7 +38,9 @@ public partial class QuickAddWindow : FluentWindow
         };
     }
 
-    private async void MicButton_Click(object sender, RoutedEventArgs e)
+    private async void MicButton_Click(object sender, RoutedEventArgs e) => await StartListeningAsync();
+
+    private async Task StartListeningAsync()
     {
         if (_listenCts is not null)
             return;

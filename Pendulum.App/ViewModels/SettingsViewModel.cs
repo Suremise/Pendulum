@@ -303,6 +303,7 @@ public partial class SettingsViewModel : ObservableObject
         Settings.Use24HourTime = source.Use24HourTime;
         Settings.QuickAddHotkeyEnabled = source.QuickAddHotkeyEnabled;
         Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;
+        Settings.QuickAddAutoListen = source.QuickAddAutoListen;
         Settings.SpeechToTextEngine = source.SpeechToTextEngine;
         Settings.WhisperModelFileName = source.WhisperModelFileName;
         Settings.TextToSpeechEngine = source.TextToSpeechEngine;
