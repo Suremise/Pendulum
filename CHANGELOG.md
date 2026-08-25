@@ -7,6 +7,21 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-25
+
+### Added
+- Quick Reminder: optional "start listening automatically" setting, so speech
+  input begins the moment the window opens instead of requiring a click on
+  the mic button first.
+- Settings > General: "Check for updates on startup" (on by default) — a
+  single cached check against GitHub once a day; if a newer release exists,
+  a small link appears in the status bar next to About. No auto-download or
+  auto-install.
+
+### Changed
+- About window: License and Third-Party Notices are now inline links instead
+  of separate buttons; removed the redundant Panels summary card.
+
 ## [1.0.0] - 2026-08-25
 
 Initial public release.
@@ -30,5 +45,6 @@ Initial public release.
   mark spent otherwise) instead of getting stuck.
 - Self-contained, no-admin Windows installer.
 
-[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Suremise/Pendulum/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Suremise/Pendulum/releases/tag/v1.0.0
