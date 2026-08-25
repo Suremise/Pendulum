@@ -56,7 +56,7 @@
             </ui:Card>
 
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
-                <Run Text="Author: "/><Run Text="Suremise" FontWeight="SemiBold"/>
+                <Run Text="Author: "/><Run Text="Darren Marshall" FontWeight="SemiBold"/>
             </TextBlock>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
                 <Run Text="Contributors: "/><Run Text="Claude (Sonnet 5)" FontWeight="SemiBold"/>

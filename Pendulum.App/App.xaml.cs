@@ -115,11 +115,11 @@ public partial class App : Application
 
             // Force the window's handle to exist (needed for hotkey registration) without
             // making it visible, so "Start minimized" can skip Show() entirely and launch
-            // straight into the tray instead of flashing the window open first. The very
-            // first launch after install shows it regardless, so a new user actually sees
-            // the app once instead of it silently vanishing into the tray.
+            // straight into the tray instead of flashing the window open first. The first
+            // launch after any install or update shows it regardless, so it's visibly clear
+            // the install worked — after that it reverts to whatever Start minimized says.
             new WindowInteropHelper(mainWindow).EnsureHandle();
-            if (!AppServices.Instance.Settings.StartMinimized || AppServices.Instance.IsFirstLaunch)
+            if (!AppServices.Instance.Settings.StartMinimized || AppServices.Instance.IsFirstLaunch || AppServices.Instance.JustInstalledOrUpdated)
                 mainWindow.Show();
 
             _hotkeyManager = new HotkeyManager();

@@ -53,6 +53,12 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "*.pdb,Data\*"; Flags: rec
 Source: "..\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
+[InstallDelete]
+; Wiped on every install run (fresh install or update-over-existing) so the app's next
+; launch can tell "setup just completed" apart from a normal relaunch and show its window
+; once regardless of Start minimized, even though Data\ (and everything else) is preserved.
+Type: files; Name: "{app}\.postinstall"
+
 [Icons]
 Name: "{group}\Pendulum"; Filename: "{app}\Pendulum.exe"
 Name: "{group}\Uninstall Pendulum"; Filename: "{uninstallexe}"

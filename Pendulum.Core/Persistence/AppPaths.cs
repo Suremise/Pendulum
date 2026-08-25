@@ -10,6 +10,11 @@ public static class AppPaths
     public static string TriggersFile => Path.Combine(DataDirectory, "triggers.json");
     public static string SettingsFile => Path.Combine(DataDirectory, "settings.json");
 
+    /// Lives next to the exe, not in Data\ — the installer deletes it on every run (fresh
+    /// install or update-over-existing), so its absence on launch means "an install just
+    /// completed," distinct from Data\ existing/not existing.
+    public static string PostInstallMarkerFile => Path.Combine(BaseDirectory, ".postinstall");
+
     public static void EnsureDirectories()
     {
         Directory.CreateDirectory(DataDirectory);

@@ -31,6 +31,13 @@ public sealed class AppServices
     /// first-time user isn't left wondering whether the install did anything.
     public bool IsFirstLaunch { get; private set; }
 
+    /// True for the first launch after any install/reinstall/update — including over an
+    /// existing install where Data\ (and IsFirstLaunch) already exists. The installer wipes
+    /// AppPaths.PostInstallMarkerFile on every run, so its absence here means "setup just
+    /// finished." Also used to force the window open once even if StartMinimized is on, so
+    /// updating to a new version visibly confirms the install worked.
+    public bool JustInstalledOrUpdated { get; private set; }
+
     private AppServices()
     {
     }
@@ -43,6 +50,9 @@ public sealed class AppServices
         AppPaths.EnsureDirectories();
 
         IsFirstLaunch = !File.Exists(AppPaths.SettingsFile);
+
+        JustInstalledOrUpdated = !File.Exists(AppPaths.PostInstallMarkerFile);
+        File.WriteAllText(AppPaths.PostInstallMarkerFile, string.Empty);
 
         Settings = SettingsRepository.Load();
         Settings.PropertyChanged += OnSettingsChanged;
