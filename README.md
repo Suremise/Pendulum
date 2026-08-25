@@ -8,10 +8,18 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
   <img src="docs/screenshots/settings.png" width="32%" alt="Settings" />
 </p>
 
-<p align="center">
-  <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" /><br/>
-  <sub>When a reminder comes due, it surfaces as a small topmost popup — sound and/or a spoken phrase, with one click to snooze or dismiss.</sub>
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="docs/screenshots/quick-reminder.png" width="280" alt="Quick Reminder: type or speak a reminder in plain English" /><br/>
+      <sub>Ctrl+Shift+R anywhere, type or speak it — "call mom 3pm", "in 20 min" — and it's scheduled.</sub>
+    </td>
+    <td align="center">
+      <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" /><br/>
+      <sub>When it comes due: a small topmost popup, sound and/or spoken phrase, one click to snooze or dismiss.</sub>
+    </td>
+  </tr>
+</table>
 
 ## Features
 
