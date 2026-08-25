@@ -27,6 +27,3 @@ ARCHIVE/
 # Local-only cache of downloaded speech models (Whisper/Piper etc.) — kept on disk for
 # testing/backup, never in source control (large binaries, not worth the repo/LFS cost).
 resources/
-
-# Local planning notes, not ready to publish as part of the project.
-TODO.md
