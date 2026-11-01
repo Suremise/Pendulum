@@ -87,14 +87,14 @@ public static class QuickAddParser
                 }
                 else
                 {
-                    var (dayWord, dayIndex) = FindWeekday(text);
+                    var (dayStart, dayLength, dayIndex) = FindWeekday(text);
                     if (dayIndex >= 0)
                     {
                         var delta = ((dayIndex - (int)now.DayOfWeek) + 7) % 7;
                         baseDate = now.Date.AddDays(delta);
                         explicitDay = true;
                         namedWeekday = true;
-                        text = RemoveWord(text, dayWord);
+                        text = text[..dayStart] + " " + text[(dayStart + dayLength)..];
                     }
                 }
             }
@@ -196,26 +196,70 @@ public static class QuickAddParser
         return true;
     }
 
-    private static (string Word, int DayIndex) FindWeekday(string text)
+    private static readonly Regex OnJustBefore = new(@"\bon\s+$", RegexOptions.IgnoreCase);
+    private static readonly Regex GapJustBefore = new(@"[\s,]+$");
+    private static readonly Regex GapJustAfter = new(@"^[\s,]+");
+
+    /// Every real time in the text, as ExtractTime would take one: the same patterns and the same
+    /// range checks, so "at 42", "25:10pm" or "123pm" aren't times here either.
+    private static IEnumerable<Match> ValidTimes(string text) =>
+        new[] { TimeWithAt, TimeWithColon }
+            .SelectMany(r => r.Matches(text))
+            .Where(m => BuildTime(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value) is not null)
+            .Concat(TimeWithAmPm.Matches(text)
+                .Where(m => BuildTime(m.Groups[1].Value, string.Empty, m.Groups[2].Value) is not null));
+
+    /// Whether a real time ends just before <paramref name="start"/> (spaces or a comma between).
+    private static bool TimeJustBefore(string text, int start)
     {
-        foreach (Match candidate in Word.Matches(text))
+        var gap = GapJustBefore.Match(text[..start]);
+        return gap.Success && ValidTimes(text).Any(m => m.Index + m.Length == gap.Index);
+    }
+
+    /// Whether a real time starts just after <paramref name="end"/> (spaces or a comma between).
+    private static bool TimeJustAfter(string text, int end)
+    {
+        var gap = GapJustAfter.Match(text[end..]);
+        return gap.Success && ValidTimes(text).Any(m => m.Index == end + gap.Length);
+    }
+
+    /// The weekday the text names, and where it is (with an "on" before it, which goes with it).
+    /// A full name ("saturday") counts anywhere. A three-letter one counts only where it reads as a
+    /// day: next to a time ("sat 9am", "9am sat"), after "on" ("on sat"), or as the last word
+    /// ("gym sat"). So "buy sun cream 3pm" and "sat nav update 2pm" keep their words.
+    private static (int Start, int Length, int DayIndex) FindWeekday(string text)
+    {
+        foreach (var fullNames in new[] { true, false })
         {
-            var word = candidate.Value.ToLowerInvariant();
-            for (var i = 0; i < DayNames.Length; i++)
+            foreach (Match candidate in Word.Matches(text))
             {
-                if (word == DayNames[i] || word == DayAbbreviations[i])
-                    return (candidate.Value, i);
+                var names = fullNames ? DayNames : DayAbbreviations;
+                var dayIndex = Array.IndexOf(names, candidate.Value.ToLowerInvariant());
+                if (dayIndex < 0)
+                    continue;
+
+                var before = text[..candidate.Index];
+                var after = text[(candidate.Index + candidate.Length)..];
+                var on = OnJustBefore.Match(before);
+
+                var readsAsDay = fullNames
+                    || on.Success
+                    || TimeJustBefore(text, candidate.Index)
+                    || TimeJustAfter(text, candidate.Index + candidate.Length)
+                    || (after.Trim(' ', ',', '.').Length == 0 && before.Trim().Length > 0);
+                if (!readsAsDay)
+                    continue;
+
+                var start = on.Success ? on.Index : candidate.Index;
+                return (start, candidate.Index + candidate.Length - start, dayIndex);
             }
         }
 
-        return (string.Empty, -1);
+        return (0, 0, -1);
     }
 
     private static string Remove(string text, Match match) =>
         text[..match.Index] + " " + text[(match.Index + match.Length)..];
-
-    private static string RemoveWord(string text, string word) =>
-        Regex.Replace(text, $@"\b{Regex.Escape(word)}\b", " ", RegexOptions.IgnoreCase);
 
     private static string CleanName(string text) =>
         Regex.Replace(text, @"\s+", " ").Trim(' ', ',', '-', '.');

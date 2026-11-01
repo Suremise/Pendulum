@@ -8,6 +8,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Quick Reminder: "sun", "sat", "wed" and the other short day names are read
+  as days only where they look like one ("gym sat 9am", "9am sat", "on sat"),
+  so "buy sun cream 3pm" is a reminder for 3pm named "buy sun cream", not one
+  for Sunday. Full day names work as before, and an "on" before a day is no
+  longer left in the reminder's name.
 - Restore: choosing a file that isn't a backup no longer renames the file you
   chose, and choosing a settings file by mistake no longer replaces all your
   reminders with none. Pendulum says it isn't a backup and leaves it where it
