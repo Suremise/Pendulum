@@ -12,6 +12,7 @@ using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Persistence;
 using Pendulum.Core.Services;
 
 namespace Pendulum.App;
@@ -136,6 +137,9 @@ public partial class App : Application
             if (missed.Count > 0)
                 NotifyMissedReminders(missed);
 
+            if (AppServices.Instance.DataFileNotices.Count > 0)
+                ShowDataFileNotices(AppServices.Instance.DataFileNotices);
+
             if (AppServices.Instance.Settings.CheckForUpdatesOnStartup)
                 _ = CheckForUpdateAsync(mainWindow);
         }
@@ -202,6 +206,16 @@ public partial class App : Application
 
         settings.HasShownTrayMinimizeHint = true;
         _trayIcon?.ShowNotification(Strings.App_Name, Strings.Tray_StillRunning);
+    }
+
+    /// Says, once, which data files were damaged, what Pendulum used instead, and where the
+    /// damaged copy is kept, so nothing is lost without the user knowing.
+    private static void ShowDataFileNotices(IEnumerable<DataFileNotice> notices)
+    {
+        var lines = notices.Select(n => n.Outcome == StoreOutcome.RecoveredFromBackup
+            ? string.Format(Strings.DataFile_Recovered, n.File, n.SetAsidePath ?? Strings.DataFile_NoDamagedCopy)
+            : string.Format(Strings.DataFile_SetAside, n.File, n.SetAsidePath));
+        MessageBox.Show(string.Join("\n\n", lines), Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private void NotifyMissedReminders(List<string> missed)

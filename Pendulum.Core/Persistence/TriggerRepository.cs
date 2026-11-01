@@ -6,8 +6,11 @@ namespace Pendulum.Core.Persistence;
 
 public class TriggerRepository
 {
-    public List<TriggerTimer> Load() =>
-        JsonStore.Load<List<TriggerTimer>>(AppPaths.TriggersFile) ?? new List<TriggerTimer>();
+    public List<TriggerTimer> Load() => LoadWithOutcome().Value ?? new List<TriggerTimer>();
+
+    /// The reminders and how loading them went (set aside, or recovered from the save before).
+    /// Throws StoreUnreadableException when the file can't be read at all.
+    public StoreLoad<List<TriggerTimer>> LoadWithOutcome() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(AppPaths.TriggersFile);
 
     public void Save(IEnumerable<TriggerTimer> timers) =>
         JsonStore.Save(AppPaths.TriggersFile, timers.ToList());
@@ -32,6 +35,7 @@ public class TriggerRepository
             ?? throw new InvalidDataException(CoreStrings.File_NotReminderList);
     }
 
+    /// Exports to a file the user chose: no .bak is left beside it.
     public void SaveTo(string path, IEnumerable<TriggerTimer> timers) =>
-        JsonStore.Save(path, timers.ToList());
+        JsonStore.Save(path, timers.ToList(), keepBackup: false);
 }

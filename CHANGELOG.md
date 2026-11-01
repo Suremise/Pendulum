@@ -18,6 +18,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Saves survive a power cut or crash: your reminders and settings are written
+  safely, and the save before is kept beside each as a `.bak`. If a file is ever
+  damaged, Pendulum keeps it aside unchanged, uses the save before, and tells you
+  at startup. A file another program has open is never replaced: Pendulum says
+  so instead of starting empty.
 - A repeating reminder that was still ringing when Pendulum closed (Exit, a
   crash, or Windows restarting) no longer stops for good and shows as spent:
   the next start moves it on to its next time, and lists it with the

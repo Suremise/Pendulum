@@ -80,7 +80,9 @@ public sealed class PersistenceTests : IDisposable
         repo.Save(new AppSettings { SnoozeMinutes = 9 });
 
         Assert.Equal(9, repo.Load().SnoozeMinutes);
-        Assert.Equal(new[] { path }, Directory.GetFiles(_temp.Path));
+        // The save before is kept as the .bak; no temp file is left.
+        Assert.Equal(new[] { path, path + ".bak" }, Directory.GetFiles(_temp.Path).Order());
+        Assert.Equal(7, JsonStore.Load<AppSettings>(path + ".bak")!.SnoozeMinutes);
     }
 
     [Fact]
@@ -210,6 +212,186 @@ public sealed class PersistenceTests : IDisposable
         Assert.Null(JsonStore.Load<List<TriggerTimer>>(path));
         var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "triggers.json.corrupt-*"));
         Assert.Equal("[ { \"Name\": \"half a remind", File.ReadAllText(quarantined));
+    }
+
+    // ---- Surviving a damaged save ----
+
+    [Fact]
+    public void A_damaged_file_loads_the_save_before_it_and_is_kept_aside()
+    {
+        var path = _temp.File("triggers.json");
+        JsonStore.Save(path, new List<TriggerTimer> { new() { Name = "Dentist" } });
+        JsonStore.Save(path, new List<TriggerTimer> { new() { Name = "Dentist" }, new() { Name = "Gym" } });
+        File.WriteAllText(path, "");  // what a power cut mid-save can leave
+
+        var load = JsonStore.LoadWithOutcome<List<TriggerTimer>>(path);
+
+        Assert.Equal(StoreOutcome.RecoveredFromBackup, load.Outcome);
+        Assert.Equal(new[] { "Dentist" }, load.Value!.Select(t => t.Name));
+        Assert.NotNull(load.SetAsidePath);
+        Assert.Equal("", File.ReadAllText(load.SetAsidePath!));
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public void A_damaged_file_with_no_earlier_copy_is_reported_and_kept()
+    {
+        var path = _temp.File("triggers.json");
+        File.WriteAllText(path, "[ { \"Name\": \"half a remind");
+
+        var load = JsonStore.LoadWithOutcome<List<TriggerTimer>>(path);
+
+        Assert.Equal(StoreOutcome.SetAside, load.Outcome);
+        Assert.Null(load.Value);
+        Assert.Equal("[ { \"Name\": \"half a remind", File.ReadAllText(load.SetAsidePath!));
+    }
+
+    [Fact]
+    public void A_file_another_program_holds_is_never_set_aside_or_overwritten()
+    {
+        var path = _temp.File("triggers.json");
+        JsonStore.Save(path, new List<TriggerTimer> { new() { Name = "Dentist" } });
+        var before = File.ReadAllText(path);
+        var delays = JsonStore.RetryDelays;
+        JsonStore.RetryDelays = [];
+        try
+        {
+            using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path));
+                Assert.Equal(path, e.Path);
+                Assert.Contains(path, e.Message, StringComparison.Ordinal);
+            }
+        }
+        finally
+        {
+            JsonStore.RetryDelays = delays;
+        }
+
+        Assert.Equal(before, File.ReadAllText(path));
+        Assert.Empty(Directory.GetFiles(_temp.Path, "triggers.json.corrupt-*"));
+    }
+
+    [Fact]
+    public void A_missing_file_whose_earlier_copy_is_held_stops_and_keeps_it()
+    {
+        var path = _temp.File("triggers.json");
+        JsonStore.Save(path + ".bak", new List<TriggerTimer> { new() { Name = "Dentist" } }, keepBackup: false);
+        var before = File.ReadAllText(path + ".bak");
+
+        AssertUnreadableWhileHeld(path + ".bak", path);
+
+        Assert.Equal(before, File.ReadAllText(path + ".bak"));
+        Assert.Empty(Directory.GetFiles(_temp.Path, "*.corrupt-*"));
+    }
+
+    [Fact]
+    public void A_damaged_file_whose_earlier_copy_is_held_stops_with_both_in_place()
+    {
+        var path = _temp.File("triggers.json");
+        JsonStore.Save(path + ".bak", new List<TriggerTimer> { new() { Name = "Dentist" } }, keepBackup: false);
+        File.WriteAllText(path, "");
+        var before = File.ReadAllText(path + ".bak");
+
+        AssertUnreadableWhileHeld(path + ".bak", path);
+
+        Assert.True(File.Exists(path));
+        Assert.Equal(before, File.ReadAllText(path + ".bak"));
+        Assert.Empty(Directory.GetFiles(_temp.Path, "*.corrupt-*"));
+    }
+
+    [Fact]
+    public void A_missing_file_with_a_damaged_earlier_copy_is_reported_and_kept()
+    {
+        var path = _temp.File("triggers.json");
+        File.WriteAllText(path + ".bak", "[ { half");
+
+        var load = JsonStore.LoadWithOutcome<List<TriggerTimer>>(path);
+
+        Assert.Equal(StoreOutcome.SetAside, load.Outcome);
+        Assert.Null(load.Value);
+        Assert.Equal("[ { half", File.ReadAllText(load.SetAsidePath!));
+        Assert.False(File.Exists(path + ".bak"));
+    }
+
+    [Fact]
+    public void When_the_file_and_its_earlier_copy_are_both_damaged_both_are_kept()
+    {
+        var path = _temp.File("triggers.json");
+        File.WriteAllText(path, "{ main");
+        File.WriteAllText(path + ".bak", "{ bak");
+
+        var load = JsonStore.LoadWithOutcome<List<TriggerTimer>>(path);
+
+        Assert.Equal(StoreOutcome.SetAside, load.Outcome);
+        Assert.Equal("{ main", File.ReadAllText(load.SetAsidePath!));
+        var kept = Directory.GetFiles(_temp.Path, "triggers.json.bak.corrupt-*");
+        Assert.Equal("{ bak", File.ReadAllText(Assert.Single(kept)));
+    }
+
+    /// Loading path while held is open with no sharing: StoreUnreadableException naming it.
+    private static void AssertUnreadableWhileHeld(string held, string path)
+    {
+        var delays = JsonStore.RetryDelays;
+        JsonStore.RetryDelays = [];
+        try
+        {
+            using (new FileStream(held, FileMode.Open, FileAccess.Read, FileShare.None))
+            {
+                var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path));
+                Assert.Equal(held, e.Path);
+            }
+        }
+        finally
+        {
+            JsonStore.RetryDelays = delays;
+        }
+    }
+
+    [Fact]
+    public void A_missing_file_with_a_good_earlier_copy_uses_it()
+    {
+        // A save stopped between keeping the .bak and putting the new file in place.
+        var path = _temp.File("settings.json");
+        JsonStore.Save(path + ".bak", new AppSettings { SnoozeMinutes = 11 }, keepBackup: false);
+
+        var load = JsonStore.LoadWithOutcome<AppSettings>(path);
+
+        Assert.Equal(StoreOutcome.RecoveredFromBackup, load.Outcome);
+        Assert.Equal(11, load.Value!.SnoozeMinutes);
+        Assert.Null(load.SetAsidePath);
+    }
+
+    [Fact]
+    public void No_file_at_all_is_a_first_run()
+    {
+        var load = JsonStore.LoadWithOutcome<AppSettings>(_temp.File("settings.json"));
+        Assert.Equal(StoreOutcome.Missing, load.Outcome);
+        Assert.Null(load.Value);
+    }
+
+    [Fact]
+    public void Temp_files_a_cut_off_save_left_are_cleared_and_never_read()
+    {
+        var path = _temp.File("settings.json");
+        JsonStore.Save(path, new AppSettings { SnoozeMinutes = 7 });
+        File.WriteAllText(path + ".0123456789abcdef0123456789abcdef.tmp", "{ half");
+
+        Assert.Equal(7, JsonStore.Load<AppSettings>(path)!.SnoozeMinutes);
+        Assert.Empty(Directory.GetFiles(_temp.Path, "*.tmp"));
+    }
+
+    [Fact]
+    public void Exports_and_backups_the_user_saves_get_no_bak_beside_them()
+    {
+        var export = _temp.File("my-reminders.json");
+        new TriggerRepository().SaveTo(export, [new TriggerTimer { Name = "One" }]);
+        new TriggerRepository().SaveTo(export, [new TriggerTimer { Name = "Two" }]);
+        var backup = _temp.File("my-backup.json");
+        BackupRepository.Save(backup, new AppBackup());
+        BackupRepository.Save(backup, new AppBackup());
+
+        Assert.Equal(new[] { backup, export }, Directory.GetFiles(_temp.Path).Order());
     }
 
     // ---- Files the user picks: to import or restore. Never moved or changed, whatever they hold ----

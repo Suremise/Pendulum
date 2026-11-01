@@ -33,4 +33,5 @@
   <data name="DayKind_Day" xml:space="preserve"><value>day</value><comment>Any day, as "the fourth day".</comment></data>
   <data name="DayKind_Weekday" xml:space="preserve"><value>weekday</value></data>
   <data name="DayKind_WeekendDay" xml:space="preserve"><value>weekend day</value></data>
+  <data name="File_Unreadable" xml:space="preserve"><value>Pendulum couldn't read {0}. Another program may have it open: try again in a moment. Nothing was changed.</value><comment>{0}: the data file's full path. Shown when Pendulum stops at startup rather than start without it.</comment></data>
 </root>

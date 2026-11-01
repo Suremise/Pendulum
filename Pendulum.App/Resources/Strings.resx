@@ -51,6 +51,9 @@ This replaces all your current settings and reminders. This cannot be undone.</v
   <data name="Calendar_MoreFormat" xml:space="preserve"><value>+{0} more</value><comment>{0}: how many more reminders that day.</comment></data>
   <data name="Calendar_SeeYourRemindersLaidOutByDay" xml:space="preserve"><value>See your reminders laid out by day.</value><comment>CalendarPanel.xaml, Text</comment></data>
   <data name="Calendar_Today" xml:space="preserve"><value>Today</value><comment>CalendarPanel.xaml, Content</comment></data>
+  <data name="DataFile_NoDamagedCopy" xml:space="preserve"><value>(it was missing)</value><comment>In DataFile_Recovered, when the file was missing rather than damaged.</comment></data>
+  <data name="DataFile_Recovered" xml:space="preserve"><value>Pendulum couldn't read {0}, so it used the copy from the save before it. The damaged file is kept as {1}.</value><comment>{0}: the data file's full path; {1}: where the damaged file was kept, or DataFile_NoDamagedCopy.</comment></data>
+  <data name="DataFile_SetAside" xml:space="preserve"><value>Pendulum couldn't read {0} and had no earlier copy, so it started without it. The damaged file is kept, unchanged, as {1}.</value><comment>{0}: the data file's full path; {1}: where the damaged file was kept.</comment></data>
   <data name="Dialog_AddSoundTitle" xml:space="preserve"><value>Add sound</value></data>
   <data name="Dialog_AudioFilter" xml:space="preserve"><value>Audio files (*.wav;*.mp3)|*.wav;*.mp3</value><comment>A file dialog's filter: keep the part after |.</comment></data>
   <data name="Dialog_BackupFilter" xml:space="preserve"><value>Pendulum backup (*.json)|*.json</value><comment>A file dialog's filter: keep the part after |.</comment></data>

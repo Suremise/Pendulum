@@ -15,8 +15,11 @@ public class SettingsRepository
 
     private string Path => _path ?? AppPaths.SettingsFile;
 
-    public AppSettings Load() =>
-        JsonStore.Load<AppSettings>(Path) ?? new AppSettings();
+    public AppSettings Load() => LoadWithOutcome().Value ?? new AppSettings();
+
+    /// The settings and how loading them went (set aside, or recovered from the save before).
+    /// Throws StoreUnreadableException when the file can't be read at all.
+    public StoreLoad<AppSettings> LoadWithOutcome() => JsonStore.LoadWithOutcome<AppSettings>(Path);
 
     public void Save(AppSettings settings) =>
         JsonStore.Save(Path, settings);

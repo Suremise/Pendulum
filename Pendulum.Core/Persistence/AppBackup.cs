@@ -14,7 +14,8 @@ public sealed class AppBackup
 
 public static class BackupRepository
 {
-    public static void Save(string path, AppBackup backup) => JsonStore.Save(path, backup);
+    /// Writes a backup to a file the user chose: no .bak is left beside it.
+    public static void Save(string path, AppBackup backup) => JsonStore.Save(path, backup, keepBackup: false);
 
     /// Reads a backup the user chose to restore, or null when the file isn't one. The file is
     /// never moved or changed. A backup names both its settings and its reminders (every backup

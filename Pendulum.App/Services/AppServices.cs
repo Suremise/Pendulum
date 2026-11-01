@@ -27,6 +27,10 @@ public sealed class AppServices
     public ObservableCollection<TriggerTimer> Triggers { get; } = new();
     public AppSettings Settings { get; private set; } = new();
 
+    /// Data files that couldn't be read as they were at startup: each was set aside, and either
+    /// the save before it was used or Pendulum started without it. The App tells the user.
+    public List<DataFileNotice> DataFileNotices { get; } = new();
+
     /// For tests only: settings loaded from a test's own file, without Initialize (which reads
     /// the app's Data\ and can write the Run key). Never called by the app.
     internal void UseSettingsForTests(AppSettings settings) => Settings = settings;
@@ -59,7 +63,9 @@ public sealed class AppServices
         JustInstalledOrUpdated = !File.Exists(AppPaths.PostInstallMarkerFile);
         File.WriteAllText(AppPaths.PostInstallMarkerFile, string.Empty);
 
-        Settings = SettingsRepository.Load();
+        var settingsLoad = SettingsRepository.LoadWithOutcome();
+        Settings = settingsLoad.Value ?? new AppSettings();
+        NoteProblem(AppPaths.SettingsFile, settingsLoad);
         Settings.PropertyChanged += OnSettingsChanged;
         ApplySpeechSettings();
 
@@ -71,7 +77,9 @@ public sealed class AppServices
             Settings.LaunchOnWindowsStartup = StartupRegistration.RegisterOnFirstLaunch();
 
         var now = DateTime.Now;
-        var loaded = TriggerRepository.Load();
+        var triggersLoad = TriggerRepository.LoadWithOutcome();
+        var loaded = triggersLoad.Value ?? new List<TriggerTimer>();
+        NoteProblem(AppPaths.TriggersFile, triggersLoad);
         var missed = TriggerReconciler.CatchUpMissed(loaded, now);
 
         foreach (var t in loaded)
@@ -141,6 +149,12 @@ public sealed class AppServices
         speech.SetRate(Settings.TtsRate);
         speech.SetVolume(Settings.TtsVolume);
         return speech;
+    }
+
+    private void NoteProblem<T>(string file, StoreLoad<T> load) where T : class
+    {
+        if (load.Outcome is StoreOutcome.RecoveredFromBackup or StoreOutcome.SetAside)
+            DataFileNotices.Add(new DataFileNotice(file, load.Outcome, load.SetAsidePath));
     }
 
     private void WireItem(TriggerTimer t) => t.PropertyChanged += (_, e) =>
