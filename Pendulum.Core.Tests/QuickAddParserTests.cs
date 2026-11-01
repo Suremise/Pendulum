@@ -46,7 +46,8 @@ public class QuickAddParserTests
     [InlineData("tomorrow at 14:00 dentist", "dentist", "2026-06-04 14:00")]
     [InlineData("dentist tomorrow", "dentist", "2026-06-04 09:00")]
     [InlineData("report today 4pm", "report", "2026-06-03 16:00")]
-    [InlineData("report today", "report", "2026-06-03 09:00")]
+    // "today" alone is the next whole hour (now is 10:00).
+    [InlineData("report today", "report", "2026-06-03 11:00")]
     // Weekdays: the next one, today's own only while its time is still ahead.
     [InlineData("call bank friday 2pm", "call bank", "2026-06-05 14:00")]
     [InlineData("call bank Fri 2pm", "call bank", "2026-06-05 14:00")]

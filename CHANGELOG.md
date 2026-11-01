@@ -18,6 +18,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Quick Reminder: "today" with a time that has already gone ("report today
+  9am" typed at 10:00) now says the time has passed, instead of adding a
+  reminder that goes off at once. "today" with no time means the next whole
+  hour, and a weekday that's today ("gym wed" on a Wednesday afternoon) means
+  next week's.
 - Whisper speech recognition now works on a PC that doesn't have Microsoft's
   Visual C++ runtime installed: Pendulum ships the runtime files Whisper needs.
   If they're ever missing, Quick Reminder says so before listening, instead of

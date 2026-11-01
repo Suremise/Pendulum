@@ -129,7 +129,7 @@ public partial class QuickAddWindow : FluentWindow
 
         if (result.When is null)
         {
-            ShowError(Strings.QuickAdd_NoTime);
+            ShowError(result.Refusal == QuickAddRefusal.TimePassedToday ? Strings.QuickAdd_TimePassedToday : Strings.QuickAdd_NoTime);
             return;
         }
 

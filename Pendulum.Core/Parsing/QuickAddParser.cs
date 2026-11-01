@@ -3,11 +3,19 @@ using Pendulum.Core.Engine;
 
 namespace Pendulum.Core.Parsing;
 
+/// Why a phrase that names a time gives no reminder.
+public enum QuickAddRefusal
+{
+    /// "today" with a time that has already gone ("report today 9am", typed at 10:00).
+    TimePassedToday,
+}
+
 /// The parsed outcome of a quick-add phrase. <see cref="When"/> is null when no
-/// recognizable time expression was found in the input.
+/// recognizable time expression was found in the input, or when <see cref="Refusal"/> says why
+/// the one found can't be used.
 /// <see cref="DueUtc"/> is set for a time given as a span from now ("in 20 min"): the real
 /// instant, for TriggerTimer.SetDue.
-public sealed record QuickAddResult(string Name, DateTime? When, DateTime? DueUtc = null);
+public sealed record QuickAddResult(string Name, DateTime? When, DateTime? DueUtc = null, QuickAddRefusal? Refusal = null);
 
 /// Rule-based (non-LLM) parser for short reminder phrases like "Call mom 3pm" or
 /// "Standup tomorrow 9am". Recognizes a small, explicit set of time expressions —
@@ -71,12 +79,14 @@ public static class QuickAddParser
             }
         }
 
+        QuickAddRefusal? refusal = null;
         if (when is null)
         {
             var baseDate = now.Date;
             var explicitDay = false;
 
             var namedWeekday = false;
+            var namedToday = false;
 
             var tomorrowMatch = TomorrowWord.Match(text);
             if (tomorrowMatch.Success)
@@ -91,6 +101,7 @@ public static class QuickAddParser
                 if (todayMatch.Success)
                 {
                     explicitDay = true;
+                    namedToday = true;
                     text = Remove(text, todayMatch);
                 }
                 else
@@ -117,18 +128,32 @@ public static class QuickAddParser
                 // Today's own weekday with a time already gone means next week's, not a moment ago.
                 else if (namedWeekday && when <= now)
                     when = when.Value.AddDays(7);
+                // "today" with a time already gone can't be: say so rather than ring at once.
+                else if (namedToday && when <= now)
+                {
+                    when = null;
+                    refusal = QuickAddRefusal.TimePassedToday;
+                }
+            }
+            else if (namedToday)
+            {
+                // "today" alone: the next whole hour (10:20 gives 11:00; 10:00 gives 11:00 too).
+                when = now.Date.AddHours(now.Hour + 1);
             }
             else if (explicitDay)
             {
                 // A day was named but no time — default to a reasonable morning time
-                // rather than silently dropping the day the user typed.
+                // rather than silently dropping the day the user typed. Today's own weekday, once
+                // that time has gone, means next week's.
                 when = baseDate.AddHours(9);
+                if (namedWeekday && when <= now)
+                    when = when.Value.AddDays(7);
             }
         }
 
         // Every time is a wall-clock time, whatever kind of DateTime "now" was.
         var wall = when is { } w ? DateTime.SpecifyKind(w, DateTimeKind.Unspecified) : (DateTime?)null;
-        return new QuickAddResult(CleanName(text), wall, dueUtc);
+        return new QuickAddResult(CleanName(text), wall, dueUtc, refusal);
     }
 
     /// The first real time in the text: "at 9", "at 9:30pm", "14:30", "3pm". A number that isn't
