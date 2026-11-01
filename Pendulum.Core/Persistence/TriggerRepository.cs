@@ -16,6 +16,7 @@ public class TriggerRepository
         JsonStore.Save(AppPaths.TriggersFile, timers.ToList());
 
     /// Reads reminders from a file the user chose to import. The file is never moved or changed.
+    /// A sound that isn't a plain file name in Sounds\ is dropped: that reminder plays none.
     /// Throws InvalidDataException when it doesn't hold a list of Pendulum reminders.
     public List<TriggerTimer> LoadFrom(string path)
     {
@@ -31,8 +32,10 @@ public class TriggerRepository
             throw new InvalidDataException(CoreStrings.File_NotPendulumFormat, e);
         }
 
-        return JsonStore.DeserializeUserJson<List<TriggerTimer>>(json)
+        var reminders = JsonStore.DeserializeUserJson<List<TriggerTimer>>(json)
             ?? throw new InvalidDataException(CoreStrings.File_NotReminderList);
+        DataFileName.Clean(reminders);
+        return reminders;
     }
 
     /// Exports to a file the user chose: no .bak is left beside it.

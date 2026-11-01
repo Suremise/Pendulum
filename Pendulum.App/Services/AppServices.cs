@@ -131,9 +131,8 @@ public sealed class AppServices
     {
         if (Settings.TextToSpeechEngine == TextToSpeechEngine.Piper
             && IsPiperExecutableAvailable
-            && Settings.PiperVoiceModelFileName is { } modelFileName)
+            && DataFileName.PathInside(AppPaths.PiperModelsDirectory, Settings.PiperVoiceModelFileName) is { } modelPath)
         {
-            var modelPath = Path.Combine(AppPaths.PiperModelsDirectory, modelFileName);
             if (File.Exists(modelPath))
             {
                 // SAPI's Rate is -10 (slowest) to +10 (fastest); Piper's length_scale is the
@@ -190,12 +189,10 @@ public sealed class AppServices
         TriggerRepository.Save(Triggers);
     }
 
-    public string ResolveSoundPath(string? fileName)
-    {
-        if (string.IsNullOrWhiteSpace(fileName))
-            return string.Empty;
-        return Path.Combine(AppPaths.SoundsDirectory, fileName);
-    }
+    /// The full path of a sound in Sounds\, or empty for none. A name that isn't a plain file
+    /// name there (a full or network path, or "..") is never used: it plays no sound.
+    public string ResolveSoundPath(string? fileName) =>
+        DataFileName.PathInside(AppPaths.SoundsDirectory, fileName) ?? string.Empty;
 
     public List<string> GetAvailableSoundFiles()
     {

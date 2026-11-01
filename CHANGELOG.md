@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Imported reminders and restored backups can no longer make Pendulum play a
+  sound or load a voice or speech model from outside its own folders (a full
+  path, a network share or ".."): such a name is dropped, and that reminder
+  plays no sound. Sounds in `Sounds\` and models in `Data\` work as before.
 - A reminder's alert could be lost without a trace when saving the reminders
   list failed at the moment it went off (for example while another program had
   the file open), and so could the alerts of other reminders due at the same

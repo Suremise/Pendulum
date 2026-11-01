@@ -47,8 +47,9 @@ public partial class QuickAddWindow : FluentWindow
             return;
 
         var settings = AppServices.Instance.Settings;
-        var whisperModel = settings.WhisperModelFileName;
-        var useWhisper = settings.SpeechToTextEngine == SpeechToTextEngine.Whisper && !string.IsNullOrEmpty(whisperModel);
+        // Only a plain file name in Data\WhisperModels\ is ever loaded.
+        var modelPath = DataFileName.PathInside(AppPaths.WhisperModelsDirectory, settings.WhisperModelFileName);
+        var useWhisper = settings.SpeechToTextEngine == SpeechToTextEngine.Whisper && modelPath is not null;
 
         ErrorText.Visibility = Visibility.Collapsed;
         MicButton.IsEnabled = false;
@@ -61,8 +62,7 @@ public partial class QuickAddWindow : FluentWindow
             string? text;
             if (useWhisper)
             {
-                var modelPath = Path.Combine(AppPaths.WhisperModelsDirectory, whisperModel!);
-                text = await _whisperSpeech.ListenOnceAsync(modelPath, () => MicButton.ToolTip = Strings.QuickAdd_Transcribing, _listenCts.Token);
+                text = await _whisperSpeech.ListenOnceAsync(modelPath!, () => MicButton.ToolTip = Strings.QuickAdd_Transcribing, _listenCts.Token);
             }
             else
             {

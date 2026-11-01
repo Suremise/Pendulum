@@ -37,7 +37,17 @@ public static class BackupRepository
                     return null;
             }
 
-            return JsonStore.DeserializeUserJson<AppBackup>(json);
+            var backup = JsonStore.DeserializeUserJson<AppBackup>(json);
+            if (backup is not null)
+            {
+                // A backup can come from anywhere: sounds, voices and models must be plain file
+                // names in Pendulum's own folders.
+                DataFileName.Clean(backup.Triggers);
+                if (backup.Settings is not null)
+                    DataFileName.Clean(backup.Settings);
+            }
+
+            return backup;
         }
         catch (Exception e) when (e is JsonException or InvalidDataException or IOException or UnauthorizedAccessException)
         {
