@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Pendulum.Core.Models;
 
 namespace Pendulum.Core.Persistence;
@@ -15,5 +16,31 @@ public static class BackupRepository
 {
     public static void Save(string path, AppBackup backup) => JsonStore.Save(path, backup);
 
-    public static AppBackup? Load(string path) => JsonStore.Load<AppBackup>(path);
+    /// Reads a backup the user chose to restore, or null when the file isn't one. The file is
+    /// never moved or changed. A backup names both its settings and its reminders (every backup
+    /// since 1.0.0 does), so another JSON file, such as a settings.json or a reminders export,
+    /// can't be taken for an empty backup and wipe the reminders.
+    public static AppBackup? Load(string path)
+    {
+        try
+        {
+            var json = File.ReadAllText(path);
+            using (var doc = JsonDocument.Parse(json))
+            {
+                var root = doc.RootElement;
+                if (root.ValueKind != JsonValueKind.Object
+                    || !root.TryGetProperty(nameof(AppBackup.Settings), out var settings)
+                    || !PendulumFileShape.IsSettings(settings)
+                    || !root.TryGetProperty(nameof(AppBackup.Triggers), out var triggers)
+                    || !PendulumFileShape.IsReminderList(triggers))
+                    return null;
+            }
+
+            return JsonStore.DeserializeUserJson<AppBackup>(json);
+        }
+        catch (Exception e) when (e is JsonException or InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
 }

@@ -201,20 +201,89 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public void Without_a_reminders_file_the_list_is_empty()
+    public void The_apps_own_corrupt_reminders_file_is_kept_aside_not_overwritten()
     {
-        Assert.Empty(new TriggerRepository().LoadFrom(_temp.File("missing.json")));
-    }
-
-    [Fact]
-    public void A_corrupt_reminders_file_is_kept_aside_not_overwritten()
-    {
+        // triggers.json in Data\ goes through JsonStore.Load, which sets a bad file aside.
         var path = _temp.File("triggers.json");
         File.WriteAllText(path, "[ { \"Name\": \"half a remind");
 
-        Assert.Empty(new TriggerRepository().LoadFrom(path));
+        Assert.Null(JsonStore.Load<List<TriggerTimer>>(path));
         var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "triggers.json.corrupt-*"));
         Assert.Equal("[ { \"Name\": \"half a remind", File.ReadAllText(quarantined));
+    }
+
+    // ---- Files the user picks: to import or restore. Never moved or changed, whatever they hold ----
+
+    public static TheoryData<string, string> NotPendulumFiles => new()
+    {
+        { "notes.json", "{ \"title\": \"shopping\", \"items\": [\"milk\"] }" },
+        { "half.json", "[ { \"Name\": \"half a remind" },
+        { "empty.json", "" },
+        { "words.json", "not json at all" },
+        { "null.json", "null" },
+        { "numbers.json", "[1, 2, 3]" },
+        { "empty-object.json", "{}" },
+    };
+
+    [Theory]
+    [MemberData(nameof(NotPendulumFiles))]
+    public void Importing_a_file_that_isnt_reminders_says_so_and_leaves_it_where_it_was(string name, string content)
+    {
+        var path = _temp.File(name);
+        File.WriteAllText(path, content);
+        var written = File.GetLastWriteTimeUtc(path);
+
+        Assert.Throws<InvalidDataException>(() => new TriggerRepository().LoadFrom(path));
+
+        AssertUntouched(path, content, written);
+    }
+
+    [Theory]
+    [MemberData(nameof(NotPendulumFiles))]
+    public void Restoring_a_file_that_isnt_a_backup_finds_no_backup_and_leaves_it_where_it_was(string name, string content)
+    {
+        var path = _temp.File(name);
+        File.WriteAllText(path, content);
+        var written = File.GetLastWriteTimeUtc(path);
+
+        Assert.Null(BackupRepository.Load(path));
+
+        AssertUntouched(path, content, written);
+    }
+
+    [Fact]
+    public void Importing_a_backup_says_it_isnt_reminders_and_leaves_it_where_it_was()
+    {
+        var path = _temp.File("backup.json");
+        BackupRepository.Save(path, new AppBackup { Settings = new AppSettings(), Triggers = SampleReminders() });
+        var content = File.ReadAllText(path);
+
+        Assert.Throws<InvalidDataException>(() => new TriggerRepository().LoadFrom(path));
+
+        AssertUntouched(path, content, File.GetLastWriteTimeUtc(path));
+    }
+
+    [Fact]
+    public void Importing_a_file_thats_gone_says_so()
+    {
+        Assert.Throws<FileNotFoundException>(() => new TriggerRepository().LoadFrom(_temp.File("missing.json")));
+    }
+
+    [Fact]
+    public void An_empty_reminders_export_imports_nothing()
+    {
+        var path = _temp.File("none.json");
+        new TriggerRepository().SaveTo(path, Array.Empty<TriggerTimer>());
+
+        Assert.Empty(new TriggerRepository().LoadFrom(path));
+    }
+
+    private void AssertUntouched(string path, string content, DateTime writtenUtc)
+    {
+        Assert.True(File.Exists(path), "the user's file was moved");
+        Assert.Equal(content, File.ReadAllText(path));
+        Assert.Equal(writtenUtc, File.GetLastWriteTimeUtc(path));
+        Assert.Equal(new[] { path }, Directory.GetFiles(_temp.Path));
     }
 
     // ---- Backups ----
@@ -238,9 +307,49 @@ public sealed class PersistenceTests : IDisposable
     {
         var path = _temp.File("export.json");
         new TriggerRepository().SaveTo(path, SampleReminders());
+        var content = File.ReadAllText(path);
 
-        // A list where an object should be: not a backup (and the file is kept aside, not lost).
         Assert.Null(BackupRepository.Load(path));
+        AssertUntouched(path, content, File.GetLastWriteTimeUtc(path));
+    }
+
+    [Fact]
+    public void A_settings_file_isnt_taken_for_an_empty_backup()
+    {
+        // Restoring one would otherwise replace every reminder with none.
+        var path = _temp.File("settings.json");
+        JsonStore.Save(path, new AppSettings { SnoozeMinutes = 9 });
+        var content = File.ReadAllText(path);
+
+        Assert.Null(BackupRepository.Load(path));
+        AssertUntouched(path, content, File.GetLastWriteTimeUtc(path));
+    }
+
+    [Theory]
+    [InlineData("""{ "Settings": {}, "Triggers": null }""")]
+    [InlineData("""{ "Settings": null, "Triggers": [] }""")]
+    [InlineData("""{ "Triggers": [] }""")]
+    [InlineData("""{ "Settings": {} }""")]
+    [InlineData("""[ { "Settings": {}, "Triggers": [] } ]""")]
+    public void A_backup_must_have_both_its_settings_and_its_reminders(string json)
+    {
+        var path = _temp.File("backup.json");
+        File.WriteAllText(path, json);
+
+        Assert.Null(BackupRepository.Load(path));
+        AssertUntouched(path, json, File.GetLastWriteTimeUtc(path));
+    }
+
+    [Fact]
+    public void A_backup_with_no_reminders_still_restores()
+    {
+        var path = _temp.File("backup.json");
+        BackupRepository.Save(path, new AppBackup { Settings = new AppSettings { SnoozeMinutes = 9 }, Triggers = new() });
+
+        var backup = BackupRepository.Load(path)!;
+
+        Assert.Empty(backup.Triggers);
+        Assert.Equal(9, backup.Settings!.SnoozeMinutes);
     }
 
     // ---- Upgrading: Data folders as 1.0.0 and 1.1.0 wrote them ----

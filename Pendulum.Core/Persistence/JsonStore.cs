@@ -26,6 +26,26 @@ public static class JsonStore
         }
     }
 
+    /// Reads a file the user chose (a backup to restore, reminders to import). Unlike Load, a file
+    /// it can't read is never moved or changed: it's the user's, wherever they keep it. Throws
+    /// InvalidDataException when the file isn't JSON of the expected shape.
+    public static T? ReadUserFile<T>(string path) where T : class =>
+        DeserializeUserJson<T>(File.ReadAllText(path));
+
+    /// The text of a file the user chose, read as <typeparamref name="T"/>: InvalidDataException
+    /// when it isn't JSON of that shape.
+    internal static T? DeserializeUserJson<T>(string json) where T : class
+    {
+        try
+        {
+            return JsonSerializer.Deserialize<T>(json, Options);
+        }
+        catch (JsonException e)
+        {
+            throw new InvalidDataException("The file isn't in Pendulum's format.", e);
+        }
+    }
+
     public static void Save<T>(string path, T value)
     {
         var dir = Path.GetDirectoryName(path);

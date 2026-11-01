@@ -8,6 +8,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Restore: choosing a file that isn't a backup no longer renames the file you
+  chose, and choosing a settings file by mistake no longer replaces all your
+  reminders with none. Pendulum says it isn't a backup and leaves it where it
+  was.
+- Import: choosing a file that doesn't hold reminders now says so, instead of
+  reporting "Imported 0 reminder(s)", and leaves the file where it was.
 - Launch on Windows startup: the first run of a second copy of Pendulum (a
   portable copy, or one unzipped to try out) no longer takes over the startup
   entry from your installed Pendulum, and turning the setting off in that copy
