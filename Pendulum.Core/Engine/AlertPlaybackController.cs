@@ -48,16 +48,20 @@ public class AlertPlaybackController : IDisposable
     /// The running loop, for tests: it completes once the alert has finished or been stopped.
     internal Task Running => _loop;
 
-    public void Start(string? soundPath, AlertMode mode, string? phrase, bool repeatUntilDismissed, float volume = 1.0f)
+    /// Starts the sound-then-phrase cycle. <paramref name="speakOnce"/>: the phrase is spoken on the
+    /// first cycle only (the sound still repeats): for an alert whose turn comes after others were
+    /// dealt with, which says what it is once rather than over and over.
+    public void Start(string? soundPath, AlertMode mode, string? phrase, bool repeatUntilDismissed, float volume = 1.0f, bool speakOnce = false)
     {
         Stop();
         _reported.Clear();
         _cts = new CancellationTokenSource();
-        _loop = RunLoopAsync(soundPath, mode, phrase, repeatUntilDismissed, volume, _cts.Token);
+        _loop = RunLoopAsync(soundPath, mode, phrase, repeatUntilDismissed, volume, speakOnce, _cts.Token);
     }
 
-    private async Task RunLoopAsync(string? soundPath, AlertMode mode, string? phrase, bool repeat, float volume, CancellationToken token)
+    private async Task RunLoopAsync(string? soundPath, AlertMode mode, string? phrase, bool repeat, float volume, bool speakOnce, CancellationToken token)
     {
+        var spoken = false;
         try
         {
             do
@@ -68,8 +72,12 @@ public class AlertPlaybackController : IDisposable
                 if (token.IsCancellationRequested)
                     break;
 
-                if ((mode == AlertMode.SoundAndSpeech || mode == AlertMode.SpeechOnly) && !string.IsNullOrWhiteSpace(phrase))
+                if ((mode == AlertMode.SoundAndSpeech || mode == AlertMode.SpeechOnly) && !string.IsNullOrWhiteSpace(phrase)
+                    && !(speakOnce && spoken))
+                {
                     await SpeakAsync(phrase, token);
+                    spoken = true;
+                }
 
                 if (token.IsCancellationRequested || !repeat)
                     break;

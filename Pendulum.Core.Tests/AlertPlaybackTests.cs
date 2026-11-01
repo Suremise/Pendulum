@@ -129,6 +129,38 @@ public sealed class AlertPlaybackTests : IDisposable
         Assert.True(playback.Task.IsCompletedSuccessfully);
     }
 
+    // ---- An alert whose turn has come: says what it is once, then keeps sounding ----
+
+    [Fact]
+    public async Task Speaking_once_says_the_phrase_on_the_first_cycle_and_the_sound_goes_on()
+    {
+        var sound = new FakeSound();
+        var speech = new FakeSpeech();
+        using var playback = new AlertPlaybackController(sound, speech);
+
+        playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true, speakOnce: true);
+        await WaitUntil(() => sound.Attempts >= 4);
+        playback.Stop();
+        await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal(new[] { "Dentist" }, speech.Spoken);
+    }
+
+    [Fact]
+    public async Task Without_speaking_once_the_phrase_repeats_as_before()
+    {
+        var sound = new FakeSound();
+        var speech = new FakeSpeech();
+        using var playback = new AlertPlaybackController(sound, speech);
+
+        playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true);
+        await WaitUntil(() => speech.Spoken.Count >= 3);
+        playback.Stop();
+        await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.True(speech.Spoken.Count >= 3);
+    }
+
     private static async Task WaitUntil(Func<bool> condition)
     {
         var clock = Stopwatch.StartNew();

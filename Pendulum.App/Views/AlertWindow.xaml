@@ -29,7 +29,11 @@
             </StackPanel>
             <TextBlock x:Name="TitleText" Text="" FontSize="21" FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,4"/>
             <TextBlock x:Name="SubtitleText" Text="" FontSize="13" Foreground="#FFEBD3DC" TextWrapping="Wrap" Margin="0,0,0,20"/>
+            <TextBlock x:Name="WaitingText" Text="{x:Static res:Strings.Alert_Waiting}" FontSize="12" FontStyle="Italic"
+                       Foreground="#FFE3A9BD" TextWrapping="Wrap" Margin="0,-12,0,16" Visibility="Collapsed"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button x:Name="DismissAllButton" Content="{x:Static res:Strings.Alert_DismissAll}" Appearance="Secondary" Margin="0,0,10,0"
+                           Visibility="Collapsed" Click="DismissAllButton_Click"/>
                 <ui:Button x:Name="SnoozeButton" Content="{x:Static res:Strings.Alert_Snooze}" Appearance="Secondary" Margin="0,0,10,0" Click="SnoozeButton_Click"/>
                 <ui:Button x:Name="DismissButton" Content="{x:Static res:Strings.Alert_Dismiss}" Appearance="Primary" Click="DismissButton_Click"/>
             </StackPanel>

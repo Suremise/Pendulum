@@ -52,11 +52,28 @@ public partial class AlertWindow : Window
         };
     }
 
+    /// A newer alert has the sound: this one says it's waiting its turn. The line changes the
+    /// alert's height, so an alert already on screen re-stacks the rest around its new size.
+    public void SetWaiting(bool waiting)
+    {
+        WaitingText.Visibility = waiting ? Visibility.Visible : Visibility.Collapsed;
+        if (OpenWindows.Contains(this))
+            RestackOpenWindows();
+    }
+
     // Re-positions every open alert (AlertLayout: columns from the bottom-right corner, newest at
     // the bottom, all on screen however many) — run whenever one opens or closes so the rest move
     // to fill the gap rather than leaving new alerts to draw directly on top of existing ones.
     private static void RestackOpenWindows()
     {
+        // "Dismiss all" whenever there's more than one.
+        var several = OpenWindows.Count > 1 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var w in OpenWindows)
+        {
+            w.DismissAllButton.Visibility = several;
+            w.UpdateLayout();   // heights as they are now (SizeToContent), not before a change
+        }
+
         var sizes = OpenWindows.Select(w => new Size(w.Width, w.ActualHeight)).ToList();
         var positions = AlertLayout.Place(_workArea, sizes);
         for (var i = 0; i < OpenWindows.Count; i++)
@@ -76,6 +93,17 @@ public partial class AlertWindow : Window
             return SystemParameters.WorkArea;
 
         return new Rect(m.Transform(new Point(p.Left, p.Top)), m.Transform(new Point(p.Right, p.Bottom)));
+    }
+
+    // Every open alert dismissed, each as its own Dismiss would. Oldest first, so the ringing
+    // (newest) one goes last and no waiting alert starts ringing on the way.
+    private void DismissAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var w in OpenWindows.ToList())
+        {
+            w.Dismissed?.Invoke();
+            w.Close();
+        }
     }
 
     private void DismissButton_Click(object sender, RoutedEventArgs e)

@@ -123,6 +123,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- With several alerts open, only the newest makes a sound; the others stay on
+  screen, marked as waiting. Dismiss or snooze it and the next newest rings,
+  saying its phrase once. A "Dismiss all" button appears when more than one
+  alert is open.
 - The installer is about 1 MB smaller, and Pendulum takes 3.5 MB less once
   installed: it no longer carries copies of the Whisper speech libraries for
   32-bit and ARM PCs, which it never used.

@@ -29,6 +29,8 @@
   <data name="About_WindowsVersion" xml:space="preserve"><value>Windows {0} (build {1})</value><comment>{0}: 10 or 11; {1}: the build.</comment></data>
   <data name="About_WindowsVersionRelease" xml:space="preserve"><value>Windows {0} {1} (build {2})</value><comment>{0}: 10 or 11; {1}: the release, as 24H2; {2}: the build.</comment></data>
   <data name="Alert_AppNameHeading" xml:space="preserve"><value>PENDULUM</value><comment>AlertWindow.xaml, Text</comment></data>
+  <data name="Alert_DismissAll" xml:space="preserve"><value>Dismiss all</value><comment>AlertWindow.xaml, Content: shown when more than one alert is open.</comment></data>
+  <data name="Alert_Waiting" xml:space="preserve"><value>Waiting: it will ring once you've dealt with the newer alert.</value><comment>AlertWindow.xaml, Text: on an alert that's silent while a newer one rings.</comment></data>
   <data name="Alert_Dismiss" xml:space="preserve"><value>Dismiss</value><comment>AlertWindow.xaml, Content</comment></data>
   <data name="Alert_Snooze" xml:space="preserve"><value>Snooze</value><comment>AlertWindow.xaml, Content</comment></data>
   <data name="App_FailedToStart" xml:space="preserve"><value>Pendulum failed to start and logged the details to Data\crash.log.

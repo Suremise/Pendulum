@@ -9,6 +9,35 @@ namespace Pendulum.App.Services;
 
 public static class AlertCoordinator
 {
+    /// One open alert: its playback and its window, and how it plays when it's its turn.
+    private sealed class Session(AlertPlaybackController playback, AlertWindow window, string? soundPath, AlertMode mode, string? phrase, bool repeat, float volume)
+    {
+        public AlertWindow Window => window;
+
+        /// Its turn: sound and speech, the phrase once if it waited for its turn.
+        public void Ring(bool turnCame)
+        {
+            window.SetWaiting(false);
+            playback.Start(soundPath, mode, phrase, repeat, volume, speakOnce: turnCame);
+        }
+
+        /// A newer alert rings: this one waits, silent and still on screen.
+        public void Silence()
+        {
+            playback.Stop();
+            window.SetWaiting(true);
+        }
+    }
+
+    // Only the newest open alert makes a sound; dismissing or snoozing it hands the sound on.
+    private static readonly AlertQueue<Session> Queue = new();
+
+    private static void Apply(AlertQueue<Session>.Handover change)
+    {
+        change.Silence?.Silence();
+        change.Ring?.Ring(change.TurnCame);
+    }
+
     public static void Fire(
         string title,
         string subtitle,
@@ -37,9 +66,8 @@ public static class AlertCoordinator
             speech,
             speech is PiperSpeechService ? services.CreateWindowsSpeechEngine : null,
             problem => CrashLog.Write($"Alert {problem.Step}{(problem.FellBackToWindowsSpeech ? " (fell back to the Windows voice)" : "")}", problem.Error));  // not user-visible
-        playback.Start(soundPath, mode, phrase, repeat, volume);
-
         var window = new AlertWindow(title, subtitle, canSnooze);
+        var session = new Session(playback, window, soundPath, mode, phrase, repeat, volume);
         window.Dismissed += () => onDismiss?.Invoke();
         window.Snoozed += () => onSnooze?.Invoke();
         window.Closed += (_, __) =>
@@ -47,7 +75,9 @@ public static class AlertCoordinator
             playback.Dispose();
             audio.Dispose();
             speech.Dispose();
+            Apply(Queue.Close(session));
         };
+        Apply(Queue.Open(session));
 
         // A non-repeating alert plays its sound/phrase once and then just sits there —
         // if nobody's at the desk to click it, resolve it the same way Dismiss would
