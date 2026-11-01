@@ -46,6 +46,7 @@ This replaces all your current settings and reminders. This cannot be undone.</v
 {0}</value><comment>{0}: the error's message.</comment></data>
   <data name="Backup_Done" xml:space="preserve"><value>Backed up settings and {0} reminder(s) to {1}.</value><comment>{0}: how many reminders; {1}: the file's name.</comment></data>
   <data name="Backup_NotValid" xml:space="preserve"><value>That file isn't a valid Pendulum backup.</value></data>
+  <data name="Backup_RestoredCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows Backup_Restored. {0}: how many reminders.</comment></data>
   <data name="Backup_Restored" xml:space="preserve"><value>Restored settings and {0} reminder(s).</value><comment>{0}: how many reminders.</comment></data>
   <data name="Calendar_Calendar" xml:space="preserve"><value>Calendar</value><comment>CalendarPanel.xaml, Text</comment></data>
   <data name="Calendar_MoreFormat" xml:space="preserve"><value>+{0} more</value><comment>{0}: how many more reminders that day.</comment></data>
@@ -196,6 +197,7 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Reminders_From" xml:space="preserve"><value>From</value><comment>TriggersPanel.xaml, Text</comment></data>
   <data name="Reminders_Import" xml:space="preserve"><value>Import...</value><comment>TriggersPanel.xaml, Content</comment></data>
   <data name="Reminders_Imported" xml:space="preserve"><value>Imported {0} reminder(s)</value><comment>{0}: how many; Reminders_ImportedReplaced and _Skipped may follow.</comment></data>
+  <data name="Reminders_ImportedCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows the import summary. {0}: how many reminders.</comment></data>
   <data name="Reminders_ImportedReplaced" xml:space="preserve"><value> ({0} replaced)</value><comment>{0}: how many.</comment></data>
   <data name="Reminders_ImportedSkipped" xml:space="preserve"><value>, skipped {0}</value><comment>{0}: how many.</comment></data>
   <data name="Reminders_MODE" xml:space="preserve"><value>MODE</value><comment>TriggersPanel.xaml, Text</comment></data>

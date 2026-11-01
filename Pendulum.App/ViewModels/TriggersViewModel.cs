@@ -438,6 +438,8 @@ public partial class TriggersViewModel : ObservableObject
         if (result.Skipped > 0)
             summary += string.Format(Strings.Reminders_ImportedSkipped, result.Skipped);
         summary += ".";
+        if (result.CaughtUp > 0)
+            summary += string.Format(Strings.Reminders_ImportedCaughtUp, result.CaughtUp);
 
         MessageBox.Show(
             Application.Current.MainWindow!,

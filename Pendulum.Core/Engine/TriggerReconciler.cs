@@ -44,9 +44,15 @@ public static class TriggerReconciler
     /// Resolves every trigger that came due while the app wasn't running: a recurring one moves
     /// on to its next future occurrence, anything else is marked spent. Returns the names of the
     /// triggers it resolved, for the "missed while Pendulum was closed" notice.
-    public static List<string> CatchUpMissed(IEnumerable<TriggerTimer> triggers, DateTime now)
+    public static List<string> CatchUpMissed(IEnumerable<TriggerTimer> triggers, DateTime now) =>
+        CatchUpMissedTriggers(triggers, now).Select(t => t.Name).ToList();
+
+    /// As <see cref="CatchUpMissed"/>, returning the triggers it resolved. Also for reminders
+    /// coming in from an import or a backup, before they reach the engine, so ones already past
+    /// their time are moved on or marked spent instead of all ringing at once.
+    public static List<TriggerTimer> CatchUpMissedTriggers(IEnumerable<TriggerTimer> triggers, DateTime now)
     {
-        var missed = new List<string>();
+        var missed = new List<TriggerTimer>();
 
         foreach (var t in triggers)
         {
@@ -71,7 +77,7 @@ public static class TriggerReconciler
             }
 
             AdvancePastFiring(t, now);
-            missed.Add(t.Name);
+            missed.Add(t);
         }
 
         return missed;

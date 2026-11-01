@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Importing reminders or restoring a backup no longer rings every reminder in
+  it whose time has already gone, all at once. Those are moved on to their
+  next time, or marked spent, as when Pendulum starts after being closed, and
+  the summary says how many.
 - Imported reminders and restored backups can no longer make Pendulum play a
   sound or load a voice or speech model from outside its own folders (a full
   path, a network share or ".."): such a name is dropped, and that reminder

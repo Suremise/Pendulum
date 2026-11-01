@@ -10,7 +10,9 @@ using Pendulum.Core.Speech;
 
 namespace Pendulum.App.Services;
 
-public readonly record struct ImportResult(int Added, int Replaced, int Skipped);
+/// <param name="CaughtUp">Of those added or replaced, how many were already past their time: moved
+/// on to their next occurrence, or marked spent, so they don't all ring at once.</param>
+public readonly record struct ImportResult(int Added, int Replaced, int Skipped, int CaughtUp);
 
 /// Single shared instance holding the app's services and live state.
 /// Deliberately simple (no DI container) given the app's size.
@@ -219,7 +221,9 @@ public sealed class AppServices
     public ImportResult ImportTriggersMerge(string path, Func<string, bool> confirmReplace)
     {
         var imported = TriggerRepository.LoadFrom(path);
-        int added = 0, replaced = 0, skipped = 0;
+        // Before any reaches the engine: ones already past their time move on, or are spent.
+        var caughtUp = TriggerReconciler.CatchUpMissedTriggers(imported, DateTime.Now).ToHashSet();
+        int added = 0, replaced = 0, skipped = 0, caughtUpTaken = 0;
 
         foreach (var t in imported)
         {
@@ -230,6 +234,7 @@ public sealed class AppServices
                 t.Id = Guid.NewGuid();
                 AddTrigger(t);
                 added++;
+                if (caughtUp.Contains(t)) caughtUpTaken++;
             }
             else if (confirmReplace(t.Name))
             {
@@ -237,6 +242,7 @@ public sealed class AppServices
                 t.Id = Guid.NewGuid();
                 AddTrigger(t);
                 replaced++;
+                if (caughtUp.Contains(t)) caughtUpTaken++;
             }
             else
             {
@@ -244,7 +250,7 @@ public sealed class AppServices
             }
         }
 
-        return new ImportResult(added, replaced, skipped);
+        return new ImportResult(added, replaced, skipped, caughtUpTaken);
     }
 
     /// Exports settings and reminders together, for moving the whole app to another computer.
@@ -253,10 +259,14 @@ public sealed class AppServices
 
     /// Replaces all reminders with the ones in the backup and returns it so the caller can
     /// also apply its settings. Throws if the file isn't a valid Pendulum backup.
-    public AppBackup RestoreBackup(string path)
+    public AppBackup RestoreBackup(string path, out int caughtUp)
     {
         var backup = BackupRepository.Load(path)
             ?? throw new InvalidOperationException(Strings.Backup_NotValid);
+
+        // Before any reaches the engine: ones already past their time move on, or are spent,
+        // instead of all ringing at once.
+        caughtUp = TriggerReconciler.CatchUpMissedTriggers(backup.Triggers, DateTime.Now).Count;
 
         // Build the full replacement in memory and persist once at the end, instead of wiping
         // triggers.json to empty and then saving again after every single re-added item — a

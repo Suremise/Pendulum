@@ -254,9 +254,10 @@ public partial class SettingsViewModel : ObservableObject
             return;
 
         AppBackup backup;
+        int caughtUp;
         try
         {
-            backup = AppServices.Instance.RestoreBackup(dialog.FileName);
+            backup = AppServices.Instance.RestoreBackup(dialog.FileName, out caughtUp);
         }
         catch (Exception ex)
         {
@@ -274,7 +275,8 @@ public partial class SettingsViewModel : ObservableObject
 
         MessageBox.Show(
             Application.Current.MainWindow!,
-            string.Format(Strings.Backup_Restored, backup.Triggers.Count),
+            string.Format(Strings.Backup_Restored, backup.Triggers.Count)
+                + (caughtUp > 0 ? string.Format(Strings.Backup_RestoredCaughtUp, caughtUp) : ""),
             Strings.App_Name,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
