@@ -7,7 +7,7 @@
   #define MyAppVersion "1.0.0"
 #endif
 #ifndef SourceDir
-  #define SourceDir "..\Pendulum.App\bin\Release\net8.0-windows\win-x64"
+  #define SourceDir "..\Pendulum.App\bin\Release\net10.0-windows\win-x64"
 #endif
 
 [Setup]

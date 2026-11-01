@@ -8,6 +8,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Runs on .NET 10, Microsoft's current long-term support release, in place of
+  .NET 8, whose support ends in November 2026. The installer still includes
+  everything it needs: there's nothing extra to install, and your reminders and
+  settings carry over.
 - The update check is now off for new installs: Pendulum goes online only if you
   turn on Settings > General > "Check for updates on startup". If you already
   had it on, it stays on. The README's new Privacy section says exactly what

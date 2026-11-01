@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Version>1.1.0</Version>
     <Product>Pendulum</Product>
     <Company>Darren Marshall</Company>
@@ -20,9 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.2.0" />
-    <PackageReference Include="WPF-UI" Version="3.0.5" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="H.NotifyIcon.Wpf" Version="2.4.1" />
+    <PackageReference Include="WPF-UI" Version="3.1.1" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
   <ItemGroup>

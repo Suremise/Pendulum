@@ -37,13 +37,13 @@ Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://gi
 
 ## Building from source
 
-Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download).
+Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download) (`global.json` pins the version).
 
 ```
 dotnet build Pendulum.sln -c Release
 ```
 
-Produces a self-contained win-x64 build at `Pendulum.App\bin\Release\net8.0-windows\win-x64\`. This is the fast day-to-day dev loop — use `-c Debug` while iterating.
+Produces a self-contained win-x64 build at `Pendulum.App\bin\Release\net10.0-windows\win-x64\`. This is the fast day-to-day dev loop — use `-c Debug` while iterating.
 
 To cut a distributable release:
 

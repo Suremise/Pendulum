@@ -9,6 +9,8 @@ using Pendulum.App.Views;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
 using Pendulum.Core.Speech;
+// WPF has its own System.Windows.ThemeMode since .NET 9: the settings' one is meant here.
+using ThemeMode = Pendulum.Core.Models.ThemeMode;
 
 namespace Pendulum.App.ViewModels;
 
