@@ -12,15 +12,36 @@ public sealed class SpeechRecognitionService : IDisposable
     private SpeechRecognitionEngine? _engine;
 
     /// Listens for one spoken phrase and returns the recognized text, or null if nothing was
-    /// understood. Throws if no microphone or speech recognizer is available on this machine.
+    /// understood. Throws DictationException when there's no microphone or no recognizer.
     public async Task<string?> ListenOnceAsync(CancellationToken token)
     {
         Stop();
 
-        var engine = new SpeechRecognitionEngine();
+        SpeechRecognitionEngine? engine = null;
+        try
+        {
+            engine = new SpeechRecognitionEngine();
+            engine.LoadGrammar(new DictationGrammar());
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            // No recognizer installed for dictation in Windows. An engine made before the
+            // grammar failed is released now, not left for Stop() to miss.
+            engine?.Dispose();
+            throw new DictationException(DictationProblem.RecognizerMissing, e);
+        }
+
+        try
+        {
+            engine.SetInputToDefaultAudioDevice();
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            engine.Dispose();
+            throw new DictationException(DictationProblem.Microphone, e);
+        }
+
         _engine = engine;
-        engine.SetInputToDefaultAudioDevice();
-        engine.LoadGrammar(new DictationGrammar());
 
         // Defaults leave InitialSilenceTimeout unbounded (waits forever for speech to start)
         // and EndSilenceTimeout very short (~0.15s), which risks both hanging indefinitely on

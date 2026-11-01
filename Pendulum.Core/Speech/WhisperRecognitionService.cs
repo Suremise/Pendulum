@@ -7,6 +7,9 @@ namespace Pendulum.Core.Speech;
 /// One-shot dictation via a locally downloaded Whisper ggml model: records raw PCM from the
 /// default microphone until the speaker goes quiet (or a max duration is hit), then runs it
 /// through Whisper.net for transcription. Fully offline — no data leaves the machine.
+///
+/// The model is loaded and the audio transcribed on a background thread, so the window that
+/// asked stays responsive (a model is 75 MB to 1.5 GB). Failures come as DictationException.
 public sealed class WhisperRecognitionService : IDisposable
 {
     private const int SampleRate = 16000;
@@ -21,35 +24,70 @@ public sealed class WhisperRecognitionService : IDisposable
     /// and transcription begins, so callers can update a "Listening…" indicator to "Transcribing…".
     public async Task<string?> ListenOnceAsync(string modelPath, Action? onRecordingStopped, CancellationToken token)
     {
+        // Before listening, not after the user has spoken.
+        if (!File.Exists(modelPath))
+            throw new DictationException(DictationProblem.WhisperModelMissing);
+
         var pcm = await RecordUntilSilenceAsync(token);
         onRecordingStopped?.Invoke();
 
         if (pcm is null || pcm.Length == 0)
             return null;
 
+        return await Task.Run(() => TranscribeAsync(modelPath, pcm, token), token);
+    }
+
+    /// Loads the model and transcribes the audio. Runs off the caller's thread.
+    internal static async Task<string?> TranscribeAsync(string modelPath, byte[] pcm, CancellationToken token)
+    {
         var isEnglishOnly = Path.GetFileNameWithoutExtension(modelPath)
             .EndsWith(".en", StringComparison.OrdinalIgnoreCase);
 
         using var wavStream = BuildWavStream(pcm, SampleRate, bitsPerSample: 16, channels: 1);
-        using var factory = WhisperFactory.FromPath(modelPath);
-        using var processor = factory.CreateBuilder()
-            .WithLanguage(isEnglishOnly ? "en" : "auto")
-            .Build();
 
-        var text = new StringBuilder();
-        await foreach (var segment in processor.ProcessAsync(wavStream))
+        WhisperFactory factory;
+        try
         {
-            token.ThrowIfCancellationRequested();
-            text.Append(segment.Text);
+            factory = WhisperFactory.FromPath(modelPath);
+        }
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+        {
+            throw new DictationException(DictationProblem.WhisperModelMissing, e);
+        }
+        catch (Exception e)
+        {
+            throw new DictationException(DictationProblem.WhisperModelUnreadable, e);
         }
 
-        var result = text.ToString().Trim();
-        return result.Length > 0 ? result : null;
+        using (factory)
+        {
+            WhisperProcessor processor;
+            try
+            {
+                processor = factory.CreateBuilder()
+                    .WithLanguage(isEnglishOnly ? "en" : "auto")
+                    .Build();
+            }
+            catch (Exception e)
+            {
+                throw new DictationException(DictationProblem.WhisperModelUnreadable, e);
+            }
+
+            await using (processor.ConfigureAwait(false))
+            {
+                var text = new StringBuilder();
+                await foreach (var segment in processor.ProcessAsync(wavStream, token).ConfigureAwait(false))
+                    text.Append(segment.Text);
+
+                var result = text.ToString().Trim();
+                return result.Length > 0 ? result : null;
+            }
+        }
     }
 
     private Task<byte[]?> RecordUntilSilenceAsync(CancellationToken token)
     {
-        var tcs = new TaskCompletionSource<byte[]?>();
+        var tcs = new TaskCompletionSource<byte[]?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var buffer = new MemoryStream();
         var waveIn = new WaveInEvent { WaveFormat = new WaveFormat(SampleRate, 16, 1), BufferMilliseconds = 100 };
 
@@ -59,7 +97,7 @@ public sealed class WhisperRecognitionService : IDisposable
         var stopped = 0;
         var registration = default(CancellationTokenRegistration);
 
-        void Stop(bool keepAudio)
+        void Finish(Action complete)
         {
             if (Interlocked.Exchange(ref stopped, 1) != 0)
                 return;
@@ -67,11 +105,22 @@ public sealed class WhisperRecognitionService : IDisposable
             _cancelRecording = null;
             registration.Dispose();
             waveIn.DataAvailable -= OnDataAvailable;
-            waveIn.StopRecording();
-            waveIn.Dispose();
+            waveIn.RecordingStopped -= OnRecordingStopped;
+            try
+            {
+                waveIn.StopRecording();
+            }
+            catch (Exception)
+            {
+                // The device may already be gone: there's nothing left to stop.
+            }
 
-            tcs.TrySetResult(keepAudio && hasSpoken ? buffer.ToArray() : null);
+            waveIn.Dispose();
+            complete();
         }
+
+        void Stop(bool keepAudio) =>
+            Finish(() => tcs.TrySetResult(keepAudio && hasSpoken ? buffer.ToArray() : null));
 
         void OnDataAvailable(object? s, WaveInEventArgs e)
         {
@@ -99,11 +148,30 @@ public sealed class WhisperRecognitionService : IDisposable
                 Stop(keepAudio: true);
         }
 
+        // Recording ended by itself: the microphone was unplugged or failed (NAudio hands over
+        // the error), or capture just stopped. Either way, the listen ends instead of waiting.
+        void OnRecordingStopped(object? s, StoppedEventArgs e)
+        {
+            if (e.Exception is { } error)
+                Finish(() => tcs.TrySetException(new DictationException(DictationProblem.Microphone, error)));
+            else
+                Stop(keepAudio: true);
+        }
+
         waveIn.DataAvailable += OnDataAvailable;
+        waveIn.RecordingStopped += OnRecordingStopped;
         _cancelRecording = Stop;
         registration = token.Register(() => Stop(keepAudio: false));
 
-        waveIn.StartRecording();
+        try
+        {
+            waveIn.StartRecording();
+        }
+        catch (Exception e)
+        {
+            // No microphone, or Windows won't open it.
+            Finish(() => tcs.TrySetException(new DictationException(DictationProblem.Microphone, e)));
+        }
 
         return tcs.Task;
     }

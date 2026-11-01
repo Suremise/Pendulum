@@ -107,6 +107,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
   carries on and repeats, Piper falls back to the Windows voice, and the reason
   is written to `Data\crash.log`. Piper can no longer hang an alert, and Test
   voice and a reminder's Test button now say what went wrong.
+- Speaking a reminder with Whisper no longer freezes Quick Reminder while the
+  model loads. A Whisper model that was deleted or is damaged, a missing Windows
+  speech recognizer and a microphone problem now each get their own message
+  (the first before you speak, not after), and unplugging the microphone while
+  it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
 - New alert sounds: the chime, bell and alert are now Pendulum's own, made for it. A reminder

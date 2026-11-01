@@ -120,8 +120,6 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Format_Time12" xml:space="preserve"><value>h:mm tt</value><comment>A .NET time pattern, 12-hour; tt is the culture's AM/PM.</comment></data>
   <data name="Format_Time24" xml:space="preserve"><value>HH:mm</value><comment>A .NET time pattern, 24-hour.</comment></data>
   <data name="Hotkey_Cancel" xml:space="preserve"><value>Cancel</value><comment>HotkeyCaptureWindow.xaml, Content</comment></data>
-  <data name="Hotkey_TakenKeptPrevious" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder keeps {1}. Choose a different shortcut to change it.</value><comment>{0}: the shortcut chosen, e.g. Ctrl+Shift+R. {1}: the one kept.</comment></data>
-  <data name="Hotkey_TakenNone" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder has no shortcut for now. Choose a different one in Settings, or close that app and then turn the Quick Reminder shortcut off and on again in Settings.</value><comment>{0}: the shortcut, e.g. Ctrl+Shift+R.</comment></data>
   <data name="Hotkey_InvalidKeptPrevious" xml:space="preserve"><value>That isn't a shortcut Pendulum can use (it needs Ctrl, Alt, Shift or Win and a key), so Quick Reminder keeps {0}.</value><comment>{0}: the shortcut kept, e.g. Ctrl+Shift+R.</comment></data>
   <data name="Hotkey_InvalidNone" xml:space="preserve"><value>The saved Quick Reminder shortcut isn't one Pendulum can use, so there's no shortcut for now. Choose one in Settings.</value></data>
   <data name="Hotkey_NeedsModifier" xml:space="preserve"><value>Must include Ctrl, Alt, Shift, or Win — try again</value></data>
@@ -129,6 +127,8 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Hotkey_PressTheNewKeyCombinationItMustIncludeCtrlAltShi" xml:space="preserve"><value>Press the new key combination — it must include Ctrl, Alt, Shift, or Win.</value><comment>HotkeyCaptureWindow.xaml, Text</comment></data>
   <data name="Hotkey_Save" xml:space="preserve"><value>Save</value><comment>HotkeyCaptureWindow.xaml, Content</comment></data>
   <data name="Hotkey_SetHotkey" xml:space="preserve"><value>Set Hotkey</value><comment>HotkeyCaptureWindow.xaml, Title</comment></data>
+  <data name="Hotkey_TakenKeptPrevious" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder keeps {1}. Choose a different shortcut to change it.</value><comment>{0}: the shortcut chosen, e.g. Ctrl+Shift+R. {1}: the one kept.</comment></data>
+  <data name="Hotkey_TakenNone" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder has no shortcut for now. Choose a different one in Settings, or close that app and then turn the Quick Reminder shortcut off and on again in Settings.</value><comment>{0}: the shortcut, e.g. Ctrl+Shift+R.</comment></data>
   <data name="List_Separator" xml:space="preserve"><value>, </value><comment>Between names in a list.</comment></data>
   <data name="Main_About" xml:space="preserve"><value>About</value><comment>MainWindow.xaml, Text</comment></data>
   <data name="Main_Calendar" xml:space="preserve"><value>Calendar</value><comment>MainWindow.xaml, Header</comment></data>
@@ -140,14 +140,18 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="QuickAdd_Cancel" xml:space="preserve"><value>Cancel</value><comment>QuickAddWindow.xaml, Content</comment></data>
   <data name="QuickAdd_DidntCatch" xml:space="preserve"><value>Didn't catch that — try again, or type it instead.</value></data>
   <data name="QuickAdd_EGCallMom3pmIn20MinStandupTomorrow9am" xml:space="preserve"><value>e.g. "Call mom 3pm", "in 20 min", "standup tomorrow 9am"</value><comment>QuickAddWindow.xaml, Text</comment></data>
+  <data name="QuickAdd_ListenFailed" xml:space="preserve"><value>Speech recognition stopped with an error. The details are in Data\crash.log.</value></data>
   <data name="QuickAdd_Listening" xml:space="preserve"><value>Listening…</value></data>
-  <data name="QuickAdd_MicFailed" xml:space="preserve"><value>Couldn't start speech recognition. Make sure a microphone is set up in Windows.</value></data>
+  <data name="QuickAdd_MicFailed" xml:space="preserve"><value>Couldn't use the microphone. Make sure one is plugged in and set up in Windows.</value></data>
   <data name="QuickAdd_NoName" xml:space="preserve"><value>Please enter a name for the reminder, not just a time.</value></data>
   <data name="QuickAdd_NoTime" xml:space="preserve"><value>Couldn't find a time — try "in 20 min", "3pm", or "tomorrow 9am".</value><comment>The examples are phrases Quick Reminder understands, in English: keep them.</comment></data>
   <data name="QuickAdd_QuickReminder" xml:space="preserve"><value>Quick Reminder</value><comment>QuickAddWindow.xaml, Title</comment></data>
+  <data name="QuickAdd_RecognizerMissing" xml:space="preserve"><value>Windows has no speech recognizer for dictation. Add one in Windows' speech settings, or use Whisper (Settings &gt; Quick Reminder).</value></data>
   <data name="QuickAdd_SpeakAReminder" xml:space="preserve"><value>Speak a reminder</value><comment>QuickAddWindow.xaml, ToolTip</comment></data>
   <data name="QuickAdd_Transcribing" xml:space="preserve"><value>Transcribing…</value></data>
   <data name="QuickAdd_WhatAndWhen" xml:space="preserve"><value>What, and when?</value><comment>QuickAddWindow.xaml, PlaceholderText</comment></data>
+  <data name="QuickAdd_WhisperModelMissing" xml:space="preserve"><value>The Whisper model chosen in Settings &gt; Quick Reminder isn't in Data\WhisperModels any more. Choose another there, or use Windows speech recognition.</value></data>
+  <data name="QuickAdd_WhisperModelUnreadable" xml:space="preserve"><value>Whisper couldn't load the model chosen in Settings &gt; Quick Reminder. It may be damaged: download it again, or choose another.</value></data>
   <data name="Recurrence_Cancel" xml:space="preserve"><value>Cancel</value><comment>RecurrenceWindow.xaml, Content</comment></data>
   <data name="Recurrence_Daily" xml:space="preserve"><value>Daily</value><comment>RecurrenceWindow.xaml, Content</comment></data>
   <data name="Recurrence_Day" xml:space="preserve"><value>Day</value><comment>RecurrenceWindow.xaml, Text</comment></data>

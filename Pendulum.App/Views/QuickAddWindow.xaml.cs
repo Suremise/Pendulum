@@ -47,9 +47,13 @@ public partial class QuickAddWindow : FluentWindow
             return;
 
         var settings = AppServices.Instance.Settings;
-        // Only a plain file name in Data\WhisperModels\ is ever loaded.
-        var modelPath = DataFileName.PathInside(AppPaths.WhisperModelsDirectory, settings.WhisperModelFileName);
-        var useWhisper = settings.SpeechToTextEngine == SpeechToTextEngine.Whisper && modelPath is not null;
+        // Only a plain file name in Data\WhisperModels\ is ever loaded, and only if it's there.
+        var choice = DictationChoice.For(settings.SpeechToTextEngine, settings.WhisperModelFileName, AppPaths.WhisperModelsDirectory);
+        if (choice.Problem is { } problem)
+        {
+            ShowError(MessageFor(problem));
+            return;
+        }
 
         ErrorText.Visibility = Visibility.Collapsed;
         MicButton.IsEnabled = false;
@@ -60,9 +64,9 @@ public partial class QuickAddWindow : FluentWindow
         try
         {
             string? text;
-            if (useWhisper)
+            if (choice.UseWhisper)
             {
-                text = await _whisperSpeech.ListenOnceAsync(modelPath!, () => MicButton.ToolTip = Strings.QuickAdd_Transcribing, _listenCts.Token);
+                text = await _whisperSpeech.ListenOnceAsync(choice.WhisperModelPath!, () => MicButton.ToolTip = Strings.QuickAdd_Transcribing, _listenCts.Token);
             }
             else
             {
@@ -83,9 +87,10 @@ public partial class QuickAddWindow : FluentWindow
         {
             // Window closed mid-listen — nothing left to update.
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ShowError(Strings.QuickAdd_MicFailed);
+            CrashLog.Write("QuickAdd listen", ex);  // not user-visible
+            ShowError(MessageFor(DictationChoice.Classify(ex)));
         }
         finally
         {
@@ -146,6 +151,16 @@ public partial class QuickAddWindow : FluentWindow
         AppServices.Instance.AddTrigger(trigger);
         DialogResult = true;
     }
+
+    /// What Quick Reminder says when speaking a reminder didn't work.
+    internal static string MessageFor(DictationProblem problem) => problem switch
+    {
+        DictationProblem.Microphone => Strings.QuickAdd_MicFailed,
+        DictationProblem.WhisperModelMissing => Strings.QuickAdd_WhisperModelMissing,
+        DictationProblem.WhisperModelUnreadable => Strings.QuickAdd_WhisperModelUnreadable,
+        DictationProblem.RecognizerMissing => Strings.QuickAdd_RecognizerMissing,
+        _ => Strings.QuickAdd_ListenFailed,
+    };
 
     private void ShowError(string message)
     {
