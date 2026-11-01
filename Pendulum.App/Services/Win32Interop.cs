@@ -54,6 +54,41 @@ internal static class Win32Interop
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
 
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRect Monitor;
+        public NativeRect Work;
+        public uint Flags;
+    }
+
+    private const uint MONITOR_DEFAULTTOPRIMARY = 1;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
+    /// The work area (the screen less the taskbar), in device pixels, of the monitor showing the
+    /// window the user is working in: the primary monitor when there's none. Reads only; it moves
+    /// and activates nothing. Null if Windows can't say.
+    public static (int Left, int Top, int Right, int Bottom)? ForegroundMonitorWorkArea()
+    {
+        var monitor = MonitorFromWindow(GetForegroundWindow(), MONITOR_DEFAULTTOPRIMARY);
+        var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+        if (monitor == IntPtr.Zero || !GetMonitorInfo(monitor, ref info))
+            return null;
+        return (info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom);
+    }
+
     [DllImport("kernel32.dll")]
     private static extern uint GetCurrentThreadId();
 

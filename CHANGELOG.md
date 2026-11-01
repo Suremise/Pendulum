@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Many alerts at once no longer pile up off the top of the screen, where they
+  couldn't be reached: they fill columns from the bottom-right corner, and any
+  beyond that wait on screen behind the last one until there's room. Alerts
+  now appear on the monitor you're working on, not always the main one.
 - Choosing a Quick Reminder shortcut that another app (or Windows) already
   uses no longer leaves you with no shortcut at all while Settings shows the
   new one: Pendulum keeps the one you had and says why. If the saved shortcut

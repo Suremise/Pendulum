@@ -11,6 +11,9 @@ public partial class AlertWindow : Window
     // bottom-right corner instead of all rendering at the same spot and hiding each other.
     private static readonly List<AlertWindow> OpenWindows = new();
 
+    // The work area alerts go in: the monitor the user was working on when the newest opened.
+    private static Rect _workArea = SystemParameters.WorkArea;
+
     private readonly DispatcherTimer _topmostReinforcer;
 
     public event Action? Dismissed;
@@ -28,6 +31,7 @@ public partial class AlertWindow : Window
         Loaded += (_, __) =>
         {
             OpenWindows.Add(this);
+            _workArea = WorkAreaFor(this);
             RestackOpenWindows();
         };
 
@@ -48,21 +52,30 @@ public partial class AlertWindow : Window
         };
     }
 
-    // Re-positions every open alert in a column above the bottom-right corner, most recently
-    // opened at the bottom — run whenever one opens or closes so the rest slide down/up to fill
-    // the gap rather than leaving new alerts to draw directly on top of existing ones.
+    // Re-positions every open alert (AlertLayout: columns from the bottom-right corner, newest at
+    // the bottom, all on screen however many) — run whenever one opens or closes so the rest move
+    // to fill the gap rather than leaving new alerts to draw directly on top of existing ones.
     private static void RestackOpenWindows()
     {
-        var workArea = SystemParameters.WorkArea;
-        var bottom = workArea.Bottom - 24;
-
-        for (int i = OpenWindows.Count - 1; i >= 0; i--)
+        var sizes = OpenWindows.Select(w => new Size(w.Width, w.ActualHeight)).ToList();
+        var positions = AlertLayout.Place(_workArea, sizes);
+        for (var i = 0; i < OpenWindows.Count; i++)
         {
-            var w = OpenWindows[i];
-            w.Left = workArea.Right - w.Width - 24;
-            w.Top = bottom - w.ActualHeight;
-            bottom -= w.ActualHeight + 12;
+            OpenWindows[i].Left = positions[i].X;
+            OpenWindows[i].Top = positions[i].Y;
         }
+    }
+
+    // The work area of the monitor with the user's window, in this window's units; the primary
+    // monitor's when Windows can't say.
+    private static Rect WorkAreaFor(Window window)
+    {
+        var pixels = Win32Interop.ForegroundMonitorWorkArea();
+        var fromDevice = PresentationSource.FromVisual(window)?.CompositionTarget?.TransformFromDevice;
+        if (pixels is not { } p || fromDevice is not { } m)
+            return SystemParameters.WorkArea;
+
+        return new Rect(m.Transform(new Point(p.Left, p.Top)), m.Transform(new Point(p.Right, p.Bottom)));
     }
 
     private void DismissButton_Click(object sender, RoutedEventArgs e)
