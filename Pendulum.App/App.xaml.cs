@@ -28,6 +28,7 @@ public partial class App : Application
     private TaskbarIcon? _trayIcon;
     private DispatcherTimer? _trayTooltipTimer;
     private HotkeyManager? _hotkeyManager;
+    private HotkeyBinding? _hotkey;
     private QuickAddWindow? _quickAddWindow;
     internal bool IsExiting { get; private set; }
 
@@ -136,11 +137,12 @@ public partial class App : Application
             _hotkeyManager = new HotkeyManager();
             _hotkeyManager.Attach(mainWindow);
             _hotkeyManager.Pressed += () => Dispatcher.BeginInvoke(ShowQuickAdd);
-            ApplyHotkeySetting();
+            _hotkey = new HotkeyBinding(_hotkeyManager);
+            ApplyHotkeySetting(atStartup: true);
             AppServices.Instance.Settings.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName is nameof(AppSettings.QuickAddHotkeyEnabled) or nameof(AppSettings.QuickAddHotkeyGesture))
-                    ApplyHotkeySetting();
+                    ApplyHotkeySetting(atStartup: false);
             };
 
             if (missed.Count > 0)
@@ -168,13 +170,40 @@ public partial class App : Application
             _trayIcon.ToolTipText = string.Format(Strings.Tray_ToolTipWithStatus, ReminderStatus.GetNextReminderSummary());
     }
 
-    private void ApplyHotkeySetting()
+    /// Holds the Quick Reminder shortcut the settings name, and says so when another app has it:
+    /// a new one that's taken gives way to the one before (and Settings shows that one again); a
+    /// saved one that's taken at startup is kept in Settings, with no shortcut until it's free or
+    /// changed, and a notice from the tray.
+    private void ApplyHotkeySetting(bool atStartup)
     {
+        if (_hotkey is null)
+            return;
+
         var settings = AppServices.Instance.Settings;
-        if (settings.QuickAddHotkeyEnabled)
-            _hotkeyManager?.Register(settings.QuickAddHotkeyGesture);
+        var wanted = settings.QuickAddHotkeyGesture;
+        var outcome = _hotkey.Apply(settings.QuickAddHotkeyEnabled, wanted);
+
+        // Kept the one before: Settings shows it again (applying it then is a no-op).
+        if (outcome is HotkeyOutcome.TakenKeptPrevious or HotkeyOutcome.InvalidKeptPrevious)
+            settings.QuickAddHotkeyGesture = _hotkey.Active!;
+
+        var message = outcome switch
+        {
+            HotkeyOutcome.TakenKeptPrevious => string.Format(Strings.Hotkey_TakenKeptPrevious, wanted, _hotkey.Active),
+            HotkeyOutcome.InvalidKeptPrevious => string.Format(Strings.Hotkey_InvalidKeptPrevious, _hotkey.Active),
+            HotkeyOutcome.TakenNone => string.Format(Strings.Hotkey_TakenNone, wanted),
+            HotkeyOutcome.InvalidNone => Strings.Hotkey_InvalidNone,
+            _ => null,
+        };
+        if (message is null)
+            return;
+
+        // At startup (or sign-in) from the tray, which takes no focus; from Settings, where the
+        // user just chose it, as a message.
+        if (atStartup)
+            _trayIcon?.ShowNotification(Strings.App_Name, message);
         else
-            _hotkeyManager?.Unregister();
+            MessageBox.Show(MainWindow!, message, Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private void ShowQuickAdd()

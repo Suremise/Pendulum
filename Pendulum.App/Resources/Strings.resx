@@ -117,6 +117,10 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Format_Time12" xml:space="preserve"><value>h:mm tt</value><comment>A .NET time pattern, 12-hour; tt is the culture's AM/PM.</comment></data>
   <data name="Format_Time24" xml:space="preserve"><value>HH:mm</value><comment>A .NET time pattern, 24-hour.</comment></data>
   <data name="Hotkey_Cancel" xml:space="preserve"><value>Cancel</value><comment>HotkeyCaptureWindow.xaml, Content</comment></data>
+  <data name="Hotkey_TakenKeptPrevious" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder keeps {1}. Choose a different shortcut to change it.</value><comment>{0}: the shortcut chosen, e.g. Ctrl+Shift+R. {1}: the one kept.</comment></data>
+  <data name="Hotkey_TakenNone" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder has no shortcut for now. Choose a different one in Settings, or close that app and then turn the Quick Reminder shortcut off and on again in Settings.</value><comment>{0}: the shortcut, e.g. Ctrl+Shift+R.</comment></data>
+  <data name="Hotkey_InvalidKeptPrevious" xml:space="preserve"><value>That isn't a shortcut Pendulum can use (it needs Ctrl, Alt, Shift or Win and a key), so Quick Reminder keeps {0}.</value><comment>{0}: the shortcut kept, e.g. Ctrl+Shift+R.</comment></data>
+  <data name="Hotkey_InvalidNone" xml:space="preserve"><value>The saved Quick Reminder shortcut isn't one Pendulum can use, so there's no shortcut for now. Choose one in Settings.</value></data>
   <data name="Hotkey_NeedsModifier" xml:space="preserve"><value>Must include Ctrl, Alt, Shift, or Win — try again</value></data>
   <data name="Hotkey_PressKeys" xml:space="preserve"><value>Press keys...</value><comment>HotkeyCaptureWindow.xaml, Text</comment></data>
   <data name="Hotkey_PressTheNewKeyCombinationItMustIncludeCtrlAltShi" xml:space="preserve"><value>Press the new key combination — it must include Ctrl, Alt, Shift, or Win.</value><comment>HotkeyCaptureWindow.xaml, Text</comment></data>

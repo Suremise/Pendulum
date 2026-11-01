@@ -8,7 +8,7 @@ namespace Pendulum.App.Services;
 /// <see cref="Pressed"/> when it fires. The window is never shown or activated by this class —
 /// its handle is only used as the WM_HOTKEY message target, so it works even while Pendulum's
 /// main window is hidden in the tray.
-internal sealed class HotkeyManager : IDisposable
+internal sealed class HotkeyManager : IHotkeyRegistrar, IDisposable
 {
     private const int HotkeyId = 0xA5B1;
 

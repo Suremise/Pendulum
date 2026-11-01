@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Choosing a Quick Reminder shortcut that another app (or Windows) already
+  uses no longer leaves you with no shortcut at all while Settings shows the
+  new one: Pendulum keeps the one you had and says why. If the saved shortcut
+  is taken when Pendulum starts, it says so instead of quietly having none.
 - Snooze and Quick Reminder's "in 20 min" or "in 2 hours" are now real time
   when the clocks go back or forward: a 10-minute snooze just before the clocks
   go back rang after 70 minutes, and in spring one rang early. Changing the
