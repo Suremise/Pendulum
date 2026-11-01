@@ -5,7 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Version>1.1.0</Version>
     <Product>Pendulum</Product>
-    <Company>Surmise</Company>
+    <Company>Darren Marshall</Company>
     <Copyright>Copyright © 2026 Darren Marshall</Copyright>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

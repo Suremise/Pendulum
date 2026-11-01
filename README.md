@@ -76,14 +76,10 @@ Sounds\
 
 ## License
 
-Pendulum is released under the [MIT License](LICENSE).
+Pendulum is released under the [MIT License](LICENSE). © 2026 Darren Marshall.
 
 ## Third-party software
 
 Built on several open-source libraries, and optionally on the separately-downloaded
 Whisper and Piper speech engines — see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
 for the full list and licenses (all MIT).
-
----
-
-**Surmise** — **Sure**mised it right. — [surmise.it](https://surmise.it)

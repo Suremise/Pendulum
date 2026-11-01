@@ -1,40 +1,61 @@
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Navigation;
+using System.Windows.Threading;
+using Pendulum.App.Services;
 using Wpf.Ui.Controls;
 
 namespace Pendulum.App.Views;
 
+/// Pendulum's public links, shown in About.
+public static class AboutLinks
+{
+    public const string Repository = "https://github.com/Suremise/Pendulum";
+    public const string Releases = "https://github.com/Suremise/Pendulum/releases";
+}
+
 public partial class AboutWindow : FluentWindow
 {
+    private readonly AboutFacts _facts = AboutFacts.Gather();
+    private DispatcherTimer? _copiedTimer;
+
     public AboutWindow()
     {
         InitializeComponent();
-
-        try
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var version = assembly.GetName().Version;
-            var versionText = version is null ? "Version 1.0" : $"Version {version.Major}.{version.Minor}.{version.Build}";
-
-            var builtAt = File.GetLastWriteTime(assembly.Location);
-            VersionText.Text = $"{versionText} · Built {builtAt:dd MMM yyyy, HH:mm}";
-        }
-        catch
-        {
-            // build timestamp is a nice-to-have; leave the default text if it can't be read.
-        }
+        FactsList.ItemsSource = _facts.Rows;
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e) => Close();
 
-    private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true });
-        e.Handled = true;
+        try
+        {
+            Clipboard.SetText(_facts.CopyText());
+        }
+        catch (System.Runtime.InteropServices.ExternalException)
+        {
+            // Another app has the clipboard open; the user can press Copy again.
+            return;
+        }
+
+        CopyButton.Content = "Copied";
+        _copiedTimer?.Stop();
+        _copiedTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _copiedTimer.Tick += (_, _) =>
+        {
+            _copiedTimer.Stop();
+            CopyButton.Content = "Copy";
+        };
+        _copiedTimer.Start();
     }
+
+    private void ReleaseNotesButton_Click(object sender, RoutedEventArgs e) => OpenLink(AboutLinks.Releases);
+
+    private void SourceCodeButton_Click(object sender, RoutedEventArgs e) => OpenLink(AboutLinks.Repository);
+
+    private static void OpenLink(string uri) =>
+        Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
 
     private void ThirdPartyNoticesButton_Click(object sender, RoutedEventArgs e) =>
         OpenTextFileNextToApp("THIRD-PARTY-NOTICES.md");

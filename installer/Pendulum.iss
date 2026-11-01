@@ -14,10 +14,10 @@
 AppId={{287D517B-D89D-47D7-9BBC-BEA11618BDB3}
 AppName=Pendulum
 AppVersion={#MyAppVersion}
-AppPublisher=Surmise
-AppPublisherURL=https://surmise.it
-AppSupportURL=https://surmise.it
-AppUpdatesURL=https://surmise.it
+AppPublisher=Darren Marshall
+AppPublisherURL=https://github.com/Suremise/Pendulum
+AppSupportURL=https://github.com/Suremise/Pendulum/issues
+AppUpdatesURL=https://github.com/Suremise/Pendulum/releases
 LicenseFile=..\LICENSE
 DefaultDirName={localappdata}\Programs\Pendulum
 DefaultGroupName=Pendulum
@@ -68,4 +68,4 @@ Name: "{autodesktop}\Pendulum"; Filename: "{app}\Pendulum.exe"; Tasks: desktopic
 Filename: "{app}\Pendulum.exe"; Description: "Launch Pendulum"; Flags: nowait postinstall skipifsilent
 
 [Messages]
-WelcomeLabel2=This will install [name/ver] on your computer.%n%nSuremised it right. - surmise.it%n%nIt is recommended that you close all other applications before continuing.
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nIt is recommended that you close all other applications before continuing.

@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:local="clr-namespace:Pendulum.App.Views"
         Title="About Pendulum"
         Width="480"
         SizeToContent="Height"
@@ -16,56 +17,50 @@
 
         <ui:TitleBar Grid.Row="0" Title="About Pendulum" ShowMaximize="False" ShowMinimize="False"/>
 
-        <StackPanel Grid.Row="1" Margin="28,4,28,28">
+        <StackPanel Grid.Row="1" Margin="28,4,28,24">
 
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                <Image Source="pack://application:,,,/Resources/pendulum.ico" Width="48" Height="48" Margin="0,0,16,0"/>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Pendulum" FontSize="22" FontWeight="SemiBold"/>
-                    <TextBlock x:Name="VersionText" Text="Version 1.0" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
-                </StackPanel>
+            <!-- The icon and the name, then the tagline. -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                <Image Source="pack://application:,,,/Resources/pendulum.ico" Width="56" Height="56" Margin="0,0,16,0"/>
+                <TextBlock Text="Pendulum" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
 
-            <TextBlock TextWrapping="Wrap" Margin="0,0,0,18" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}">
-                Pendulum is a tray-resident desktop timer and alarm utility. It stays
-                out of the way in the system tray and surfaces alerts as a topmost
-                popup with sound and/or spoken-phrase notifications, even while
-                you're working in another window.
-            </TextBlock>
+            <TextBlock TextWrapping="Wrap" Margin="0,0,0,16" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                       Text="A timer and alarm utility that waits in the tray and pops up over whatever you're working in, with a sound or a spoken phrase."/>
 
-            <ui:Card Margin="0,0,0,18">
-                <StackPanel Margin="4">
-                    <TextBlock Text="LICENSE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
-                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
-                        Pendulum is released under the <Hyperlink Click="LicenseButton_Click">MIT License</Hyperlink>.
-                    </TextBlock>
-                </StackPanel>
-            </ui:Card>
+            <!-- The facts a bug report needs; Copy puts them on the clipboard. -->
+            <ItemsControl x:Name="FactsList" Margin="0,0,0,16" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="72"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Label}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" Foreground="{DynamicResource TextFillColorPrimaryBrush}" TextWrapping="Wrap"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
 
-            <ui:Card Margin="0,0,0,18">
-                <StackPanel Margin="4">
-                    <TextBlock Text="THIRD-PARTY SOFTWARE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
-                    <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap">
-                        Built on CommunityToolkit.Mvvm, WPF-UI, NAudio, H.NotifyIcon, System.Speech,
-                        and Whisper.net/whisper.cpp — all MIT licensed. The optional Whisper and Piper
-                        speech engines and their voice models are downloaded separately by you, not
-                        bundled with Pendulum; both are MIT licensed too.
-                        <Hyperlink Click="ThirdPartyNoticesButton_Click">View third-party notices</Hyperlink>
-                    </TextBlock>
-                </StackPanel>
-            </ui:Card>
+            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8">
+                <Run Text="Open source under the "/><Hyperlink Click="LicenseButton_Click">MIT License</Hyperlink><Run Text=". Includes "/><Hyperlink Click="ThirdPartyNoticesButton_Click">third-party software</Hyperlink><Run Text="."/>
+            </TextBlock>
+            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"
+                       Text="No telemetry. Pendulum goes online only to check for updates, which you can turn off in Settings."/>
+            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,20"
+                       Text="© 2026 Darren Marshall."/>
 
-            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
-                <Run Text="Author: "/><Run Text="Darren Marshall" FontWeight="SemiBold"/>
-            </TextBlock>
-            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10">
-                <Run Text="Contributors: "/><Run Text="Claude (Sonnet 5)" FontWeight="SemiBold"/>
-            </TextBlock>
-            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,20" TextWrapping="Wrap">
-                <Run Text="Surmise" FontWeight="SemiBold"/><Run Text=" — "/><Run Text="Sure" FontWeight="Bold"/><Run Text="mised it right. — "/><Hyperlink NavigateUri="https://surmise.it" RequestNavigate="Hyperlink_RequestNavigate">surmise.it</Hyperlink>
-            </TextBlock>
-
-            <ui:Button Content="Close" Appearance="Primary" HorizontalAlignment="Right" Click="CloseButton_Click"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <ui:Button x:Name="CopyButton" Content="Copy" Margin="0,0,8,0" Click="CopyButton_Click"
+                           ToolTip="Copy the version information, for a bug report"/>
+                <ui:Button Content="Release notes" Margin="0,0,8,0" Click="ReleaseNotesButton_Click"
+                           ToolTip="{x:Static local:AboutLinks.Releases}"/>
+                <ui:Button Content="Source code" Margin="0,0,8,0" Click="SourceCodeButton_Click"
+                           ToolTip="{x:Static local:AboutLinks.Repository}"/>
+                <ui:Button Content="OK" Appearance="Primary" IsDefault="True" IsCancel="True" Click="CloseButton_Click"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </ui:FluentWindow>

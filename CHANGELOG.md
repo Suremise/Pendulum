@@ -7,6 +7,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- About window: now shows the version, build date, .NET and Windows versions in
+  one table, with a Copy button to paste them into a bug report, plus links to
+  the release notes and the source code on GitHub. The installer now names
+  Darren Marshall as publisher and links to the GitHub repository.
+
 ## [1.1.0] - 2026-08-25
 
 ### Added
