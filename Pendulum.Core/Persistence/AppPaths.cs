@@ -2,7 +2,11 @@ namespace Pendulum.Core.Persistence;
 
 public static class AppPaths
 {
-    public static string BaseDirectory => AppContext.BaseDirectory;
+    public static string BaseDirectory => BaseDirectoryOverride ?? AppContext.BaseDirectory;
+
+    /// For tests only: a temp folder that stands in for the folder beside the exe, so nothing
+    /// a test does reaches the app's own Data\ or Sounds\. Never set by the app.
+    internal static string? BaseDirectoryOverride { get; set; }
     public static string DataDirectory => Path.Combine(BaseDirectory, "Data");
     public static string SoundsDirectory => Path.Combine(BaseDirectory, "Sounds");
     public static string WhisperModelsDirectory => Path.Combine(DataDirectory, "WhisperModels");

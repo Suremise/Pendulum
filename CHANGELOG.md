@@ -24,6 +24,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   reminders if Pendulum was stopped at that moment.
 
 ### Changed
+- Settings are easier to find: they're grouped into five sections (General,
+  Alerts, Spoken alerts, Quick Reminder, Backup and data) with plainer labels and
+  short explanations, and settings that only apply to another one sit under it.
+  All your settings carry over unchanged.
 - The app's accent colour is now rose, to match the new icon: buttons, toggles,
   the selected tab, links and the alert popup, in shades that stay easy to read
   on the light and dark themes. Switching the theme while Pendulum runs no

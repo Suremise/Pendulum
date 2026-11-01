@@ -62,6 +62,18 @@ dotnet test Pendulum.sln             # every test project in the solution
 - **Upgrades:** `Pendulum.Core.Tests/Fixtures/<version>/` holds a Data folder as that release wrote
   it, and the tests load each with today's code and check that every reminder and setting is kept.
   When a release changes what's saved, add its own folder (the folder's README says how).
+- **UI tests (`Pendulum.App.Tests`) show no window.** They build the real view on a UI thread of
+  their own, lay it out in memory (Measure and Arrange) and read it through WPF's UI Automation
+  providers, the AutomationPeers a screen reader talks to. They never use Pendulum's `App` class
+  (its startup takes the single-instance mutex and would wake a running copy), and use `AppPaths`'
+  and `AppServices`' internal test seams for a temp folder and loaded settings.
+- **Nothing a test, check or screenshot script does may take the foreground or focus.** The user is
+  working in other apps while it runs. A shown window can take the foreground even with
+  `ShowActivated = false` and `WS_EX_NOACTIVATE`, so don't show one: lay the view out in memory and
+  render it with `RenderTargetBitmap`. Never call `Show()`, `Activate()`, `Focus()` or
+  `Keyboard.Focus`, `SetForegroundWindow` or set `Topmost`. Check keyboard behaviour from properties
+  (focusable, tab stops, names, selection providers), not by focusing and pressing keys. No global
+  keyboard or mouse input, ever.
 - **Never run the installer on this PC**, and don't publish into the installed copy's folder. Build
   installers only when a card asks, and leave installing to the maintainer.
 - **The maintainer runs Pendulum all day.** A dev build launched beside it doesn't start: the

@@ -26,6 +26,10 @@ public sealed class AppServices
     public ObservableCollection<TriggerTimer> Triggers { get; } = new();
     public AppSettings Settings { get; private set; } = new();
 
+    /// For tests only: settings loaded from a test's own file, without Initialize (which reads
+    /// the app's Data\ and can write the Run key). Never called by the app.
+    internal void UseSettingsForTests(AppSettings settings) => Settings = settings;
+
     /// True for the very first run after a fresh install (no settings.json on disk yet) —
     /// used to show the main window once even though StartMinimized defaults to true, so a
     /// first-time user isn't left wondering whether the install did anything.

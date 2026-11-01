@@ -31,7 +31,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public string WhisperStatusText => WhisperModels.Count switch
     {
-        0 => "No Whisper models found yet — download one below and drop it into the Whisper Models folder, then click Refresh.",
+        0 => "No Whisper models found yet: see Set up Whisper below.",
         1 => "1 model found.",
         var n => $"{n} models found."
     };
@@ -41,10 +41,10 @@ public partial class SettingsViewModel : ObservableObject
 
     public string PiperStatusText => (IsPiperExecutableAvailable, PiperModels.Count) switch
     {
-        (false, _) => "piper.exe not found yet — download it below and extract it into the Piper Models folder, then click Refresh.",
-        (true, 0) => "piper.exe found, but no voices yet — download one below and drop it into the Piper Models folder, then click Refresh.",
-        (true, 1) => "Ready — 1 voice found.",
-        (true, var n) => $"Ready — {n} voices found."
+        (false, _) => "Piper isn't installed yet: see Set up Piper below.",
+        (true, 0) => "Piper is installed, but no voices yet: see Set up Piper below.",
+        (true, 1) => "Ready: 1 voice found.",
+        (true, var n) => $"Ready: {n} voices found."
     };
 
     public int TimeFormatIndex
