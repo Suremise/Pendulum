@@ -6,6 +6,9 @@ CLI runs it: Codex reads this file, and Claude Code reads it through `CLAUDE.md`
 
 - Building, the layout, the licence rule and commits, for everyone: [CONTRIBUTING.md](CONTRIBUTING.md)
 - What users see changed: [CHANGELOG.md](CHANGELOG.md). Security reports: [SECURITY.md](SECURITY.md)
+- Releases (the tag, the workflow, and the manual checklist before a draft is published):
+  [docs/RELEASING.md](docs/RELEASING.md). `build-installer.ps1` builds the release's files into
+  `dist\`, locally and in the workflow alike.
 
 ## The layout
 

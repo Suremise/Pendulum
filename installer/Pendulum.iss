@@ -69,3 +69,19 @@ Filename: "{app}\Pendulum.exe"; Description: "Launch Pendulum"; Flags: nowait po
 
 [Messages]
 WelcomeLabel2=This will install [name/ver] on your computer.%n%nIt is recommended that you close all other applications before continuing.
+
+[Code]
+// Uninstalling removes the "Launch on Windows startup" entry, but only when it starts this
+// installed copy: another copy's entry (a portable one, say) is that copy's to remove.
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  RunKey, Value: String;
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    RunKey := 'Software\Microsoft\Windows\CurrentVersion\Run';
+    if RegQueryStringValue(HKCU, RunKey, 'Pendulum', Value) then
+      if CompareText(RemoveQuotes(Trim(Value)), ExpandConstant('{app}\Pendulum.exe')) = 0 then
+        RegDeleteValue(HKCU, RunKey, 'Pendulum');
+  end;
+end;

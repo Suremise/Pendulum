@@ -46,6 +46,10 @@ not labels to translate.
 
 Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://github.com/Suremise/Pendulum/releases) page — self-contained (no separate .NET install required), installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller. See [CHANGELOG.md](CHANGELOG.md) for what's new in each version.
 
+Or download `Pendulum-<version>-portable.zip`, unzip it anywhere and run `Pendulum.exe`: it keeps its data in a `Data` folder beside it.
+
+Each release lists its files' checksums in `SHA256SUMS.txt`: check a download against it (in PowerShell, `Get-FileHash <file>`) before running it. Pendulum isn't code-signed yet, so Windows may show "Windows protected your PC"; once you've checked the download, choose **More info**, then **Run anyway**.
+
 ## Building from source
 
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download) (`global.json` pins the version).

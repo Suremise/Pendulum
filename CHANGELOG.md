@@ -8,6 +8,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A portable zip with each release: unzip it anywhere and run Pendulum.exe,
+  which keeps its data in a Data folder beside it. Each release also lists
+  its files' SHA-256 checksums, to check a download before running it.
 - Repeating reminders can fall on a day of the week in the month, as in
   Outlook: "the last Friday", "the second Tuesday", "the first weekday" or
   "the last day" of every month or every few months, or of one month each
@@ -15,6 +18,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Uninstalling Pendulum now removes its "Launch on Windows startup" entry
+  (when it starts the copy being uninstalled), instead of leaving Windows a
+  startup entry for a program that's gone.
 - Repeating reminders: the first one now falls on the pattern, as in Outlook.
   A weekly reminder set to Mondays but starting on a Wednesday goes off first
   on the Monday after, not on the Wednesday; the same for a monthly or yearly

@@ -1,0 +1,117 @@
+name: Release
+
+# On a version tag (v1.2.0): check, test, build the installer and the portable zip with
+# build-installer.ps1 (the script a local build uses), and draft a GitHub release with them and
+# their SHA-256 checksums. The draft is published by hand, after the manual checklist in
+# docs/RELEASING.md.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  release:
+    name: Build and draft the release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # One version source: Pendulum.App.csproj's <Version>.
+      - name: The tag matches the version
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path Pendulum.App/Pendulum.App.csproj -Pattern '<Version>([^<]+)</Version>').Matches[0].Groups[1].Value
+          if ("v$version" -ne $env:GITHUB_REF_NAME) {
+            throw "The tag $env:GITHUB_REF_NAME doesn't match Pendulum.App.csproj's version $version."
+          }
+          "VERSION=$version" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+
+      # The SDK global.json pins (10.0.403, rolling forward to its latest patch).
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore Pendulum.sln
+
+      - name: Build (warnings are errors)
+        run: dotnet build Pendulum.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: Tests
+        run: dotnet test Pendulum.sln -c Release --no-build
+
+      # THIRD-PARTY-NOTICES.md matches what ships, and every shipped licence is decided.
+      - name: Third-party notices
+        shell: pwsh
+        run: ./scripts/third-party-notices.ps1 -Check
+
+      # The runner images come with Inno Setup 6 (6.7.1 when this was written); install that
+      # version if an image ever doesn't.
+      - name: Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup --version 6.7.1 -y --no-progress }
+          if (-not (Test-Path $iscc)) { throw "Inno Setup 6 isn't installed at $iscc." }
+
+      # Signing comes later: build-installer.ps1 marks where the exe and the Setup.exe are signed,
+      # with the certificate's password from a secret, for example:
+      #   env:
+      #     SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+      - name: Build the installer, the portable zip and the checksums
+        shell: pwsh
+        run: ./build-installer.ps1 -Version $env:VERSION
+
+      # The version's section of CHANGELOG.md, without its heading (the release's title names the
+      # version). GitHub shows a release's line breaks, so each paragraph and list item is joined
+      # onto one line. Then how to check a download, and what SmartScreen will say.
+      - name: The release notes
+        shell: pwsh
+        run: |
+          $section = $null
+          $lines = [System.Collections.Generic.List[string]]::new()
+          foreach ($line in Get-Content -Encoding utf8 CHANGELOG.md) {
+            if ($line.StartsWith('## ')) {
+              if ($section) { break }
+              $section = $line.StartsWith("## [$env:VERSION]")
+              continue
+            }
+            if (-not $section) { continue }
+            $continues = $lines.Count -gt 0 -and $lines[-1] -ne '' -and -not $lines[-1].StartsWith('#') `
+              -and $line -ne '' -and -not $line.StartsWith('#') -and -not $line.StartsWith('- ')
+            if ($continues) { $lines[-1] += ' ' + $line.Trim() } else { $lines.Add($line) }
+          }
+          $notes = ($lines -join "`n").Trim()
+          if (-not $notes) { throw "CHANGELOG.md has no notes for $env:VERSION." }
+          $notes += "`n`n### Installing`n`n" + `
+            "Download PendulumSetup-$env:VERSION.exe and run it: it installs for you alone, with no admin prompt, and an upgrade keeps your reminders and settings. " + `
+            "Or unzip Pendulum-$env:VERSION-portable.zip anywhere and run Pendulum.exe; it keeps its data in a Data folder beside it.`n`n" + `
+            "Check a download against SHA256SUMS.txt before running it: in PowerShell, ``Get-FileHash .\PendulumSetup-$env:VERSION.exe`` shows its SHA-256. " + `
+            "Pendulum isn't code-signed yet, so Windows may say ""Windows protected your PC"": choose More info, then Run anyway, once you've checked the download."
+          Set-Content -Encoding utf8 dist/notes.md $notes
+
+      - name: Draft the GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME --draft --verify-tag `
+            --title "Pendulum $env:VERSION" --notes-file dist/notes.md `
+            "dist/PendulumSetup-$env:VERSION.exe" `
+            "dist/Pendulum-$env:VERSION-portable.zip" `
+            dist/SHA256SUMS.txt
