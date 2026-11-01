@@ -1,0 +1,403 @@
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using Pendulum.Core.Models;
+using Pendulum.Core.Persistence;
+
+namespace Pendulum.Core.Tests;
+
+/// Settings, reminders and backups on disk, in temp folders only.
+public sealed class PersistenceTests : IDisposable
+{
+    private readonly TempFolder _temp = new();
+
+    public void Dispose() => _temp.Dispose();
+
+    private static string Json(object? value) => JsonSerializer.Serialize(value);
+
+    // ---- Settings ----
+
+    [Fact]
+    public void New_settings_have_the_documented_defaults()
+    {
+        var s = new AppSettings();
+
+        Assert.Equal("chime.wav", s.DefaultSoundFileName);
+        Assert.Equal(100, s.TtsVolume);
+        Assert.True(s.LaunchOnWindowsStartup);
+        Assert.True(s.StartMinimized);
+        Assert.Equal(5, s.SnoozeMinutes);
+        Assert.True(s.RepeatAlertUntilDismissed);
+        Assert.Equal(30, s.AutoResolveMinutes);
+        Assert.Equal(ThemeMode.System, s.Theme);
+        Assert.False(s.CheckForUpdatesOnStartup);
+        Assert.True(s.QuickAddHotkeyEnabled);
+        Assert.Equal("Ctrl+Shift+R", s.QuickAddHotkeyGesture);
+        Assert.Equal(SpeechToTextEngine.WindowsSpeechRecognition, s.SpeechToTextEngine);
+        Assert.Equal(TextToSpeechEngine.WindowsSpeechSynthesis, s.TextToSpeechEngine);
+        Assert.Equal(0, s.AutoDeleteSpentAfterDays);
+    }
+
+    [Fact]
+    public void Without_a_settings_file_the_defaults_load_and_nothing_is_written()
+    {
+        var path = _temp.File("settings.json");
+
+        var s = new SettingsRepository(path).Load();
+
+        Assert.Equal(Json(new AppSettings()), Json(s));
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public void Settings_saved_load_back_the_same()
+    {
+        var path = _temp.File("settings.json");
+        var saved = new AppSettings
+        {
+            SnoozeMinutes = 12,
+            Theme = ThemeMode.Dark,
+            CheckForUpdatesOnStartup = true,
+            QuickAddHotkeyGesture = "Ctrl+Alt+P",
+            TextToSpeechEngine = TextToSpeechEngine.Piper,
+            PiperVoiceModelFileName = "voice.onnx",
+            ReminderFilterFrom = new DateTime(2026, 1, 2),
+        };
+
+        new SettingsRepository(path).Save(saved);
+        var loaded = new SettingsRepository(path).Load();
+
+        Assert.Equal(Json(saved), Json(loaded));
+        Assert.False(File.Exists(path + ".tmp"));
+    }
+
+    [Fact]
+    public void Saving_settings_twice_replaces_the_file()
+    {
+        var path = _temp.File("settings.json");
+        var repo = new SettingsRepository(path);
+
+        repo.Save(new AppSettings { SnoozeMinutes = 7 });
+        repo.Save(new AppSettings { SnoozeMinutes = 9 });
+
+        Assert.Equal(9, repo.Load().SnoozeMinutes);
+        Assert.Equal(new[] { path }, Directory.GetFiles(_temp.Path));
+    }
+
+    [Fact]
+    public void A_corrupt_settings_file_is_kept_aside_and_the_defaults_load()
+    {
+        var path = _temp.File("settings.json");
+        File.WriteAllText(path, "{ \"SnoozeMinutes\": 12, oops");
+
+        var s = new SettingsRepository(path).Load();
+
+        Assert.Equal(Json(new AppSettings()), Json(s));
+        Assert.False(File.Exists(path));
+        var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "settings.json.corrupt-*"));
+        Assert.Equal("{ \"SnoozeMinutes\": 12, oops", File.ReadAllText(quarantined));
+    }
+
+    [Fact]
+    public void An_empty_settings_file_is_kept_aside_too()
+    {
+        var path = _temp.File("settings.json");
+        File.WriteAllText(path, "");
+
+        new SettingsRepository(path).Load();
+
+        Assert.Single(Directory.GetFiles(_temp.Path, "settings.json.corrupt-*"));
+    }
+
+    [Fact]
+    public void Settings_keys_the_app_no_longer_knows_are_ignored()
+    {
+        var path = _temp.File("settings.json");
+        File.WriteAllText(path, """{ "SnoozeMinutes": 8, "SomethingFromTheFuture": true }""");
+
+        Assert.Equal(8, new SettingsRepository(path).Load().SnoozeMinutes);
+    }
+
+    // ---- The update check's default, old files and new (on by default up to 1.1.0, off since) ----
+
+    [Fact]
+    public void Update_check_is_off_for_new_settings()
+    {
+        Assert.False(new AppSettings().CheckForUpdatesOnStartup);
+    }
+
+    [Theory]
+    [InlineData("{}")]
+    [InlineData("""{ "SnoozeMinutes": 8, "Theme": 2 }""")]
+    public void A_file_without_the_update_check_key_keeps_it_on_and_keeps_its_other_values(string json)
+    {
+        var path = _temp.File("settings.json");
+        File.WriteAllText(path, json);
+
+        var s = JsonStore.Load<AppSettings>(path)!;
+
+        Assert.True(s.CheckForUpdatesOnStartup);
+        if (json.Contains("SnoozeMinutes"))
+        {
+            Assert.Equal(8, s.SnoozeMinutes);
+            Assert.Equal(ThemeMode.Dark, s.Theme);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_file_with_the_update_check_key_keeps_its_value(bool value)
+    {
+        var path = _temp.File("settings.json");
+        File.WriteAllText(path, $$"""{ "CheckForUpdatesOnStartup": {{(value ? "true" : "false")}} }""");
+
+        Assert.Equal(value, JsonStore.Load<AppSettings>(path)!.CheckForUpdatesOnStartup);
+    }
+
+    [Fact]
+    public void A_backup_whose_settings_lack_the_update_check_key_keeps_it_on()
+    {
+        var path = _temp.File("backup.json");
+        File.WriteAllText(path, """{ "Settings": { "SnoozeMinutes": 8 }, "Triggers": [] }""");
+
+        Assert.True(BackupRepository.Load(path)!.Settings!.CheckForUpdatesOnStartup);
+    }
+
+    [Fact]
+    public void New_settings_saved_and_reloaded_keep_the_update_check_off_and_name_the_key()
+    {
+        var path = _temp.File("settings.json");
+
+        JsonStore.Save(path, new AppSettings());
+
+        Assert.Contains("\"CheckForUpdatesOnStartup\": false", File.ReadAllText(path));
+        Assert.False(JsonStore.Load<AppSettings>(path)!.CheckForUpdatesOnStartup);
+    }
+
+    // ---- Reminders ----
+
+    [Fact]
+    public void Reminders_saved_load_back_the_same()
+    {
+        var path = _temp.File("triggers.json");
+        var reminders = SampleReminders();
+
+        new TriggerRepository().SaveTo(path, reminders);
+        var loaded = new TriggerRepository().LoadFrom(path);
+
+        Assert.Equal(Json(reminders), Json(loaded));
+    }
+
+    [Fact]
+    public void Reminders_dont_save_the_list_selection()
+    {
+        var path = _temp.File("triggers.json");
+        var t = new TriggerTimer { Name = "x", IsSelectedForBulk = true };
+
+        new TriggerRepository().SaveTo(path, new[] { t });
+
+        Assert.DoesNotContain("IsSelectedForBulk", File.ReadAllText(path));
+        Assert.False(new TriggerRepository().LoadFrom(path).Single().IsSelectedForBulk);
+    }
+
+    [Fact]
+    public void Without_a_reminders_file_the_list_is_empty()
+    {
+        Assert.Empty(new TriggerRepository().LoadFrom(_temp.File("missing.json")));
+    }
+
+    [Fact]
+    public void A_corrupt_reminders_file_is_kept_aside_not_overwritten()
+    {
+        var path = _temp.File("triggers.json");
+        File.WriteAllText(path, "[ { \"Name\": \"half a remind");
+
+        Assert.Empty(new TriggerRepository().LoadFrom(path));
+        var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "triggers.json.corrupt-*"));
+        Assert.Equal("[ { \"Name\": \"half a remind", File.ReadAllText(quarantined));
+    }
+
+    // ---- Backups ----
+
+    [Fact]
+    public void A_whole_app_backup_restores_the_same_settings_and_reminders()
+    {
+        var path = _temp.File("backup.json");
+        var settings = new AppSettings { SnoozeMinutes = 15, Use24HourTime = true, CheckForUpdatesOnStartup = true };
+        var reminders = SampleReminders();
+
+        BackupRepository.Save(path, new AppBackup { Settings = settings, Triggers = reminders });
+        var restored = BackupRepository.Load(path)!;
+
+        Assert.Equal(Json(settings), Json(restored.Settings));
+        Assert.Equal(Json(reminders), Json(restored.Triggers));
+    }
+
+    [Fact]
+    public void A_reminders_only_export_isnt_read_as_a_whole_app_backup()
+    {
+        var path = _temp.File("export.json");
+        new TriggerRepository().SaveTo(path, SampleReminders());
+
+        // A list where an object should be: not a backup (and the file is kept aside, not lost).
+        Assert.Null(BackupRepository.Load(path));
+    }
+
+    // ---- Upgrading: Data folders as 1.0.0 and 1.1.0 wrote them ----
+
+    public static TheoryData<string> Releases => new() { "v1.0.0", "v1.1.0" };
+
+    private static string Fixture(string release, string file) =>
+        Path.Combine(AppContext.BaseDirectory, "Fixtures", release, file);
+
+    /// A copy in this test's temp folder, so a failed load's quarantine can't touch the fixture.
+    private string Copy(string release, string file)
+    {
+        var path = _temp.File($"{release}-{file}");
+        File.Copy(Fixture(release, file), path);
+        return path;
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Settings_from_a_release_load_with_every_value_kept(string release)
+    {
+        var path = Copy(release, "settings.json");
+        var original = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+
+        var s = new SettingsRepository(path).Load();
+
+        Assert.True(File.Exists(path), "the file was set aside as corrupt");
+        var reloaded = JsonNode.Parse(JsonSerializer.Serialize(s))!.AsObject();
+        foreach (var (key, value) in original)
+        {
+            Assert.True(reloaded.ContainsKey(key), $"{release}'s setting {key} has no home in this version");
+            Assert.Equal(value?.ToJsonString(), reloaded[key]?.ToJsonString());
+        }
+
+        Assert.Equal(10, s.SnoozeMinutes);
+        Assert.Equal(ThemeMode.Dark, s.Theme);
+        Assert.Equal("Ctrl+Alt+P", s.QuickAddHotkeyGesture);
+        Assert.Equal(TextToSpeechEngine.Piper, s.TextToSpeechEngine);
+        Assert.Equal("en_GB-jenny_dioco-medium.onnx", s.PiperVoiceModelFileName);
+        Assert.Equal(SpeechToTextEngine.Whisper, s.SpeechToTextEngine);
+        Assert.Equal("ggml-base.en.bin", s.WhisperModelFileName);
+        Assert.False(s.RepeatAlertUntilDismissed);
+        Assert.Equal(15, s.AutoResolveMinutes);
+    }
+
+    [Fact]
+    public void Settings_from_1_0_0_which_had_no_update_check_keep_it_on()
+    {
+        var s = new SettingsRepository(Copy("v1.0.0", "settings.json")).Load();
+
+        Assert.True(s.CheckForUpdatesOnStartup);
+    }
+
+    [Fact]
+    public void Settings_from_1_1_0_keep_the_update_check_as_they_had_it()
+    {
+        var s = new SettingsRepository(Copy("v1.1.0", "settings.json")).Load();
+
+        Assert.False(s.CheckForUpdatesOnStartup);
+        Assert.Equal("1.1.0", s.LastKnownLatestVersion);
+        Assert.True(s.QuickAddAutoListen);
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Reminders_from_a_release_load_with_every_reminder_and_value_kept(string release)
+    {
+        var path = Copy(release, "triggers.json");
+        var original = JsonNode.Parse(File.ReadAllText(path))!.AsArray();
+
+        var loaded = new TriggerRepository().LoadFrom(path);
+
+        Assert.Equal(6, loaded.Count);
+        Assert.Equal(original.Count, loaded.Count);
+        var reloaded = JsonNode.Parse(JsonSerializer.Serialize(loaded))!.AsArray();
+        for (var i = 0; i < original.Count; i++)
+            AssertKeepsEveryValue(original[i]!.AsObject(), reloaded[i]!.AsObject(), $"{release} reminder {i}");
+
+        var rent = loaded.Single(t => t.Name == "Pay rent");
+        Assert.Equal(RecurrenceFrequency.Monthly, rent.Recurrence!.Frequency);
+        Assert.Equal(31, rent.Recurrence.DayOfMonth);
+        Assert.Equal(new DateTime(2027, 1, 31), rent.Recurrence.EndDate);
+        var standUp = loaded.Single(t => t.Name == "Stand-up");
+        Assert.Equal(new[] { DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday }, standUp.Recurrence!.DaysOfWeek);
+        Assert.Equal(AlertMode.SoundAndSpeech, standUp.Mode);
+        Assert.Equal("Stand-up in five", standUp.Phrase);
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void A_backup_from_a_release_restores_every_reminder_and_setting(string release)
+    {
+        var path = Copy(release, "backup.json");
+
+        var backup = BackupRepository.Load(path)!;
+
+        Assert.Equal(6, backup.Triggers.Count);
+        Assert.Equal(10, backup.Settings!.SnoozeMinutes);
+        var original = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
+        var reloaded = JsonNode.Parse(JsonSerializer.Serialize(backup))!.AsObject();
+        AssertKeepsEveryValue(original["Settings"]!.AsObject(), reloaded["Settings"]!.AsObject(), $"{release} backup settings");
+        var originalTriggers = original["Triggers"]!.AsArray();
+        for (var i = 0; i < originalTriggers.Count; i++)
+            AssertKeepsEveryValue(originalTriggers[i]!.AsObject(), reloaded["Triggers"]![i]!.AsObject(), $"{release} backup reminder {i}");
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void After_an_upgrade_the_first_launch_keeps_every_reminder(string release)
+    {
+        // Months after the release: everything due has gone by. Nothing is lost; the one-offs that
+        // came due are spent, the recurring ones move on.
+        var reminders = new TriggerRepository().LoadFrom(Copy(release, "triggers.json"));
+
+        var missed = Engine.TriggerReconciler.CatchUpMissed(reminders, new DateTime(2026, 11, 1, 12, 0, 0));
+
+        Assert.Equal(6, reminders.Count);
+        Assert.Contains("Call the dentist", missed);
+        Assert.True(reminders.Single(t => t.Name == "Call the dentist").HasFired);
+        var standUp = reminders.Single(t => t.Name == "Stand-up");
+        Assert.True(standUp.TriggerAt > new DateTime(2026, 11, 1, 12, 0, 0));
+        Assert.True(standUp.Enabled);
+        var tablets = reminders.Single(t => t.Name == "Take tablets");
+        Assert.False(tablets.Enabled);
+        Assert.Equal(new DateTime(2026, 8, 26, 21, 0, 0), tablets.TriggerAt);
+    }
+
+    [Theory]
+    [MemberData(nameof(Releases))]
+    public void Data_from_a_release_saved_again_by_this_version_loads_the_same(string release)
+    {
+        var settings = new SettingsRepository(Copy(release, "settings.json")).Load();
+        var reminders = new TriggerRepository().LoadFrom(Copy(release, "triggers.json"));
+
+        var settingsPath = _temp.File("resaved-settings.json");
+        var remindersPath = _temp.File("resaved-triggers.json");
+        new SettingsRepository(settingsPath).Save(settings);
+        new TriggerRepository().SaveTo(remindersPath, reminders);
+
+        Assert.Equal(Json(settings), Json(new SettingsRepository(settingsPath).Load()));
+        Assert.Equal(Json(reminders), Json(new TriggerRepository().LoadFrom(remindersPath)));
+    }
+
+    private static void AssertKeepsEveryValue(JsonObject original, JsonObject reloaded, string what)
+    {
+        foreach (var (key, value) in original)
+        {
+            Assert.True(reloaded.ContainsKey(key), $"{what}: {key} has no home in this version");
+            Assert.Equal(value?.ToJsonString(), reloaded[key]?.ToJsonString());
+        }
+    }
+
+    private static List<TriggerTimer> SampleReminders() => new()
+    {
+        new() { Name = "One-off", TriggerAt = new DateTime(2026, 6, 3, 15, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 3, 15, 0, 0), Mode = AlertMode.SoundOnly, SoundFileName = "chime.wav", Volume = 80 },
+        new() { Name = "Weekly", TriggerAt = new DateTime(2026, 6, 5, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 1, 9, 0, 0), Mode = AlertMode.SpeechOnly, Phrase = "hello",
+            Recurrence = new RecurrenceRule { Frequency = RecurrenceFrequency.Weekly, DaysOfWeek = new() { DayOfWeek.Monday, DayOfWeek.Friday }, EndType = RecurrenceEndType.AfterOccurrences, OccurrenceCount = 8, OccurrencesSoFar = 3 } },
+        new() { Name = "Spent", TriggerAt = new DateTime(2026, 5, 1, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 5, 1, 9, 0, 0), HasFired = true, Enabled = false },
+    };
+}

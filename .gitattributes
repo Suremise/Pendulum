@@ -33,3 +33,6 @@
 *.msi binary
 *.bin binary
 *.onnx binary
+
+# Data files written by released versions of Pendulum, kept byte for byte as they wrote them.
+Pendulum.Core.Tests/Fixtures/** -text -whitespace

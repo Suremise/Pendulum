@@ -64,31 +64,14 @@ public sealed class AppServices
         if (IsFirstLaunch && Settings.LaunchOnWindowsStartup)
             StartupRegistration.SetEnabled(true);
 
-        var missed = new List<string>();
         var now = DateTime.Now;
+        var loaded = TriggerRepository.Load();
+        var missed = TriggerReconciler.CatchUpMissed(loaded, now);
 
-        foreach (var t in TriggerRepository.Load())
+        foreach (var t in loaded)
         {
             WireItem(t);
             Triggers.Add(t);
-
-            if (t.Enabled && !t.HasFired && t.TriggerAt <= now)
-            {
-                if (t.Recurrence is not null)
-                {
-                    // AdvancePastFiring can silently skip past several missed occurrences in one
-                    // jump (e.g. the app was closed for days over a daily reminder) — count
-                    // exactly how many were actually skipped instead of assuming just one, so
-                    // "end after N occurrences" reminders aren't undercounted and over-fire later.
-                    var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
-                        t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, now);
-                    t.Recurrence.OccurrencesSoFar += next is not null
-                        ? RecurrenceCalculator.CountOccurrencesBetween(t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, next.Value)
-                        : 1;
-                }
-                TriggerReconciler.AdvancePastFiring(t, now);
-                missed.Add(t.Name);
-            }
         }
 
         var removedSpent = 0;

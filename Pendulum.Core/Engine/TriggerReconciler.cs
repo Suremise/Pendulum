@@ -3,7 +3,7 @@ using Pendulum.Core.Models;
 namespace Pendulum.Core.Engine;
 
 /// Decides what happens to a trigger once its alert has been accounted for —
-/// whether that's a live dismiss or a firing discovered stale at startup.
+/// whether that's a live dismiss, a snooze, or a firing discovered stale at startup.
 public static class TriggerReconciler
 {
     /// Advances a recurring trigger to its next future occurrence, or marks the
@@ -27,4 +27,57 @@ public static class TriggerReconciler
         trigger.HasFired = true;
         trigger.Enabled = false;
     }
+
+    /// Re-arms a fired trigger to go off again <paramref name="snoozeMinutes"/> from now.
+    /// TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a snooze re-fires
+    /// the same occurrence rather than starting a new one, so that count is undone here and
+    /// "end after N occurrences" isn't exhausted early by snoozing.
+    public static void Snooze(TriggerTimer trigger, DateTime now, int snoozeMinutes)
+    {
+        if (trigger.Recurrence is not null)
+            trigger.Recurrence.OccurrencesSoFar = Math.Max(0, trigger.Recurrence.OccurrencesSoFar - 1);
+
+        trigger.TriggerAt = now.AddMinutes(snoozeMinutes);
+        trigger.HasFired = false;
+    }
+
+    /// Resolves every trigger that came due while the app wasn't running: a recurring one moves
+    /// on to its next future occurrence, anything else is marked spent. Returns the names of the
+    /// triggers it resolved, for the "missed while Pendulum was closed" notice.
+    public static List<string> CatchUpMissed(IEnumerable<TriggerTimer> triggers, DateTime now)
+    {
+        var missed = new List<string>();
+
+        foreach (var t in triggers)
+        {
+            if (!t.Enabled || t.HasFired || t.TriggerAt > now)
+                continue;
+
+            if (t.Recurrence is not null)
+            {
+                // AdvancePastFiring can silently skip past several missed occurrences in one
+                // jump (e.g. the app was closed for days over a daily reminder) — count
+                // exactly how many were actually skipped instead of assuming just one, so
+                // "end after N occurrences" reminders aren't undercounted and over-fire later.
+                var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
+                    t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, now);
+                t.Recurrence.OccurrencesSoFar += next is not null
+                    ? RecurrenceCalculator.CountOccurrencesBetween(t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, next.Value)
+                    : 1;
+            }
+
+            AdvancePastFiring(t, now);
+            missed.Add(t.Name);
+        }
+
+        return missed;
+    }
+
+    /// How long an unanswered alert waits before resolving itself as if dismissed, or null when
+    /// it never does: an alert that repeats until dismissed keeps going, and 0 minutes turns
+    /// auto-resolve off.
+    public static TimeSpan? AutoResolveDelay(AppSettings settings) =>
+        !settings.RepeatAlertUntilDismissed && settings.AutoResolveMinutes > 0
+            ? TimeSpan.FromMinutes(settings.AutoResolveMinutes)
+            : null;
 }

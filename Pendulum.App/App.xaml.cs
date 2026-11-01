@@ -246,14 +246,7 @@ public partial class App : Application
                 volumePercent: trigger.Volume,
                 onSnooze: () =>
                 {
-                    // TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a
-                    // snooze re-fires the same occurrence rather than starting a new one — undo
-                    // that count here so "end after N occurrences" isn't exhausted early by snoozing.
-                    if (trigger.Recurrence is not null)
-                        trigger.Recurrence.OccurrencesSoFar = Math.Max(0, trigger.Recurrence.OccurrencesSoFar - 1);
-
-                    trigger.TriggerAt = DateTime.Now.AddMinutes(services.Settings.SnoozeMinutes);
-                    trigger.HasFired = false;
+                    TriggerReconciler.Snooze(trigger, DateTime.Now, services.Settings.SnoozeMinutes);
                     services.RefreshTriggers();
                 },
                 onDismiss: () =>

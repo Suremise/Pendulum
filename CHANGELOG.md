@@ -7,6 +7,17 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Quick Reminder: a weekday that's today with a time already gone ("report
+  wednesday 9am", typed on a Wednesday afternoon) now means next week's, not
+  a reminder that goes off straight away.
+- Quick Reminder: a number that isn't a time of day ("13pm", "25:00",
+  "10:75") is no longer turned into the nearest time, and a very large one
+  ("in 99999999999 min") no longer brings up an "unexpected error" message.
+- Starting Pendulum after reminders were missed while it was closed no longer
+  saves your reminders list part-way through loading it, which could have lost
+  reminders if Pendulum was stopped at that moment.
+
 ### Changed
 - The app's accent colour is now rose, to match the new icon: buttons, toggles,
   the selected tab, links and the alert popup, in shades that stay easy to read

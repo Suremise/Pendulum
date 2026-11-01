@@ -39,6 +39,7 @@ Pendulum.App/
   Views/, ViewModels/, Converters/   the windows and panels (WPF-UI, CommunityToolkit.Mvvm)
   Services/      app wiring, alerts, the tray, the hotkey, theme, crash log, launch on startup
   Resources/     the icon and the bundled sounds
+Pendulum.Core.Tests/   the tests (xUnit), with Fixtures/: Data files as each release wrote them
 installer/       the Inno Setup script
 ```
 

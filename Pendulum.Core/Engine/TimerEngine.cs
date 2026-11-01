@@ -7,16 +7,28 @@ namespace Pendulum.Core.Engine;
 public class TimerEngine : IDisposable
 {
     private readonly object _lock = new();
-    private readonly System.Threading.Timer _timer;
+    private readonly System.Threading.Timer? _timer;
+    private readonly Func<DateTime> _clock;
     private List<TriggerTimer> _triggers = new();
 
     public event Action<TriggerTimer>? TriggerFired;
     public event Action<Exception>? TickFailed;
 
-    public TimerEngine()
+    public TimerEngine() : this(() => DateTime.Now, startPolling: true)
     {
-        _timer = new System.Threading.Timer(Tick, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
     }
+
+    /// For tests: the clock the engine reads instead of DateTime.Now, and whether it polls on
+    /// its own. Without polling, nothing fires until <see cref="CheckDue"/> is called.
+    internal TimerEngine(Func<DateTime> clock, bool startPolling)
+    {
+        _clock = clock;
+        if (startPolling)
+            _timer = new System.Threading.Timer(Tick, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+    }
+
+    /// One poll: raises TriggerFired for everything due by the clock, as the timer does each second.
+    internal void CheckDue() => Tick(null);
 
     public void SetTriggers(IEnumerable<TriggerTimer> triggers)
     {
@@ -35,7 +47,7 @@ public class TimerEngine : IDisposable
             List<TriggerTimer> due;
             lock (_lock)
             {
-                var now = DateTime.Now;
+                var now = _clock();
                 due = _triggers.Where(t => t.Enabled && !t.HasFired && t.TriggerAt <= now).ToList();
                 foreach (var t in due)
                 {
@@ -63,5 +75,5 @@ public class TimerEngine : IDisposable
         }
     }
 
-    public void Dispose() => _timer.Dispose();
+    public void Dispose() => _timer?.Dispose();
 }

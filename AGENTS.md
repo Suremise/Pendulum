@@ -16,6 +16,8 @@ Pendulum.Core/   no UI: the models, the timer engine and recurrence, the plain-E
 Pendulum.App/    the WPF app (WPF-UI, CommunityToolkit.Mvvm, H.NotifyIcon): windows and
                  panels, view models, converters, the tray, the global hotkey, alerts,
                  theme, crash log and launch-on-startup
+Pendulum.Core.Tests/ the tests (xUnit, test-only), and Fixtures/: Data files as each
+                 release wrote them
 installer/       the Inno Setup script; build-installer.ps1 publishes and compiles it
 docs/screenshots/ the README's pictures
 ```
@@ -49,7 +51,13 @@ dotnet test Pendulum.sln             # every test project in the solution
   run, never 50 full runs.
 - **Test the logic in Pendulum.Core.** `RecurrenceCalculator`, `QuickAddParser` and
   `TriggerReconciler` take the current time as an argument, so tests pass a fixed date rather than
-  reading the clock. `TimerEngine` reads `DateTime.Now` itself.
+  reading the clock. `TimerEngine`, `UpdateCheckService` and `SettingsRepository` have internal
+  constructors or overloads for tests (a clock, an `HttpClient` with a fake handler, a file path):
+  the tests see them through `InternalsVisibleTo`. Snooze, auto-resolve and the catch-up of
+  reminders missed while closed are in `TriggerReconciler`, not the App, so they are tested too.
+- **Upgrades:** `Pendulum.Core.Tests/Fixtures/<version>/` holds a Data folder as that release wrote
+  it, and the tests load each with today's code and check that every reminder and setting is kept.
+  When a release changes what's saved, add its own folder (the folder's README says how).
 - **Never run the installer on this PC**, and don't publish into the installed copy's folder. Build
   installers only when a card asks, and leave installing to the maintainer.
 - **The maintainer runs Pendulum all day.** A dev build launched beside it doesn't start: the
