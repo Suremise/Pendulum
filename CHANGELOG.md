@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Whisper speech recognition now works on a PC that doesn't have Microsoft's
+  Visual C++ runtime installed: Pendulum ships the runtime files Whisper needs.
+  If they're ever missing, Quick Reminder says so before listening, instead of
+  asking you to check your microphone after you've spoken.
 - Many alerts at once no longer pile up off the top of the screen, where they
   couldn't be reached: they fill columns from the bottom-right corner, and any
   beyond that wait on screen behind the last one until there's room. Alerts

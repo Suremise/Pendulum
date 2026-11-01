@@ -142,6 +142,7 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="QuickAdd_EGCallMom3pmIn20MinStandupTomorrow9am" xml:space="preserve"><value>e.g. "Call mom 3pm", "in 20 min", "standup tomorrow 9am"</value><comment>QuickAddWindow.xaml, Text</comment></data>
   <data name="QuickAdd_ListenFailed" xml:space="preserve"><value>Speech recognition stopped with an error. The details are in Data\crash.log.</value></data>
   <data name="QuickAdd_Listening" xml:space="preserve"><value>Listening…</value></data>
+  <data name="QuickAdd_WhisperRuntimeMissing" xml:space="preserve"><value>Whisper can't start: it needs Microsoft's Visual C++ runtime, which isn't on this PC. Install the Visual C++ Redistributable (x64) from Microsoft, at https://aka.ms/vs/17/release/vc_redist.x64.exe, or choose Windows speech recognition in Settings.</value><comment>The link is Microsoft's own download.</comment></data>
   <data name="QuickAdd_MicFailed" xml:space="preserve"><value>Couldn't use the microphone. Make sure one is plugged in and set up in Windows.</value></data>
   <data name="QuickAdd_NoName" xml:space="preserve"><value>Please enter a name for the reminder, not just a time.</value></data>
   <data name="QuickAdd_NoTime" xml:space="preserve"><value>Couldn't find a time — try "in 20 min", "3pm", or "tomorrow 9am".</value><comment>The examples are phrases Quick Reminder understands, in English: keep them.</comment></data>

@@ -48,6 +48,38 @@
                       PublicClass="true" ExecuteAsTool="false" />
   </Target>
 
+  <!-- Microsoft's Visual C++ runtime, beside whisper.cpp's native libraries in runtimes\win-x64\
+       (they import vcruntime140, vcruntime140_1, msvcp140 and vcomp140, which Windows doesn't
+       include). There, not beside Pendulum.exe: Whisper.net loads its libraries by full path with
+       Windows' altered search path, which looks in the library's own folder, then System32, never
+       the exe's. Copied from Visual Studio's redistributable folder, Microsoft's "Distributable
+       Code", under the Microsoft runtime exception recorded in THIRD-PARTY-NOTICES. Found with
+       vswhere at its default redistributable version, so local builds and CI ship the same files.
+       Without Visual Studio's C++ tools the build warns and goes on (Whisper then needs the
+       runtime installed); build-installer.ps1 refuses to package without them. -->
+  <Target Name="AddVisualCppRuntime" BeforeTargets="BeforeBuild" Condition="'$(OS)' == 'Windows_NT'">
+    <PropertyGroup>
+      <PendulumVsWhere>$(MSBuildProgramFiles32)\Microsoft Visual Studio\Installer\vswhere.exe</PendulumVsWhere>
+    </PropertyGroup>
+    <Exec Condition="Exists('$(PendulumVsWhere)')" EchoOff="true" StandardOutputImportance="low"
+          Command="&quot;$(PendulumVsWhere)&quot; -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
+          ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PendulumVsInstall" />
+    </Exec>
+    <PropertyGroup>
+      <PendulumVcRedistVersionFile>$(PendulumVsInstall)\VC\Auxiliary\Build\Microsoft.VCRedistVersion.default.txt</PendulumVcRedistVersionFile>
+      <PendulumVcRedistVersion Condition="'$(PendulumVsInstall)' != '' And Exists('$(PendulumVcRedistVersionFile)')">$([System.IO.File]::ReadAllText('$(PendulumVcRedistVersionFile)').Trim())</PendulumVcRedistVersion>
+      <PendulumVcRedistDir>$(PendulumVsInstall)\VC\Redist\MSVC\$(PendulumVcRedistVersion)\x64</PendulumVcRedistDir>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(PendulumVcRedistVersion)' != ''">
+      <PendulumVcRuntime Include="$(PendulumVcRedistDir)\Microsoft.VC*.CRT\vcruntime140.dll;$(PendulumVcRedistDir)\Microsoft.VC*.CRT\vcruntime140_1.dll;$(PendulumVcRedistDir)\Microsoft.VC*.CRT\msvcp140.dll;$(PendulumVcRedistDir)\Microsoft.VC*.OpenMP\vcomp140.dll" />
+      <None Include="@(PendulumVcRuntime)" Link="runtimes\win-x64\%(Filename)%(Extension)" Visible="false"
+            CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+    <Warning Condition="'@(PendulumVcRuntime->Count())' != '4'"
+             Text="Visual Studio's Visual C++ redistributable files weren't found, so the Visual C++ runtime isn't copied beside whisper.cpp's libraries: Whisper will need it installed. Install Visual Studio's C++ build tools to ship it." />
+  </Target>
+
   <ItemGroup>
     <None Include="Resources\Sounds\*.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

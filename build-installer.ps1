@@ -47,6 +47,15 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 # A dev build's own Data\ (settings, reminders) must never ship.
 if (Test-Path (Join-Path $publishDir "Data")) { throw "The publish folder has a Data\ folder: it must never ship." }
 
+# whisper.cpp's libraries need Microsoft's Visual C++ runtime beside them: a release never ships
+# without it (the build copies it from Visual Studio's redistributable folder).
+$vcRuntime = "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll", "vcomp140.dll"
+foreach ($dll in $vcRuntime) {
+    if (-not (Test-Path (Join-Path $publishDir "runtimes\win-x64\$dll"))) {
+        throw "runtimes\win-x64\$dll is missing from the build: install Visual Studio's C++ build tools (its redistributable files) and build again."
+    }
+}
+
 # Signing comes later. When there's a certificate, sign Pendulum.exe here, before it's packaged,
 # and the Setup.exe after Inno Setup builds it, for example:
 #   signtool sign /fd SHA256 /tr http://timestamp.example /td SHA256 /f cert.pfx /p $env:SIGNING_PASSWORD `
@@ -88,7 +97,9 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [System.IO.Compression.ZipFile]::OpenRead((Join-Path $distDir $portableName))
 try {
     $entries = $zip.Entries | ForEach-Object { $_.FullName.Replace('\', '/') }
-    foreach ($required in "Pendulum/Pendulum.exe", "Pendulum/LICENSE", "Pendulum/THIRD-PARTY-NOTICES.md", "Pendulum/Sounds/chime.wav") {
+    $required = @("Pendulum/Pendulum.exe", "Pendulum/LICENSE", "Pendulum/THIRD-PARTY-NOTICES.md", "Pendulum/Sounds/chime.wav") +
+        ($vcRuntime | ForEach-Object { "Pendulum/runtimes/win-x64/$_" })
+    foreach ($required in $required) {
         if ($entries -notcontains $required) { throw "The portable zip has no $required." }
     }
     $unwanted = $entries | Where-Object { $_ -like "*.pdb" -or $_ -like "Pendulum/Data/*" -or $_ -like "Pendulum/unins*" }

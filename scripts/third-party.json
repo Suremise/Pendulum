@@ -139,6 +139,15 @@
       "decision": "Allowed: Darren (1 Nov 2026) extended the family's exception for Microsoft's C runtime, used unmodified under Microsoft's redistribution terms, to these files that come inside .NET's runtime."
     },
     {
+      "name": "Microsoft Visual C++ runtime for whisper.cpp (vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll, vcomp140.dll)",
+      "version": "14 (Visual Studio 2022)",
+      "licence": "Microsoft's redistribution terms (Distributable Code)",
+      "copyright": "Microsoft Corporation",
+      "url": "https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files",
+      "ships": "runtimes\\win-x64\\, beside whisper.cpp's libraries, unmodified, from Visual Studio's redistributable folder",
+      "decision": "Allowed: Darren (1 Nov 2026), under his exception for Microsoft's C runtime, so Whisper starts on a PC without the Visual C++ redistributable."
+    },
+    {
       "name": "Inno Setup (the installer's setup program)",
       "version": "6",
       "licence": "Inno Setup License",

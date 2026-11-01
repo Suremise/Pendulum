@@ -15,6 +15,9 @@ public enum DictationProblem
     WhisperModelUnreadable,
     /// Windows has no speech recognizer for dictation.
     RecognizerMissing,
+    /// Whisper's native libraries can't load: Microsoft's Visual C++ runtime they need isn't
+    /// beside Pendulum or in Windows (see WhisperRuntime).
+    WhisperRuntimeMissing,
     /// Anything else.
     Failed,
 }
@@ -31,8 +34,10 @@ public sealed record DictationChoice(bool UseWhisper, string? WhisperModelPath, 
 {
     /// Whisper when it's chosen and has a model named; the Windows recognizer otherwise, as
     /// before. A named model that isn't in its folder any more is a problem to report before
-    /// listening, not after the user has spoken.
-    public static DictationChoice For(SpeechToTextEngine engine, string? whisperModelFileName, string whisperModelsDirectory)
+    /// listening, not after the user has spoken. So is a Visual C++ runtime that's missing, when
+    /// <paramref name="missingWhisperRuntime"/> is given (the app passes WhisperRuntime's check).
+    public static DictationChoice For(SpeechToTextEngine engine, string? whisperModelFileName, string whisperModelsDirectory,
+        Func<IReadOnlyList<string>>? missingWhisperRuntime = null)
     {
         if (engine != SpeechToTextEngine.Whisper)
             return new DictationChoice(false, null, null);
@@ -41,9 +46,12 @@ public sealed record DictationChoice(bool UseWhisper, string? WhisperModelPath, 
         if (path is null)
             return new DictationChoice(false, null, null);
 
-        return File.Exists(path)
-            ? new DictationChoice(true, path, null)
-            : new DictationChoice(true, path, DictationProblem.WhisperModelMissing);
+        if (!File.Exists(path))
+            return new DictationChoice(true, path, DictationProblem.WhisperModelMissing);
+
+        return missingWhisperRuntime?.Invoke() is { Count: > 0 }
+            ? new DictationChoice(true, path, DictationProblem.WhisperRuntimeMissing)
+            : new DictationChoice(true, path, null);
     }
 
     /// The problem behind a failure while listening.
@@ -51,6 +59,7 @@ public sealed record DictationChoice(bool UseWhisper, string? WhisperModelPath, 
     {
         DictationException d => d.Problem,
         MmException => DictationProblem.Microphone,
+        DllNotFoundException => DictationProblem.WhisperRuntimeMissing,
         _ => DictationProblem.Failed,
     };
 }

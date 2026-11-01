@@ -48,7 +48,9 @@ public partial class QuickAddWindow : FluentWindow
 
         var settings = AppServices.Instance.Settings;
         // Only a plain file name in Data\WhisperModels\ is ever loaded, and only if it's there.
-        var choice = DictationChoice.For(settings.SpeechToTextEngine, settings.WhisperModelFileName, AppPaths.WhisperModelsDirectory);
+        // And Whisper needs Microsoft's Visual C++ runtime: said before listening, not after.
+        var choice = DictationChoice.For(settings.SpeechToTextEngine, settings.WhisperModelFileName, AppPaths.WhisperModelsDirectory,
+            () => WhisperRuntime.MissingNativeDependencies());
         if (choice.Problem is { } problem)
         {
             ShowError(MessageFor(problem));
@@ -159,6 +161,7 @@ public partial class QuickAddWindow : FluentWindow
         DictationProblem.WhisperModelMissing => Strings.QuickAdd_WhisperModelMissing,
         DictationProblem.WhisperModelUnreadable => Strings.QuickAdd_WhisperModelUnreadable,
         DictationProblem.RecognizerMissing => Strings.QuickAdd_RecognizerMissing,
+        DictationProblem.WhisperRuntimeMissing => Strings.QuickAdd_WhisperRuntimeMissing,
         _ => Strings.QuickAdd_ListenFailed,
     };
 
