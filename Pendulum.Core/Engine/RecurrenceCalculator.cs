@@ -82,9 +82,10 @@ public static class RecurrenceCalculator
 
     /// Expands a trigger (one-shot or recurring) into every occurrence date that falls within
     /// [rangeStart, rangeEnd], inclusive — used to populate a calendar month view. A trigger
-    /// that has already fired (HasFired) has nothing left scheduled by definition (see
-    /// TriggerReconciler/TimerEngine — a recurring reminder only stays HasFired once fully
-    /// exhausted), so it just yields its final TriggerAt, same as a spent one-shot. This does
+    /// that has fired (HasFired) yields just its TriggerAt, same as a spent one-shot: a recurring
+    /// reminder stays HasFired only once it's spent, or while its alert is open (TimerEngine marks
+    /// it fired; Dismiss or Snooze, or TriggerReconciler.CatchUpMissed after a restart, moves it
+    /// on). This does
     /// not reconstruct history: TriggerTimer only tracks a count of past occurrences
     /// (OccurrencesSoFar), not their dates, so past months only ever show a trigger's actual
     /// current TriggerAt, not a guessed-at full history.

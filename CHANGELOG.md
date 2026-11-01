@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- A repeating reminder that was still ringing when Pendulum closed (Exit, a
+  crash, or Windows restarting) no longer stops for good and shows as spent:
+  the next start moves it on to its next time, and lists it with the
+  reminders missed while Pendulum was closed.
 - Uninstalling Pendulum now removes its "Launch on Windows startup" entry
   (when it starts the copy being uninstalled), instead of leaving Windows a
   startup entry for a program that's gone.

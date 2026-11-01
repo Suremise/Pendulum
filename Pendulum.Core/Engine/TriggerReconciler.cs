@@ -50,7 +50,8 @@ public static class TriggerReconciler
 
         foreach (var t in triggers)
         {
-            if (!t.Enabled || t.HasFired || t.TriggerAt > now)
+            var wasRinging = WasRingingWhenClosed(t);
+            if (!wasRinging && (!t.Enabled || t.HasFired || t.TriggerAt > now))
                 continue;
 
             if (t.Recurrence is not null)
@@ -59,11 +60,14 @@ public static class TriggerReconciler
                 // jump (e.g. the app was closed for days over a daily reminder) — count
                 // exactly how many were actually skipped instead of assuming just one, so
                 // "end after N occurrences" reminders aren't undercounted and over-fire later.
+                // One that was ringing had its own occurrence counted when it fired, so only
+                // the ones after it are added.
                 var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
                     t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, now);
-                t.Recurrence.OccurrencesSoFar += next is not null
+                var counted = next is not null
                     ? RecurrenceCalculator.CountOccurrencesBetween(t.Recurrence, t.RecurrenceAnchor, t.TriggerAt, next.Value)
                     : 1;
+                t.Recurrence.OccurrencesSoFar += wasRinging ? counted - 1 : counted;
             }
 
             AdvancePastFiring(t, now);
@@ -72,6 +76,17 @@ public static class TriggerReconciler
 
         return missed;
     }
+
+    /// A repeating reminder whose alert was still open when Pendulum closed (Exit, a crash, a
+    /// Windows restart): the engine marked it fired, and only Dismiss or Snooze would have moved it
+    /// on. It's the only state that is both enabled and fired, since a spent reminder is also
+    /// disabled. Left alone it would never fire again, so it's caught up like a missed one, unless
+    /// that firing was its last. A one-off that was ringing stays as it is: fired.
+    private static bool WasRingingWhenClosed(TriggerTimer t) =>
+        t.Enabled
+        && t.HasFired
+        && t.Recurrence is { Frequency: not RecurrenceFrequency.None } rule
+        && !RecurrenceCalculator.IsExhausted(rule);
 
     /// How long an unanswered alert waits before resolving itself as if dismissed, or null when
     /// it never does: an alert that repeats until dismissed keeps going, and 0 minutes turns
