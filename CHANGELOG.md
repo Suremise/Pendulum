@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Turning a repeating reminder back on from the list no longer rings it at
+  once for a time that went by while it was off: it goes off next at its next
+  time. A one-off whose time has passed stays off, and Pendulum says to give
+  it a new time.
 - Importing reminders or restoring a backup no longer rings every reminder in
   it whose time has already gone, all at once. Those are moved on to their
   next time, or marked spent, as when Pendulum starts after being closed, and

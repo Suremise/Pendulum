@@ -196,6 +196,8 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Reminders_Fixed" xml:space="preserve"><value>Fixed</value><comment>TriggersPanel.xaml, Text</comment></data>
   <data name="Reminders_From" xml:space="preserve"><value>From</value><comment>TriggersPanel.xaml, Text</comment></data>
   <data name="Reminders_Import" xml:space="preserve"><value>Import...</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_EnablePastOneOff" xml:space="preserve"><value>"{0}" was due at {1}, which has passed, so it stays off. Edit it to give it a new time.</value><comment>Turning a past one-off reminder back on from the list. {0}: its name. {1}: the time it was due, from DisplayFormat.DateAndTime.</comment></data>
+  <data name="Reminders_EnableSeriesEnded" xml:space="preserve"><value>"{0}" has no more times to go off: its repeats ended while it was off, so it's now spent.</value><comment>Turning a repeating reminder back on from the list, after its end date or count. {0}: its name.</comment></data>
   <data name="Reminders_Imported" xml:space="preserve"><value>Imported {0} reminder(s)</value><comment>{0}: how many; Reminders_ImportedReplaced and _Skipped may follow.</comment></data>
   <data name="Reminders_ImportedCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows the import summary. {0}: how many reminders.</comment></data>
   <data name="Reminders_ImportedReplaced" xml:space="preserve"><value> ({0} replaced)</value><comment>{0}: how many.</comment></data>

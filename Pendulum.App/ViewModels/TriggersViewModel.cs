@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
+using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 
 namespace Pendulum.App.ViewModels;
@@ -343,8 +344,28 @@ public partial class TriggersViewModel : ObservableObject
         if (trigger is null || trigger.HasFired)
             return;
 
-        trigger.Enabled = !trigger.Enabled;
+        if (trigger.Enabled)
+        {
+            trigger.Enabled = false;
+            return;
+        }
+
+        // Back on: never for a time that went by while it was off.
+        var message = EnableMessage(TriggerReconciler.Enable(trigger, DateTime.Now), trigger);
+        if (message is not null)
+            MessageBox.Show(Application.Current.MainWindow!, message, Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Information);
     }
+
+    /// What to tell the user after turning a reminder back on, or null when it simply went on.
+    /// The time is shown as everywhere else, by the 12/24-hour setting (a caller can pass it).
+    internal static string? EnableMessage(TriggerReconciler.EnableOutcome outcome, TriggerTimer trigger, bool? use24Hour = null) =>
+        outcome switch
+        {
+            TriggerReconciler.EnableOutcome.PastOneOff =>
+                string.Format(Strings.Reminders_EnablePastOneOff, trigger.Name, DisplayFormat.DateAndTime(trigger.TriggerAt, use24Hour)),
+            TriggerReconciler.EnableOutcome.SeriesEnded => string.Format(Strings.Reminders_EnableSeriesEnded, trigger.Name),
+            _ => null,
+        };
 
     [RelayCommand]
     private void ToggleSelect() => IsSelecting = !IsSelecting;

@@ -28,6 +28,48 @@ public static class TriggerReconciler
         trigger.Enabled = false;
     }
 
+    /// What turning a reminder back on did.
+    public enum EnableOutcome
+    {
+        /// Enabled, at the time it had (still ahead).
+        Enabled,
+        /// A repeating reminder whose time had gone by while it was off: enabled at its next time.
+        MovedOn,
+        /// A repeating reminder whose series ended while it was off: marked spent, not enabled.
+        SeriesEnded,
+        /// A one-off whose time has gone by: left off and unchanged; it needs a new time.
+        PastOneOff,
+    }
+
+    /// Turns a disabled reminder back on without ringing it for a time that went by while it was
+    /// off. A repeating one moves to its next future occurrence first (the ones it was off for
+    /// aren't counted: they never happened), so the engine never sees it enabled and due. A
+    /// one-off in the past stays as it was, for the user to give it a new time.
+    public static EnableOutcome Enable(TriggerTimer trigger, DateTime now)
+    {
+        if (trigger.TriggerAt > now)
+        {
+            trigger.Enabled = true;
+            return EnableOutcome.Enabled;
+        }
+
+        if (trigger.Recurrence is not { Frequency: not RecurrenceFrequency.None } rule)
+            return EnableOutcome.PastOneOff;
+
+        var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
+            rule, trigger.RecurrenceAnchor, trigger.TriggerAt, now);
+        if (next is null)
+        {
+            trigger.HasFired = true;
+            return EnableOutcome.SeriesEnded;
+        }
+
+        // The time first, so the reminder is never enabled while it's due.
+        trigger.TriggerAt = next.Value;
+        trigger.Enabled = true;
+        return EnableOutcome.MovedOn;
+    }
+
     /// Re-arms a fired trigger to go off again <paramref name="snoozeMinutes"/> from now.
     /// TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a snooze re-fires
     /// the same occurrence rather than starting a new one, so that count is undone here and
