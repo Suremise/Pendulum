@@ -16,8 +16,13 @@ You need Windows 10 or 11 and the .NET SDK the projects target (the `TargetFrame
 dotnet build Pendulum.sln -c Debug   # day to day
 dotnet build Pendulum.sln -c Release
 dotnet test Pendulum.sln             # every test project in the solution
+pwsh scripts/third-party-notices.ps1 -Check      # the notices match what ships
+dotnet format Pendulum.sln --verify-no-changes --no-restore   # the layout in .editorconfig
 .\build-installer.ps1                # installer\Output\PendulumSetup-<version>.exe
 ```
+
+CI runs the Release build (warnings are errors), the tests, the notices check and the format check
+on every push to master and every pull request, so run them before you open one.
 
 The build is self-contained for win-x64: `Pendulum.App\bin\<Configuration>\<framework>\win-x64\`
 holds `Pendulum.exe`, and a run from there keeps its data in a `Data\` folder beside it, apart from

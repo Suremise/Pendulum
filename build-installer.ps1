@@ -31,7 +31,8 @@ if (-not (Test-Path $dotnet)) { throw "dotnet.exe not found. Install the .NET SD
 
 if (Test-Path $publishDir) { Remove-Item $publishDir -Recurse -Force }
 
-& $dotnet publish $csproj -c Release -r win-x64 --self-contained true `
+# --disable-build-servers: no MSBuild nodes or compiler server left running afterwards.
+& $dotnet publish $csproj -c Release -r win-x64 --self-contained true --disable-build-servers `
     -p:PublishSingleFile=false -p:Version=$Version -o $publishDir
 if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 

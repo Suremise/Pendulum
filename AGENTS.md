@@ -44,10 +44,20 @@ docs/screenshots/ the README's pictures
 You need the .NET SDK the projects target (`TargetFramework` in each `.csproj`) on Windows.
 
 ```
-dotnet build Pendulum.sln -c Debug
-dotnet test Pendulum.sln             # every test project in the solution
-.\build-installer.ps1                # the installer, with Inno Setup 6
+dotnet build Pendulum.sln -c Debug --disable-build-servers
+dotnet test Pendulum.sln --disable-build-servers     # every test project in the solution
+pwsh scripts/third-party-notices.ps1 -Check           # THIRD-PARTY-NOTICES.md matches what ships
+dotnet format Pendulum.sln --verify-no-changes --no-restore   # the layout .editorconfig sets
+.\build-installer.ps1                                # the installer, with Inno Setup 6
 ```
+
+- **Pass `--disable-build-servers` to every `dotnet build`, `test` and `publish`** (build-installer.ps1
+  does), or run `dotnet build-server shutdown` when you finish: otherwise MSBuild nodes and the
+  compiler server keep running after your shell exits. `dotnet format` takes no such flag, and its
+  own restore leaves nodes running, so run it with `--no-restore` after a build.
+- **CI** (`.github/workflows/ci.yml`, on Windows) runs on every push to master, every pull request
+  and by hand: the Release build with warnings as errors, the tests, the notices check and the
+  format check. Run the same four before review.
 
 - **Tests use temp folders only**, never the app's real `Data\`, the registry or the user's
   sounds, and clean up even when they fail. They **wait for conditions, never for time**, and pass

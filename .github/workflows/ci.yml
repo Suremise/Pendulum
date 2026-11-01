@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  # Run by hand (Actions > CI > Run workflow).
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
+jobs:
+  windows:
+    name: Windows (build, tests, notices, format)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # The SDK global.json pins (10.0.403, rolling forward to its latest patch).
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore Pendulum.sln
+
+      - name: Build (warnings are errors)
+        run: dotnet build Pendulum.sln -c Release --no-restore -p:TreatWarningsAsErrors=true
+
+      - name: Tests
+        run: dotnet test Pendulum.sln -c Release --no-build
+
+      # THIRD-PARTY-NOTICES.md matches what ships, and every shipped licence is decided.
+      - name: Third-party notices
+        shell: pwsh
+        run: ./scripts/third-party-notices.ps1 -Check
+
+      - name: Format
+        run: dotnet format Pendulum.sln --verify-no-changes --no-restore
