@@ -254,6 +254,9 @@ public partial class App : Application
         Dispatcher.Invoke(() =>
         {
             var services = AppServices.Instance;
+            // The alert's buttons act on this firing only: if the reminder is edited while the
+            // alert is open, they leave the edit alone.
+            var firedAt = trigger.TriggerAt;
             AlertCoordinator.Fire(
                 trigger.Name,
                 DisplayFormat.DateAndTime(trigger.TriggerAt),
@@ -264,13 +267,13 @@ public partial class App : Application
                 volumePercent: trigger.Volume,
                 onSnooze: () =>
                 {
-                    TriggerReconciler.Snooze(trigger, DateTime.Now, services.Settings.SnoozeMinutes);
-                    services.RefreshTriggers();
+                    if (TriggerReconciler.Snooze(trigger, firedAt, DateTime.Now, services.Settings.SnoozeMinutes))
+                        services.RefreshTriggers();
                 },
                 onDismiss: () =>
                 {
-                    TriggerReconciler.AdvancePastFiring(trigger, DateTime.Now);
-                    services.RefreshTriggers();
+                    if (TriggerReconciler.Dismiss(trigger, firedAt, DateTime.Now))
+                        services.RefreshTriggers();
                 });
         });
     }

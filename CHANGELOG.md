@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Dismissing an alert late, after the PC slept for days, now counts the
+  times that went by meanwhile, so a reminder set to "end after" a number of
+  times ends when it should. And an alert's Dismiss or Snooze no longer undoes
+  a change you made to its reminder while the alert was open.
 - Editing a repeating reminder after snoozing it no longer moves its time to
   the snooze time for good (a 9:00 stand-up snoozed once and then renamed
   went off at 9:10 every day). The edit window shows its usual time, and

@@ -107,6 +107,44 @@ public static class TriggerReconciler
         trigger.HasFired = false;
     }
 
+    /// Whether an open alert still speaks for its reminder: it went off at
+    /// <paramref name="firedAt"/> and nothing has moved it since. Editing while the alert is open
+    /// gives it a new time, or makes it unfired, and then the old alert's buttons must not act.
+    public static bool StillRinging(TriggerTimer trigger, DateTime firedAt) =>
+        trigger.HasFired && trigger.TriggerAt == firedAt;
+
+    /// The alert's Snooze (and its auto-resolve's twin, Dismiss, below): acts only while the
+    /// reminder is still the one that rang at <paramref name="firedAt"/>. Returns whether it did.
+    public static bool Snooze(TriggerTimer trigger, DateTime firedAt, DateTime now, int snoozeMinutes)
+    {
+        if (!StillRinging(trigger, firedAt))
+            return false;
+
+        Snooze(trigger, now, snoozeMinutes);
+        return true;
+    }
+
+    /// The alert's Dismiss, and auto-resolve: moves the reminder that rang at
+    /// <paramref name="firedAt"/> on to its next occurrence, or marks it spent. The engine counted
+    /// the firing itself; any occurrences that went by while the alert was open (a PC asleep for
+    /// days, say) are counted here too, as the startup catch-up does, so "end after N" ends on time.
+    /// Does nothing if the reminder was edited since it rang. Returns whether it acted.
+    public static bool Dismiss(TriggerTimer trigger, DateTime firedAt, DateTime now)
+    {
+        if (!StillRinging(trigger, firedAt))
+            return false;
+
+        if (trigger.Recurrence is { Frequency: not RecurrenceFrequency.None } rule && !RecurrenceCalculator.IsExhausted(rule))
+        {
+            var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(rule, trigger.RecurrenceAnchor, trigger.TriggerAt, now);
+            if (next is not null)
+                rule.OccurrencesSoFar += RecurrenceCalculator.CountOccurrencesBetween(rule, trigger.RecurrenceAnchor, trigger.TriggerAt, next.Value) - 1;
+        }
+
+        AdvancePastFiring(trigger, now);
+        return true;
+    }
+
     /// Resolves every trigger that came due while the app wasn't running: a recurring one moves
     /// on to its next future occurrence, anything else is marked spent. Returns the names of the
     /// triggers it resolved, for the "missed while Pendulum was closed" notice.
