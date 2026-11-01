@@ -118,6 +118,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- The installer is about 1 MB smaller, and Pendulum takes 3.5 MB less once
+  installed: it no longer carries copies of the Whisper speech libraries for
+  32-bit and ARM PCs, which it never used.
 - New alert sounds: the chime, bell and alert are now Pendulum's own, made for it. A reminder
   set to one of them keeps its sound.
 - Settings offers four Piper voices (Alba, Jenny (Dioco), LibriTTS-R and Northern English Male),

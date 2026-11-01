@@ -15,6 +15,17 @@
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
   </ItemGroup>
 
+  <!-- Pendulum is x64 only: of whisper.cpp's Windows libraries, which Whisper.net.Runtime adds for
+       x64, x86 and arm64 (runtimes\win-*\), keep only x64's. The others are never loaded, and
+       would only make the installer and the install folder bigger. Dropped here, where the package
+       adds them, so the App's build, publish, installer and portable zip never see them. -->
+  <Target Name="KeepOnlyX64Whisper" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <None Remove="@(None)"
+            Condition="$([System.String]::Copy('%(None.TargetPath)').StartsWith('runtimes/win-x86/')) Or $([System.String]::Copy('%(None.TargetPath)').StartsWith('runtimes/win-arm64/'))" />
+    </ItemGroup>
+  </Target>
+
   <!-- Core's user-visible text (the repeat descriptions), English to start. The CoreStrings class
        is generated from Resources\CoreStrings.resx before compiling, as Pendulum.App's Strings is. -->
   <ItemGroup>
