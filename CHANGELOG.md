@@ -8,6 +8,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Repeating reminders: the first one now falls on the pattern, as in Outlook.
+  A weekly reminder set to Mondays but starting on a Wednesday goes off first
+  on the Monday after, not on the Wednesday; the same for a monthly or yearly
+  day that isn't the start date. Reminders you already have keep their next
+  time.
 - Quick Reminder: "sun", "sat", "wed" and the other short day names are read
   as days only where they look like one ("gym sat 9am", "9am sat", "on sat"),
   so "buy sun cream 3pm" is a reminder for 3pm named "buy sun cream", not one

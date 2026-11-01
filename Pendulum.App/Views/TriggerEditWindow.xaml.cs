@@ -251,11 +251,11 @@ public partial class TriggerEditWindow : FluentWindow
         var now = DateTime.Now;
         var enabledByUser = EnabledBox.IsChecked == true;
 
-        DateTime? firstOccurrence = scheduledAt > now
-            ? scheduledAt
-            : _recurrence is not null
-                ? RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(_recurrence, scheduledAt, scheduledAt, now)
-                : null;
+        // A repeating reminder first goes off on its pattern (Outlook's way), which may be after the
+        // start date; a one-off goes off at its start.
+        DateTime? firstOccurrence = _recurrence is not null
+            ? RecurrenceCalculator.FirstOccurrence(_recurrence, scheduledAt, now)
+            : scheduledAt > now ? scheduledAt : null;
 
         // The user asked for this to be enabled, but the date/time they set is in the past
         // (e.g. only the time was changed and the date field was left stale after midnight) —

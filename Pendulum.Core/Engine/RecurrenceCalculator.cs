@@ -123,6 +123,49 @@ public static class RecurrenceCalculator
         }
     }
 
+    /// When a repeating reminder that starts at <paramref name="start"/> first goes off, the way
+    /// Outlook does it: at the start itself if it fits the pattern, otherwise at the pattern's first
+    /// occurrence after it (start on a Wednesday, repeat on Mondays: the first is the next Monday).
+    /// Anything already past <paramref name="now"/> is skipped, and the end condition holds. Null
+    /// when nothing is left to fire.
+    public static DateTime? FirstOccurrence(RecurrenceRule rule, DateTime start, DateTime now)
+    {
+        if (rule.Frequency == RecurrenceFrequency.None)
+            return start > now ? start : null;
+
+        if (IsExhausted(rule))
+            return null;
+
+        var first = FitsPattern(rule, start) ? start : GetNextOccurrence(rule, start, start);
+        if (first is null)
+            return null;
+
+        if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && first.Value.Date > endDate.Date)
+            return null;
+
+        return first.Value > now
+            ? first.Value
+            : GetNextFutureOccurrenceWithinEndCondition(rule, start, first.Value, now);
+    }
+
+    /// Whether <paramref name="start"/> is itself one of the rule's occurrences, by day (the time
+    /// of day is the start's own, so it always fits).
+    private static bool FitsPattern(RecurrenceRule rule, DateTime start)
+    {
+        switch (rule.Frequency)
+        {
+            case RecurrenceFrequency.Weekly:
+                return rule.DaysOfWeek.Count == 0 || rule.DaysOfWeek.Contains(start.DayOfWeek);
+            case RecurrenceFrequency.Monthly:
+                return start.Day == Math.Min(rule.DayOfMonth, DateTime.DaysInMonth(start.Year, start.Month));
+            case RecurrenceFrequency.Yearly:
+                var month = Math.Clamp(rule.Month, 1, 12);
+                return start.Month == month && start.Day == Math.Min(rule.DayOfMonth, DateTime.DaysInMonth(start.Year, month));
+            default:
+                return true;
+        }
+    }
+
     public static bool IsExhausted(RecurrenceRule rule) =>
         rule.EndType == RecurrenceEndType.AfterOccurrences && rule.OccurrencesSoFar >= rule.OccurrenceCount;
 
