@@ -493,12 +493,17 @@ public sealed class PersistenceTests : IDisposable
         Assert.Equal(Json(reminders), Json(new TriggerRepository().LoadFrom(remindersPath)));
     }
 
+    /// Every key and value the release wrote is still there, at every depth. Keys this version
+    /// adds (a new property, saved with its default) are allowed: that's how the format grows.
     private static void AssertKeepsEveryValue(JsonObject original, JsonObject reloaded, string what)
     {
         foreach (var (key, value) in original)
         {
             Assert.True(reloaded.ContainsKey(key), $"{what}: {key} has no home in this version");
-            Assert.Equal(value?.ToJsonString(), reloaded[key]?.ToJsonString());
+            if (value is JsonObject nested && reloaded[key] is JsonObject reloadedNested)
+                AssertKeepsEveryValue(nested, reloadedNested, $"{what}.{key}");
+            else
+                Assert.Equal(value?.ToJsonString(), reloaded[key]?.ToJsonString());
         }
     }
 

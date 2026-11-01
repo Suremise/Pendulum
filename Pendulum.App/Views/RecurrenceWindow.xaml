@@ -55,20 +55,39 @@
                         </WrapPanel>
                     </StackPanel>
 
-                    <StackPanel x:Name="MonthlyPanel" Orientation="Horizontal">
-                        <TextBlock Text="Day" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="MonthlyDayBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,16,0" ClearButtonEnabled="False"/>
-                        <TextBlock Text="of every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="MonthlyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
-                        <TextBlock Text="month(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <StackPanel x:Name="MonthlyPanel">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <RadioButton x:Name="MonthlyByDayRadio" Content="Day" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ui:TextBox x:Name="MonthlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <RadioButton x:Name="MonthlyByRelativeRadio" Content="The" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="MonthlyWhichBox" Width="110" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="MonthlyKindBox" Width="140"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="of every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ui:TextBox x:Name="MonthlyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
+                            <TextBlock Text="month(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        </StackPanel>
                     </StackPanel>
 
-                    <StackPanel x:Name="YearlyPanel" Orientation="Horizontal">
-                        <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ui:TextBox x:Name="YearlyIntervalBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,8,0" ClearButtonEnabled="False"/>
-                        <TextBlock Text="year(s) on" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <ComboBox x:Name="YearlyMonthBox" Width="120" Margin="0,0,16,0"/>
-                        <ui:TextBox x:Name="YearlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
+                    <StackPanel x:Name="YearlyPanel">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ui:TextBox x:Name="YearlyIntervalBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,8,0" ClearButtonEnabled="False"/>
+                            <TextBlock Text="year(s) in" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="YearlyMonthBox" Width="140"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <RadioButton x:Name="YearlyByDayRadio" Content="On day" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ui:TextBox x:Name="YearlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="YearlyByRelativeRadio" Content="On the" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="YearlyWhichBox" Width="110" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="YearlyKindBox" Width="140"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </ui:Card>

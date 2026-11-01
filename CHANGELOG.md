@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Repeating reminders can fall on a day of the week in the month, as in
+  Outlook: "the last Friday", "the second Tuesday", "the first weekday" or
+  "the last day" of every month or every few months, or of one month each
+  year ("the fourth Thursday of November"). Choose it in the repeat window,
+  under Monthly or Yearly.
+
 ### Fixed
 - Repeating reminders: the first one now falls on the pattern, as in Outlook.
   A weekly reminder set to Mondays but starting on a Wednesday goes off first

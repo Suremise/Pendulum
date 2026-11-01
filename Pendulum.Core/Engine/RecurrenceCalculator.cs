@@ -22,8 +22,8 @@ public static class RecurrenceCalculator
         {
             RecurrenceFrequency.Daily => NextDaily(anchor, after, interval),
             RecurrenceFrequency.Weekly => NextWeekly(anchor, after, interval, rule.DaysOfWeek),
-            RecurrenceFrequency.Monthly => NextMonthly(anchor, after, interval, rule.DayOfMonth),
-            RecurrenceFrequency.Yearly => NextYearly(anchor, after, interval, rule.Month, rule.DayOfMonth),
+            RecurrenceFrequency.Monthly => NextMonthly(rule, anchor, after, interval),
+            RecurrenceFrequency.Yearly => NextYearly(rule, anchor, after, interval),
             _ => null
         };
     }
@@ -157,10 +157,9 @@ public static class RecurrenceCalculator
             case RecurrenceFrequency.Weekly:
                 return rule.DaysOfWeek.Count == 0 || rule.DaysOfWeek.Contains(start.DayOfWeek);
             case RecurrenceFrequency.Monthly:
-                return start.Day == Math.Min(rule.DayOfMonth, DateTime.DaysInMonth(start.Year, start.Month));
+                return start.Day == DayInMonth(rule, start.Year, start.Month);
             case RecurrenceFrequency.Yearly:
-                var month = Math.Clamp(rule.Month, 1, 12);
-                return start.Month == month && start.Day == Math.Min(rule.DayOfMonth, DateTime.DaysInMonth(start.Year, month));
+                return start.Month == Math.Clamp(rule.Month, 1, 12) && start.Day == DayInMonth(rule, start.Year, start.Month);
             default:
                 return true;
         }
@@ -175,12 +174,12 @@ public static class RecurrenceCalculator
         {
             RecurrenceFrequency.Daily => rule.Interval <= 1 ? "Daily" : $"Every {rule.Interval} days",
             RecurrenceFrequency.Weekly => DescribeWeekly(rule),
-            RecurrenceFrequency.Monthly => rule.Interval <= 1
-                ? $"Monthly on day {rule.DayOfMonth}"
-                : $"Every {rule.Interval} months on day {rule.DayOfMonth}",
-            RecurrenceFrequency.Yearly => rule.Interval <= 1
-                ? $"Annually on {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}"
-                : $"Every {rule.Interval} years on {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}",
+            RecurrenceFrequency.Monthly => (rule.Interval <= 1 ? "Monthly on " : $"Every {rule.Interval} months on ")
+                + (rule.MonthDayRule == MonthDayRule.RelativeDay ? DescribeRelativeDay(rule) : $"day {rule.DayOfMonth}"),
+            RecurrenceFrequency.Yearly => (rule.Interval <= 1 ? "Annually on " : $"Every {rule.Interval} years on ")
+                + (rule.MonthDayRule == MonthDayRule.RelativeDay
+                    ? $"{DescribeRelativeDay(rule)} of {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM}"
+                    : $"{new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}"),
             _ => "Does not repeat"
         };
 
@@ -204,6 +203,54 @@ public static class RecurrenceCalculator
             .OrderBy(d => (int)d)
             .Select(d => d.ToString()[..3]));
         return $"{prefix} on {days}";
+    }
+
+    /// The day of <paramref name="month"/> a monthly or yearly rule lands on: its day number,
+    /// clamped to the month's length, or its relative day ("the last Friday").
+    public static int DayInMonth(RecurrenceRule rule, int year, int month) =>
+        rule.MonthDayRule == MonthDayRule.RelativeDay
+            ? RelativeDayInMonth(year, month, rule.WeekOfMonth, rule.RelativeDay)
+            : Math.Min(Math.Max(1, rule.DayOfMonth), DateTime.DaysInMonth(year, month));
+
+    /// The first to fourth, or the last, day of the given kind in the month: "the second Tuesday",
+    /// "the last weekday", "the first weekend day", "the last day".
+    public static int RelativeDayInMonth(int year, int month, WeekOfMonth which, RelativeDay kind)
+    {
+        var matching = Enumerable.Range(1, DateTime.DaysInMonth(year, month))
+            .Where(d => Matches(new DateTime(year, month, d).DayOfWeek, kind))
+            .ToList();
+
+        return which == WeekOfMonth.Last
+            ? matching[^1]
+            : matching[Math.Clamp((int)which, 1, 4) - 1];
+    }
+
+    private static bool Matches(DayOfWeek day, RelativeDay kind) => kind switch
+    {
+        RelativeDay.Day => true,
+        RelativeDay.Weekday => day is not (DayOfWeek.Saturday or DayOfWeek.Sunday),
+        RelativeDay.WeekendDay => day is DayOfWeek.Saturday or DayOfWeek.Sunday,
+        _ => (int)day == (int)kind,
+    };
+
+    private static string DescribeRelativeDay(RecurrenceRule rule)
+    {
+        var which = rule.WeekOfMonth switch
+        {
+            WeekOfMonth.Second => "second",
+            WeekOfMonth.Third => "third",
+            WeekOfMonth.Fourth => "fourth",
+            WeekOfMonth.Last => "last",
+            _ => "first",
+        };
+        var kind = rule.RelativeDay switch
+        {
+            RelativeDay.Day => "day",
+            RelativeDay.Weekday => "weekday",
+            RelativeDay.WeekendDay => "weekend day",
+            var named => ((DayOfWeek)(int)named).ToString(),
+        };
+        return $"the {which} {kind}";
     }
 
     private static DateTime NextDaily(DateTime anchor, DateTime after, int interval)
@@ -242,13 +289,13 @@ public static class RecurrenceCalculator
         return null;
     }
 
-    private static DateTime NextMonthly(DateTime anchor, DateTime after, int interval, int dayOfMonth)
+    private static DateTime NextMonthly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
     {
         var start = new DateTime(anchor.Year, anchor.Month, 1).Add(anchor.TimeOfDay);
         for (int i = 0; i < MaxIterations; i++)
         {
             var monthDate = start.AddMonths(i * interval);
-            var day = Math.Min(dayOfMonth, DateTime.DaysInMonth(monthDate.Year, monthDate.Month));
+            var day = DayInMonth(rule, monthDate.Year, monthDate.Month);
             var candidate = new DateTime(monthDate.Year, monthDate.Month, day).Add(anchor.TimeOfDay);
             if (candidate > after)
                 return candidate;
@@ -256,13 +303,13 @@ public static class RecurrenceCalculator
         return after;
     }
 
-    private static DateTime NextYearly(DateTime anchor, DateTime after, int interval, int month, int dayOfMonth)
+    private static DateTime NextYearly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
     {
-        month = Math.Clamp(month, 1, 12);
+        var month = Math.Clamp(rule.Month, 1, 12);
         for (int i = 0; i < MaxIterations; i++)
         {
             var year = anchor.Year + i * interval;
-            var day = Math.Min(dayOfMonth, DateTime.DaysInMonth(year, month));
+            var day = DayInMonth(rule, year, month);
             var candidate = new DateTime(year, month, day).Add(anchor.TimeOfDay);
             if (candidate > after)
                 return candidate;

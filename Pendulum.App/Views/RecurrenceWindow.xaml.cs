@@ -9,6 +9,21 @@ public partial class RecurrenceWindow : FluentWindow
 {
     private readonly DateTime _anchor;
 
+    // The choices for "the [which] [kind]", in WeekOfMonth's and RelativeDay's order.
+    private static readonly (WeekOfMonth Value, string Text)[] WhichChoices =
+    {
+        (WeekOfMonth.First, "first"), (WeekOfMonth.Second, "second"), (WeekOfMonth.Third, "third"),
+        (WeekOfMonth.Fourth, "fourth"), (WeekOfMonth.Last, "last"),
+    };
+
+    private static readonly (RelativeDay Value, string Text)[] KindChoices =
+    {
+        (RelativeDay.Monday, "Monday"), (RelativeDay.Tuesday, "Tuesday"), (RelativeDay.Wednesday, "Wednesday"),
+        (RelativeDay.Thursday, "Thursday"), (RelativeDay.Friday, "Friday"), (RelativeDay.Saturday, "Saturday"),
+        (RelativeDay.Sunday, "Sunday"), (RelativeDay.Day, "day"), (RelativeDay.Weekday, "weekday"),
+        (RelativeDay.WeekendDay, "weekend day"),
+    };
+
     /// The configured rule if the user clicked OK, or null if they clicked "Don't Repeat".
     /// Only meaningful when DialogResult == true.
     public RecurrenceRule? Result { get; private set; }
@@ -26,6 +41,14 @@ public partial class RecurrenceWindow : FluentWindow
                 YearlyMonthBox.Items.Add(monthName);
         }
 
+        foreach (var box in new[] { MonthlyWhichBox, YearlyWhichBox })
+            foreach (var (_, text) in WhichChoices)
+                box.Items.Add(text);
+
+        foreach (var box in new[] { MonthlyKindBox, YearlyKindBox })
+            foreach (var (_, text) in KindChoices)
+                box.Items.Add(text);
+
         LoadFrom(existing);
     }
 
@@ -41,6 +64,18 @@ public partial class RecurrenceWindow : FluentWindow
         MonthlyDayBox.Text = (rule.DayOfMonth > 0 ? rule.DayOfMonth : _anchor.Day).ToString();
         YearlyDayBox.Text = (rule.DayOfMonth > 0 ? rule.DayOfMonth : _anchor.Day).ToString();
         YearlyMonthBox.SelectedIndex = (rule.Month > 0 ? rule.Month : _anchor.Month) - 1;
+
+        // "The [which] [kind]": the rule's own, or for a new or day-number rule, the start date's
+        // place in its month ("the third Wednesday"; "the last" in the month's final seven days).
+        var relative = rule.MonthDayRule == MonthDayRule.RelativeDay;
+        var which = relative ? rule.WeekOfMonth
+            : _anchor.Day + 7 > DateTime.DaysInMonth(_anchor.Year, _anchor.Month) ? WeekOfMonth.Last
+            : (WeekOfMonth)((_anchor.Day - 1) / 7 + 1);
+        var kind = relative ? rule.RelativeDay : (RelativeDay)(int)_anchor.DayOfWeek;
+        MonthlyWhichBox.SelectedIndex = YearlyWhichBox.SelectedIndex = Array.FindIndex(WhichChoices, c => c.Value == which);
+        MonthlyKindBox.SelectedIndex = YearlyKindBox.SelectedIndex = Array.FindIndex(KindChoices, c => c.Value == kind);
+        MonthlyByRelativeRadio.IsChecked = YearlyByRelativeRadio.IsChecked = relative;
+        MonthlyByDayRadio.IsChecked = YearlyByDayRadio.IsChecked = !relative;
 
         var days = rule.DaysOfWeek.Count > 0 ? rule.DaysOfWeek : new List<DayOfWeek> { _anchor.DayOfWeek };
         MonCheck.IsChecked = days.Contains(DayOfWeek.Monday);
@@ -99,6 +134,13 @@ public partial class RecurrenceWindow : FluentWindow
 
     private void OkButton_Click(object sender, RoutedEventArgs e)
     {
+        Result = BuildRule();
+        DialogResult = true;
+    }
+
+    /// The rule the window's controls describe.
+    internal RecurrenceRule BuildRule()
+    {
         var rule = new RecurrenceRule();
 
         if (WeeklyRadio.IsChecked == true)
@@ -120,6 +162,7 @@ public partial class RecurrenceWindow : FluentWindow
             rule.Frequency = RecurrenceFrequency.Monthly;
             rule.Interval = ParseIntOrDefault(MonthlyIntervalBox.Text, 1);
             rule.DayOfMonth = Math.Clamp(ParseIntOrDefault(MonthlyDayBox.Text, _anchor.Day), 1, 31);
+            ApplyRelativeDay(rule, MonthlyByRelativeRadio, MonthlyWhichBox, MonthlyKindBox);
         }
         else if (YearlyRadio.IsChecked == true)
         {
@@ -127,6 +170,7 @@ public partial class RecurrenceWindow : FluentWindow
             rule.Interval = ParseIntOrDefault(YearlyIntervalBox.Text, 1);
             rule.Month = YearlyMonthBox.SelectedIndex >= 0 ? YearlyMonthBox.SelectedIndex + 1 : _anchor.Month;
             rule.DayOfMonth = Math.Clamp(ParseIntOrDefault(YearlyDayBox.Text, _anchor.Day), 1, 31);
+            ApplyRelativeDay(rule, YearlyByRelativeRadio, YearlyWhichBox, YearlyKindBox);
         }
         else
         {
@@ -149,8 +193,18 @@ public partial class RecurrenceWindow : FluentWindow
             rule.EndType = RecurrenceEndType.Never;
         }
 
-        Result = rule;
-        DialogResult = true;
+        return rule;
+    }
+
+    private static void ApplyRelativeDay(RecurrenceRule rule, System.Windows.Controls.RadioButton relativeRadio,
+        System.Windows.Controls.ComboBox whichBox, System.Windows.Controls.ComboBox kindBox)
+    {
+        if (relativeRadio.IsChecked != true)
+            return;
+
+        rule.MonthDayRule = MonthDayRule.RelativeDay;
+        rule.WeekOfMonth = WhichChoices[Math.Max(0, whichBox.SelectedIndex)].Value;
+        rule.RelativeDay = KindChoices[Math.Max(0, kindBox.SelectedIndex)].Value;
     }
 
     private void DontRepeatButton_Click(object sender, RoutedEventArgs e)
