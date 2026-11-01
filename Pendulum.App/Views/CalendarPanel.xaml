@@ -8,7 +8,6 @@
     </UserControl.DataContext>
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
         <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
         <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
         <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
@@ -103,7 +102,7 @@
                             <Style TargetType="Border">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource PendulumAccentBrush}"/>
+                                        <Setter Property="Background" Value="{DynamicResource PendulumAccentBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -118,7 +117,7 @@
                                             <Setter Property="Foreground" Value="{DynamicResource TextFillColorTertiaryBrush}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

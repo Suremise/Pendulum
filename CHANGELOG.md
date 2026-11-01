@@ -8,6 +8,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The app's accent colour is now rose, to match the new icon: buttons, toggles,
+  the selected tab, links and the alert popup, in shades that stay easy to read
+  on the light and dark themes. Switching the theme while Pendulum runs no
+  longer turns buttons blue.
 - Links (in About and the "View release" link in the status bar) are now easy
   to read on the dark theme, and match the app's accent on the light one.
 - Runs on .NET 10, Microsoft's current long-term support release, in place of

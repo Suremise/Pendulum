@@ -85,3 +85,23 @@ Dialect's violet, Replica's teal, Legible's blue and Overmark's copper.
 | `--brand-rose-600` | `#A3234B` | Gradient bottom |
 | `--brand-face` | `#2E1420` | The face, top |
 | `--brand-face-deep` | `#1A0A12` | The face, bottom, and its ring; the small icon's glyph |
+
+## The app's accent
+
+The app's UI takes its accent from the icon: rose, with a set of shades for each theme
+(`Pendulum.App/Services/AppThemeManager.cs`, which applies them; WPF-UI draws its controls from
+them). Contrast is WCAG 2, against the themes' backgrounds (light `#FAFAFA` to `#EEEEEE`, dark
+`#202020` to `#323232`).
+
+| Token | Light | Dark | Used for | Contrast (worst case) |
+|---|---|---|---|---|
+| `--accent-fill` | `#C7305E` | `#F56A8F` | Primary buttons, toggles, checked boxes; the selected tab's bar, the panel's frame, today in the calendar | Its label (white on light, black on dark): 5.23 / 7.34. On the backgrounds: 4.51 / 4.48 |
+| `--accent-hover` | `#A3234B` | `#FF8FB0` | A primary button under the pointer; WPF-UI's other accent fills | Its label: 7.24 / 9.81 |
+| `--accent-text` | `#A3234B` | `#FF8FB0` | Accent-coloured text and icons (the Settings section icons) | 6.24 / 5.99 |
+| `--accent-link` | `#A3234B` | `#FF8FB0` | Links | 6.24 / 5.99 |
+| `--accent-system` | `#D23A66` | `#F0567F` | The selection highlight | |
+| `--accent-soft` | `#C7305E` at 16% | `#F56A8F` at 16% | The selected tab's background | |
+
+The alert popup keeps its own dark look in both themes: a plum face (`#2A1720`, the icon's face
+colour), a `#8E3A58` frame, the "PENDULUM" label in `#E3A9BD` (8.6:1) and the subtitle in
+`#EBD3DC` (12.0:1).

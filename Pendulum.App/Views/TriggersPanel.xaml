@@ -21,7 +21,6 @@
         <SolidColorBrush x:Key="FixedBadgeBrush" Color="#333B82F6"/>
         <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
         <SolidColorBrush x:Key="DisabledBadgeBrush" Color="#33F59E0B"/>
-        <SolidColorBrush x:Key="PendulumAccentBrush" Color="#FF7C6AE0"/>
         <SolidColorBrush x:Key="FilterActiveBrush" Color="#4048A0FA"/>
         <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
         <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
@@ -228,7 +227,7 @@
                     <ui:Button Content="Filters" Icon="{ui:SymbolIcon Filter24}"
                                Style="{StaticResource FiltersToggleButton}"
                                Command="{Binding ToggleFilterRowCommand}"/>
-                    <Border Width="8" Height="8" CornerRadius="4" Background="{StaticResource PendulumAccentBrush}"
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource PendulumAccentBrush}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0"
                             IsHitTestVisible="False"
                             Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}"/>
@@ -250,7 +249,7 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <CheckBox IsChecked="{Binding IsSelectedForBulk, Mode=TwoWay}" VerticalAlignment="Center"
-                                                  BorderBrush="{StaticResource PendulumAccentBrush}" BorderThickness="1.5"/>
+                                                  BorderBrush="{DynamicResource PendulumAccentBrush}" BorderThickness="1.5"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -260,7 +259,7 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="NAME" Style="{StaticResource ColumnFilterLabel}"/>
-                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                             </StackPanel>
                                             <ui:TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}"
                                                         PlaceholderText="Filter..." FontSize="12" FontWeight="Normal"
@@ -282,7 +281,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="TYPE" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -330,7 +329,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="TRIGGERS ON" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -366,7 +365,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="MODE" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -410,7 +409,7 @@
                                     <GridViewColumnHeader Tag="SoundFileName" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="SOUND" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                         </StackPanel>
                                     </GridViewColumnHeader>
                                 </GridViewColumn.Header>
@@ -427,7 +426,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="STATUS" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{StaticResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"

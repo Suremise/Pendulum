@@ -11,9 +11,13 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Links in the theme's link colour (AppThemeManager sets it per theme), readable on
-                 light and dark alike. -->
-            <SolidColorBrush x:Key="PendulumLinkBrush" Color="#A99CF5"/>
+            <!-- Pendulum's own accent brushes: AppThemeManager sets each per theme. These are the
+                 dark theme's, until it runs. The accent marks the selected tab and the panel's
+                 frame, today in the calendar and the sort arrows; links take their own shade, readable
+                 on light and dark alike. -->
+            <SolidColorBrush x:Key="PendulumAccentBrush" Color="#F56A8F"/>
+            <SolidColorBrush x:Key="PendulumAccentSoftBrush" Color="#29F56A8F"/>
+            <SolidColorBrush x:Key="PendulumLinkBrush" Color="#FF8FB0"/>
             <Style TargetType="Hyperlink">
                 <Setter Property="Foreground" Value="{DynamicResource PendulumLinkBrush}"/>
             </Style>
