@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/icon/pendulum-128.png" width="96" height="96" alt="Pendulum's icon: a clock face with a swinging pendulum, in a rose circle"></p>
+
 # Pendulum
 
 A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of the way in the system tray and surfaces alerts as a topmost popup with sound and/or spoken-phrase notifications, even while you're working in another window.

@@ -38,7 +38,7 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayIcon={app}\Pendulum.exe
-SetupIconFile=..\Pendulum.App\Resources\pendulum.ico
+SetupIconFile=..\assets\icon\pendulum.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

@@ -10,7 +10,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>Resources\pendulum.ico</ApplicationIcon>
+    <ApplicationIcon>..\assets\icon\pendulum.ico</ApplicationIcon>
     <AssemblyName>Pendulum</AssemblyName>
     <RootNamespace>Pendulum.App</RootNamespace>
     <SelfContained>true</SelfContained>
@@ -30,7 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\pendulum.ico" />
+    <Resource Include="..\assets\icon\pendulum.ico" Link="Resources\pendulum.ico" />
+    <Resource Include="..\assets\tray\tray.ico" Link="Resources\tray.ico" />
   </ItemGroup>
 
   <ItemGroup>

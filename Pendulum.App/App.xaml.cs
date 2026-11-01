@@ -90,7 +90,7 @@ public partial class App : Application
 
             AppThemeManager.Apply(AppServices.Instance.Settings.Theme);
 
-            var iconUri = new Uri("pack://application:,,,/Resources/pendulum.ico", UriKind.Absolute);
+            var iconUri = new Uri("pack://application:,,,/Resources/tray.ico", UriKind.Absolute);
             var iconImage = new BitmapImage(iconUri);
 
             _trayIcon = new TaskbarIcon
