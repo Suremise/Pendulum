@@ -23,3 +23,6 @@ Data/
 
 # Local-only material kept on disk for reference/convenience
 excluded/
+
+# Personal agent notes, never committed
+CLAUDE.local.md

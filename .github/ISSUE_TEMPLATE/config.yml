@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/Suremise/Pendulum/security/advisories/new
+    about: Please report security problems privately here, not in a public issue.
+  - name: What Pendulum does
+    url: https://github.com/Suremise/Pendulum#readme
+    about: The features, where Pendulum keeps its data, and how to build it.

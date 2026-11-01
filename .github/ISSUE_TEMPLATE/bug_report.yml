@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in Pendulum doesn't work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. **A security problem?** Please don't open an issue: report it privately, as [SECURITY.md](https://github.com/Suremise/Pendulum/blob/master/SECURITY.md) says.
+
+        Before attaching or pasting anything, check it for things you'd rather keep private: your reminders' names, and folder names in paths.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. A screenshot helps.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to show it
+      description: What you set up and clicked or typed. For a reminder that fired at the wrong time, say its date, time and how it repeats, and when it fired.
+      placeholder: |
+        1. Add a reminder for 9:00 every weekday
+        2. Snooze it on Friday
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Pendulum version
+      description: In Pendulum, open About.
+      placeholder: "1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Press Win+R, type winver, and copy what it shows.
+      placeholder: "Windows 11 24H2 (26100.1234)"
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: The crash log
+      description: If Pendulum closed or did something odd, `Data\crash.log` beside Pendulum.exe (for an installed copy, in `%LocalAppData%\Programs\Pendulum\`). It holds file paths, so check it first.
+      render: text
