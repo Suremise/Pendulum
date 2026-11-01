@@ -26,20 +26,17 @@ body:
         3. ...
     validations:
       required: true
-  - type: input
-    id: version
+  - type: textarea
+    id: about
     attributes:
-      label: Pendulum version
-      description: In Pendulum, open About.
-      placeholder: "1.1.0"
-    validations:
-      required: true
-  - type: input
-    id: windows
-    attributes:
-      label: Windows version
-      description: Press Win+R, type winver, and copy what it shows.
-      placeholder: "Windows 11 24H2 (26100.1234)"
+      label: About Pendulum
+      description: In Pendulum, open About (bottom of the main window), choose Copy, and paste it here. It has the version, when it was built, and the .NET and Windows versions. Version 1.1.0 and earlier have no Copy button; there, type the version About shows, and the Windows version (press Win+R, type winver).
+      placeholder: |
+        Pendulum 1.2.0
+        Built: ...
+        .NET: ...
+        Windows: ...
+      render: text
     validations:
       required: true
   - type: textarea

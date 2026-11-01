@@ -16,7 +16,8 @@ maintainers can see it.
 Please include:
 
 - what the problem is, and what someone could do with it;
-- a file (or the steps) that shows it, the Pendulum version (in About) and the Windows version;
+- a file (or the steps) that shows it, and what About's Copy gives (the Pendulum, .NET and
+  Windows versions; on 1.1.0 and earlier, the version About shows and the Windows version);
 - anything you've found about a fix.
 
 We aim to answer within a week, and to keep you told as we work on it. We'll credit you in the
