@@ -22,7 +22,8 @@ Pendulum.App/    the WPF app (WPF-UI, CommunityToolkit.Mvvm, H.NotifyIcon): wind
 Pendulum.Core.Tests/ the tests (xUnit, test-only), and Fixtures/: Data files as each
                  release wrote them
 installer/       the Inno Setup script; build-installer.ps1 publishes and compiles it
-docs/screenshots/ the README's pictures
+tools/Pendulum.Screenshots/ renders the README's pictures (build-only, never shipped)
+docs/screenshots/ the README's pictures, from that tool
 ```
 
 - **Logic goes in Pendulum.Core**, where it can be tested without a window: anything that decides
@@ -51,6 +52,7 @@ dotnet build Pendulum.sln -c Debug --disable-build-servers
 dotnet test Pendulum.sln --disable-build-servers     # every test project in the solution
 pwsh scripts/third-party-notices.ps1 -Check           # THIRD-PARTY-NOTICES.md matches what ships
 dotnet format Pendulum.sln --verify-no-changes --no-restore   # the layout .editorconfig sets
+pwsh scripts/screenshots.ps1                         # the README's pictures, into docs/screenshots
 .\build-installer.ps1                                # the installer, with Inno Setup 6
 ```
 
@@ -80,6 +82,12 @@ dotnet format Pendulum.sln --verify-no-changes --no-restore   # the layout .edit
   providers, the AutomationPeers a screen reader talks to. They never use Pendulum's `App` class
   (its startup takes the single-instance mutex and would wake a running copy), and use `AppPaths`'
   and `AppServices`' internal test seams for a temp folder and loaded settings.
+- **The README's pictures are rendered, never captured.** `pwsh scripts/screenshots.ps1` builds
+  `tools/Pendulum.Screenshots`, which lays the app's own views out in memory the same way, with
+  invented reminders dated around today (dark theme, en-GB dates, 24-hour times), and draws them
+  with `RenderTargetBitmap` into `docs/screenshots`. It shows no window, uses a temp folder through
+  the same test seams, and never uses the `App` class. Run it again when a change alters what the
+  pictures show. Never take them from a screen, where private reminders could show.
 - **Nothing a test, check or screenshot script does may take the foreground or focus.** The user is
   working in other apps while it runs. A shown window can take the foreground even with
   `ShowActivated = false` and `WS_EX_NOACTIVATE`, so don't show one: lay the view out in memory and

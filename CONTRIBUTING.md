@@ -45,7 +45,10 @@ Pendulum.App/
   Services/      app wiring, alerts, the tray, the hotkey, theme, crash log, launch on startup
   Resources/     the icon and the bundled sounds
 Pendulum.Core.Tests/   the tests (xUnit), with Fixtures/: Data files as each release wrote them
+Pendulum.App.Tests/    the UI tests: the real views, laid out in memory and read through UI Automation
 installer/       the Inno Setup script
+tools/Pendulum.Screenshots/   renders the README's screenshots (build-only, never shipped)
+docs/screenshots/             those screenshots
 ```
 
 **Pendulum.Core has no UI**: it references no WPF and shows no windows, so its logic can be tested
@@ -92,5 +95,8 @@ libraries included), sounds and icons.
 - Keep a pull request to one change, and update the README for anything it describes.
 - **Add an entry under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md)** for anything a user
   would notice, in plain words.
-- A change to what's on screen comes with before and after screenshots.
+- A change to what's on screen comes with before and after screenshots. When it changes what the
+  README's pictures show, run `pwsh scripts/screenshots.ps1` to render them again: it draws the
+  app's own views off screen with invented reminders, so no window opens and nothing of yours is
+  in them.
 - By contributing, you agree that your contribution is under Pendulum's [MIT licence](LICENSE).

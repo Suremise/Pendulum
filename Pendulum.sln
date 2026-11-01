@@ -11,6 +11,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pendulum.Core.Tests", "Pend
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pendulum.App.Tests", "Pendulum.App.Tests\Pendulum.App.Tests.csproj", "{A4DE1584-9AD0-4690-8D88-15D48F8FAA99}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E-EAC7-C090-1BA3-A61EC2A24D84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pendulum.Screenshots", "tools\Pendulum.Screenshots\Pendulum.Screenshots.csproj", "{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,8 +73,23 @@ Global
 		{A4DE1584-9AD0-4690-8D88-15D48F8FAA99}.Release|x64.Build.0 = Release|x64
 		{A4DE1584-9AD0-4690-8D88-15D48F8FAA99}.Release|x86.ActiveCfg = Release|x64
 		{A4DE1584-9AD0-4690-8D88-15D48F8FAA99}.Release|x86.Build.0 = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|Any CPU.Build.0 = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|x64.ActiveCfg = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|x64.Build.0 = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|x86.ActiveCfg = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Debug|x86.Build.0 = Debug|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|Any CPU.ActiveCfg = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|Any CPU.Build.0 = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|x64.ActiveCfg = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|x64.Build.0 = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|x86.ActiveCfg = Release|x64
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{56BCAF2C-4026-4AF6-9396-BDFB90B33A7C} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 	EndGlobalSection
 EndGlobal

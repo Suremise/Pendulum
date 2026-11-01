@@ -19,7 +19,7 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
       <sub>Ctrl+Shift+R anywhere, type or speak it — "call mom 3pm", "in 20 min" — and it's scheduled.</sub>
     </td>
     <td align="center">
-      <img src="docs/screenshots/alert.png" width="260" alt="Alert popup with Snooze and Dismiss buttons" /><br/>
+      <img src="docs/screenshots/alert.png" width="290" alt="Alert popup with Snooze and Dismiss buttons" /><br/>
       <sub>When it comes due: a small topmost popup, sound and/or spoken phrase, one click to snooze or dismiss.</sub>
     </td>
   </tr>
