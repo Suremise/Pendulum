@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Editing a repeating reminder after snoozing it no longer moves its time to
+  the snooze time for good (a 9:00 stand-up snoozed once and then renamed
+  went off at 9:10 every day). The edit window shows its usual time, and
+  saving without changing the time keeps the pattern, and the snooze.
 - Turning a repeating reminder back on from the list no longer rings it at
   once for a time that went by while it was off: it goes off next at its next
   time. A one-off whose time has passed stays off, and Pendulum says to give

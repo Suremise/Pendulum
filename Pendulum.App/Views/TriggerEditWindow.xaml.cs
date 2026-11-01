@@ -23,6 +23,8 @@ public partial class TriggerEditWindow : FluentWindow
     private readonly bool _isNew;
     private bool _isLoading;
     private RecurrenceRule? _recurrence;
+    // The date and time the window loaded, so Save can tell whether the user changed them.
+    private DateTime _shownAt;
 
     // The Test button previews sound/speech independently of AppServices.Instance.AlertPlayback —
     // that controller may be actively sounding a real, currently-firing alert, and sharing it here
@@ -99,7 +101,10 @@ public partial class TriggerEditWindow : FluentWindow
 
         NameBox.Text = t.Name;
 
-        var dt = t.TriggerAt;
+        // Its scheduled occurrence: for a snoozed repeating reminder that's the pattern's time, not
+        // the snooze's, so saving it unchanged doesn't move the daily time to the snooze time.
+        var dt = RecurrenceCalculator.ScheduledOccurrence(t);
+        _shownAt = dt;
         DatePickerControl.SelectedDate = dt.Date;
         MinuteBox.SelectedItem = dt.Minute.ToString("00");
         SecondBox.SelectedItem = dt.Second.ToString("00");
@@ -253,10 +258,10 @@ public partial class TriggerEditWindow : FluentWindow
         var enabledByUser = EnabledBox.IsChecked == true;
 
         // A repeating reminder first goes off on its pattern (Outlook's way), which may be after the
-        // start date; a one-off goes off at its start.
-        DateTime? firstOccurrence = _recurrence is not null
-            ? RecurrenceCalculator.FirstOccurrence(_recurrence, scheduledAt, now)
-            : scheduledAt > now ? scheduledAt : null;
+        // start date; a one-off goes off at its start. With the time and the repeat untouched, the
+        // series keeps its anchor, and a pending snooze.
+        var (anchor, firstOccurrence) = TriggerReconciler.ScheduleAfterEdit(
+            _target, _recurrence, ruleChanged: !ReferenceEquals(_recurrence, _target.Recurrence), _shownAt, scheduledAt, now);
 
         // The user asked for this to be enabled, but the date/time they set is in the past
         // (e.g. only the time was changed and the date field was left stale after midnight) —
@@ -279,7 +284,7 @@ public partial class TriggerEditWindow : FluentWindow
         _previewPlayback.Stop();
 
         _target.Name = NameBox.Text.Trim();
-        _target.RecurrenceAnchor = scheduledAt;
+        _target.RecurrenceAnchor = anchor;
         _target.Recurrence = _recurrence;
         _target.Mode = mode;
         _target.SoundFileName = soundFile;

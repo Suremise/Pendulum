@@ -151,6 +151,39 @@ public static class RecurrenceCalculator
             : GetNextFutureOccurrenceWithinEndCondition(rule, start, first.Value, now);
     }
 
+    /// The occurrence a reminder is scheduled for, for showing and editing it. That's its
+    /// TriggerAt, except for a snoozed repeating reminder, whose TriggerAt is the snooze time (now
+    /// plus the snooze minutes) and off its pattern: then it's the pattern's latest occurrence at or
+    /// before that, so the edit window shows 09:00 for a daily 09:00 reminder snoozed to 09:10:37.
+    public static DateTime ScheduledOccurrence(TriggerTimer trigger)
+    {
+        if (trigger.Recurrence is not { Frequency: not RecurrenceFrequency.None } rule)
+            return trigger.TriggerAt;
+
+        var anchor = trigger.RecurrenceAnchor;
+        var interval = Math.Max(1, rule.Interval);
+        var lookBack = rule.Frequency switch
+        {
+            RecurrenceFrequency.Daily => trigger.TriggerAt.AddDays(-(interval + 1)),
+            RecurrenceFrequency.Weekly => trigger.TriggerAt.AddDays(-7 * (interval + 1)),
+            RecurrenceFrequency.Monthly => trigger.TriggerAt.AddMonths(-(interval + 1)),
+            _ => trigger.TriggerAt.AddYears(-(interval + 1)),
+        };
+        var after = lookBack > anchor ? lookBack : anchor.AddTicks(-1);
+
+        DateTime? latest = null;
+        for (int i = 0; i < MaxIterations; i++)
+        {
+            var next = GetNextOccurrence(rule, anchor, after);
+            if (next is null || next.Value > trigger.TriggerAt)
+                break;
+            latest = next;
+            after = next.Value;
+        }
+
+        return latest ?? trigger.TriggerAt;
+    }
+
     /// Whether <paramref name="start"/> is itself one of the rule's occurrences, by day (the time
     /// of day is the start's own, so it always fits).
     private static bool FitsPattern(RecurrenceRule rule, DateTime start)

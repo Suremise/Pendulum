@@ -70,6 +70,30 @@ public static class TriggerReconciler
         return EnableOutcome.MovedOn;
     }
 
+    /// What saving the edit window sets: the series' anchor, and when the reminder next goes off
+    /// (null when nothing is left to fire). <paramref name="shown"/> is the date and time the
+    /// window loaded (<see cref="RecurrenceCalculator.ScheduledOccurrence"/>), <paramref name="edited"/>
+    /// what it holds now.
+    ///
+    /// When the user changed neither the time nor the repeat, the series stays as it was: its anchor
+    /// keeps its time of day, and a pending snooze still goes off. Otherwise the edited time is the
+    /// new start, and the first firing follows the pattern from it.
+    public static (DateTime Anchor, DateTime? Next) ScheduleAfterEdit(
+        TriggerTimer before, RecurrenceRule? rule, bool ruleChanged, DateTime shown, DateTime edited, DateTime now)
+    {
+        if (rule is not null && !ruleChanged && edited == shown)
+        {
+            var anchor = before.RecurrenceAnchor;
+            if (!before.HasFired && before.TriggerAt > now)
+                return (anchor, before.TriggerAt);
+            return (anchor, RecurrenceCalculator.FirstOccurrence(rule, anchor, now));
+        }
+
+        return (edited, rule is not null
+            ? RecurrenceCalculator.FirstOccurrence(rule, edited, now)
+            : edited > now ? edited : null);
+    }
+
     /// Re-arms a fired trigger to go off again <paramref name="snoozeMinutes"/> from now.
     /// TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a snooze re-fires
     /// the same occurrence rather than starting a new one, so that count is undone here and
