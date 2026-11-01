@@ -10,6 +10,13 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Links in the theme's link colour (AppThemeManager sets it per theme), readable on
+                 light and dark alike. -->
+            <SolidColorBrush x:Key="PendulumLinkBrush" Color="#A99CF5"/>
+            <Style TargetType="Hyperlink">
+                <Setter Property="Foreground" Value="{DynamicResource PendulumLinkBrush}"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

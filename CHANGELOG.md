@@ -8,6 +8,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- Links (in About and the "View release" link in the status bar) are now easy
+  to read on the dark theme, and match the app's accent on the light one.
 - Runs on .NET 10, Microsoft's current long-term support release, in place of
   .NET 8, whose support ends in November 2026. The installer still includes
   everything it needs: there's nothing extra to install, and your reminders and

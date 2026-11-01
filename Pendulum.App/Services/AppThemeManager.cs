@@ -1,6 +1,9 @@
+using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
 using Pendulum.Core.Models;
+// WPF has its own System.Windows.ThemeMode since .NET 9: the settings' one is meant here.
+using ThemeMode = Pendulum.Core.Models.ThemeMode;
 using Wpf.Ui.Appearance;
 
 namespace Pendulum.App.Services;
@@ -10,6 +13,15 @@ namespace Pendulum.App.Services;
 /// reset accent brushes back to the Windows default.
 internal static class AppThemeManager
 {
+    /// The resource key of the brush links are drawn in (App.xaml's Hyperlink style).
+    public const string LinkBrushKey = "PendulumLinkBrush";
+
+    // WPF's default link blue is 2.5:1 on the dark theme's cards. These keep links at 4.5:1 or
+    // more on every surface of their theme: #A99CF5 is 5.3:1 on dark cards (#323232) and more on
+    // the window; #4C3BAE is 7.1:1 on light ones (#EEEEEE) and more on the window.
+    private const string LinkOnDark = "#A99CF5";
+    private const string LinkOnLight = "#4C3BAE";
+
     public static void Apply(ThemeMode mode)
     {
         var theme = mode switch
@@ -20,6 +32,10 @@ internal static class AppThemeManager
         };
 
         ApplicationThemeManager.Apply(theme);
+
+        var link = new SolidColorBrush((Color)ColorConverter.ConvertFromString(theme == ApplicationTheme.Dark ? LinkOnDark : LinkOnLight)!);
+        link.Freeze();
+        Application.Current.Resources[LinkBrushKey] = link;
 
         ApplicationAccentColorManager.Apply(
             (Color)ColorConverter.ConvertFromString("#7C6AE0")!,
