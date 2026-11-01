@@ -76,6 +76,28 @@ Sounds\
   chime.wav, bell.wav, ...
 ```
 
+## Privacy
+
+Pendulum has no telemetry and no account. It goes online for one thing only, and only if you
+turn it on: **Settings > General > Check for updates on startup** (off for new installs; if you
+had it on before, it stays on).
+
+- **What it sends:** one HTTPS request to GitHub's API,
+  `GET https://api.github.com/repos/Suremise/Pendulum/releases/latest`, with the user agent
+  `Pendulum/1` and nothing else that identifies you or your computer. GitHub sees your IP
+  address, as with any web request.
+- **How often:** only when Pendulum starts. A successful answer is kept in
+  `Data\settings.json` for a day, so starts within that day send nothing. A check that fails
+  (you're offline, or GitHub doesn't answer within 5 seconds or answers with an error) is
+  dropped silently and tried again at the next start.
+- **What it does with the answer:** if a newer version exists, a link appears in the status
+  bar. Pendulum never downloads or installs anything itself.
+
+The Whisper and Piper speech engines and voices are never downloaded by Pendulum: the buttons
+in Settings open their download pages in your browser, and you put the files in
+`Data\WhisperModels\` or `Data\PiperModels\` yourself. Speech is then processed entirely on your
+computer.
+
 ## License
 
 Pendulum is released under the [MIT License](LICENSE). © 2026 Darren Marshall.

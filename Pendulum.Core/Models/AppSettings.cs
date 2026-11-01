@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Pendulum.Core.Models;
@@ -21,7 +22,7 @@ public enum TextToSpeechEngine
     Piper
 }
 
-public partial class AppSettings : ObservableObject
+public partial class AppSettings : ObservableObject, IJsonOnDeserializing
 {
     [ObservableProperty] private string defaultSoundFileName = "chime.wav";
     [ObservableProperty] private string? ttsVoiceName;
@@ -37,7 +38,10 @@ public partial class AppSettings : ObservableObject
     /// outcome as if the user had clicked Dismiss. Has no effect when RepeatAlertUntilDismissed is true.
     [ObservableProperty] private int autoResolveMinutes = 30;
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
-    [ObservableProperty] private bool checkForUpdatesOnStartup = true;
+    /// Off for a new install: Pendulum goes online only when the user turns this on. Settings
+    /// read from a file (settings.json or a backup) that predates this default and doesn't name
+    /// the key keep the old default, on: see OnDeserializing.
+    [ObservableProperty] private bool checkForUpdatesOnStartup;
 
     /// Cache for UpdateCheckService, so it only actually hits GitHub once a day rather than
     /// on every launch. Null until the first check ever runs.
@@ -84,4 +88,9 @@ public partial class AppSettings : ObservableObject
     [ObservableProperty] private bool reminderFilterModeSpeechOnly;
     [ObservableProperty] private DateTime? reminderFilterFrom;
     [ObservableProperty] private DateTime? reminderFilterTo;
+
+    /// Runs before a file's values are applied. Up to 1.1.0 the update check was on by default,
+    /// so a file without the key had it on: keep it so, rather than turning a user's check off
+    /// when they upgrade. A file that names the key sets it as it says.
+    void IJsonOnDeserializing.OnDeserializing() => CheckForUpdatesOnStartup = true;
 }

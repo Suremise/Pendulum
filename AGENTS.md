@@ -73,12 +73,13 @@ dotnet test Pendulum.sln             # every test project in the solution
   **MIT or equally permissive** (Apache-2.0, BSD, ISC, Zlib, ...). No copyleft, and system fonts
   only. Build-only tools may use any open-source licence. A dependency outside the rule stops the
   work for the maintainer's decision. A new or changed package updates THIRD-PARTY-NOTICES.md.
-- **No network beyond two things:** the update check (`UpdateCheckService`, one cached GitHub
-  request a day, on by default and turned off by Settings > General, "Check for updates on
-  startup") and the links in Settings that open the
-  Whisper and Piper download pages in the user's browser. No telemetry, no other requests, and
-  tests make none. The update check notifies and links to the release: it never downloads or
-  installs.
+- **No network beyond two things:** the update check (`UpdateCheckService`) and the links in
+  Settings that open the Whisper and Piper download pages in the user's browser. The update check
+  is off unless the user turns on Settings > General, "Check for updates on startup" (settings
+  files from before that default keep it on). It sends one GitHub request at startup; a
+  successful answer is cached a day, and a failure is retried at the next start. It notifies and
+  links to the release: it never downloads or installs. No telemetry, no other requests, and
+  tests make none.
 - **No global keyboard or mouse input, ever**, in tests, probes or scripts: no SendKeys,
   SendInput, keybd_event or mouse_event, wscript or AutoHotkey, and no clicking at screen
   coordinates. Synthetic input goes to whatever is in the foreground, which is the user's work (on

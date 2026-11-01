@@ -8,6 +8,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- The update check is now off for new installs: Pendulum goes online only if you
+  turn on Settings > General > "Check for updates on startup". If you already
+  had it on, it stays on. The README's new Privacy section says exactly what
+  the check sends.
 - New icon, in the style of the other Tools apps: the same clock face and
   swinging pendulum, now on a rose circle, with a bolder version for the tray
   and small sizes so it reads on light and dark taskbars.

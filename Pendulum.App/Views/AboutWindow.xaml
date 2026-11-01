@@ -48,7 +48,7 @@
                 <Run Text="Open source under the "/><Hyperlink Click="LicenseButton_Click">MIT License</Hyperlink><Run Text=". Includes "/><Hyperlink Click="ThirdPartyNoticesButton_Click">third-party software</Hyperlink><Run Text="."/>
             </TextBlock>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"
-                       Text="No telemetry. Pendulum goes online only to check for updates, which you can turn off in Settings."/>
+                       Text="No telemetry. Pendulum goes online only to check for updates, and only when that's turned on in Settings."/>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,20"
                        Text="© 2026 Darren Marshall."/>
 

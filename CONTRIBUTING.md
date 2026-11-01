@@ -67,7 +67,8 @@ libraries included), sounds and icons.
   registry or your sounds, and cleans up after itself even when it fails.
 - **Tests wait for conditions, never for time,** and pass under load, beside every other test.
   Pass the time into the code under test rather than reading the clock.
-- **No network:** Pendulum makes no network calls beyond its update check, and its tests make none.
+- **No network:** Pendulum makes no network calls beyond its update check, which is off unless the
+  user turns it on, and its tests make none.
 - **No global keyboard or mouse input,** ever: a test drives only its own windows, through UI
   Automation on its own process or messages to its own window.
 - A fix comes with a test that fails without it, where the code can be tested.
