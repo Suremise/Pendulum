@@ -98,6 +98,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Restore backup and Reset settings now cover every setting, including
   "Delete spent reminders after", and save once. Neither changes Start with
   Windows any more: only its own checkbox does.
+- An alert whose sound or spoken phrase fails (a damaged sound file, no audio
+  device, a Piper problem) no longer goes quiet for good: the rest of the alert
+  carries on and repeats, Piper falls back to the Windows voice, and the reason
+  is written to `Data\crash.log`. Piper can no longer hang an alert, and Test
+  voice and a reminder's Test button now say what went wrong.
 
 ### Changed
 - New alert sounds: the chime, bell and alert are now Pendulum's own, made for it. A reminder

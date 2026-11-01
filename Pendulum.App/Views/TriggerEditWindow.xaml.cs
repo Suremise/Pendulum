@@ -45,7 +45,11 @@ public partial class TriggerEditWindow : FluentWindow
         EditorTitleBar.Title = Title;
 
         _previewSpeech = AppServices.Instance.CreateSpeechEngine();
-        _previewPlayback = new AlertPlaybackController(_previewAudio, _previewSpeech);
+        _previewPlayback = new AlertPlaybackController(
+            _previewAudio,
+            _previewSpeech,
+            _previewSpeech is PiperSpeechService ? AppServices.Instance.CreateWindowsSpeechEngine : null,
+            problem => Dispatcher.BeginInvoke(() => ShowTestProblem(problem)));
         Closed += (_, __) =>
         {
             _previewPlayback.Dispose();
@@ -234,6 +238,18 @@ public partial class TriggerEditWindow : FluentWindow
         string? soundFile = SoundBox.SelectedIndex <= 0 ? null : SoundBox.SelectedItem as string;
         var phrase = PhraseBox.Text;
         return (soundFile, CurrentMode, phrase, (int)VolumeSlider.Value);
+    }
+
+    /// Test tells the user what didn't play, and why, rather than staying silent.
+    private void ShowTestProblem(AlertProblem problem)
+    {
+        var message = problem switch
+        {
+            { Step: AlertStep.Sound } => Strings.Edit_TestSoundFailed,
+            { FellBackToWindowsSpeech: true } => Strings.Edit_TestPiperFellBack,
+            _ => Strings.Edit_TestSpeechFailed,
+        };
+        System.Windows.MessageBox.Show(this, string.Format(message, problem.Error.Message), Strings.App_Name, System.Windows.MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     private void TestButton_Click(object sender, RoutedEventArgs e)

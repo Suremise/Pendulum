@@ -34,4 +34,7 @@
   <data name="DayKind_Weekday" xml:space="preserve"><value>weekday</value></data>
   <data name="DayKind_WeekendDay" xml:space="preserve"><value>weekend day</value></data>
   <data name="File_Unreadable" xml:space="preserve"><value>Pendulum couldn't read {0}. Another program may have it open: try again in a moment. Nothing was changed.</value><comment>{0}: the data file's full path. Shown when Pendulum stops at startup rather than start without it.</comment></data>
+  <data name="Piper_CouldNotStart" xml:space="preserve"><value>Piper couldn't start ({0}): {1}</value><comment>{0}: piper.exe's full path; {1}: Windows' reason.</comment></data>
+  <data name="Piper_TimedOut" xml:space="preserve"><value>Piper took longer than {0} seconds to speak, so it was stopped.</value><comment>{0}: the number of seconds.</comment></data>
+  <data name="Piper_Failed" xml:space="preserve"><value>Piper stopped with exit code {0}. {1}</value><comment>{0}: piper's exit code; {1}: the last line piper wrote about the problem (may be empty).</comment></data>
 </root>

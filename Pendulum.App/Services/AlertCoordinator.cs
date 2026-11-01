@@ -30,7 +30,13 @@ public static class AlertCoordinator
         // two reminders firing close together would silently cut each other's sound/speech off.
         var audio = new AudioService();
         var speech = services.CreateSpeechEngine();
-        var playback = new AlertPlaybackController(audio, speech);
+        // A sound or phrase that fails never stops the alert: the rest carries on, Piper falls
+        // back to the Windows voice, and the reason goes to Data\crash.log.
+        var playback = new AlertPlaybackController(
+            audio,
+            speech,
+            speech is PiperSpeechService ? services.CreateWindowsSpeechEngine : null,
+            problem => CrashLog.Write($"Alert {problem.Step}{(problem.FellBackToWindowsSpeech ? " (fell back to the Windows voice)" : "")}", problem.Error));  // not user-visible
         playback.Start(soundPath, mode, phrase, repeat, volume);
 
         var window = new AlertWindow(title, subtitle, canSnooze);

@@ -191,17 +191,22 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void TestVoice()
+    private async Task TestVoice()
     {
         var engine = AppServices.Instance.CreateSpeechEngine();
-        _ = SpeakThenDisposeAsync(engine);
-    }
-
-    private static async Task SpeakThenDisposeAsync(ITextToSpeechEngine engine)
-    {
         try
         {
             await engine.SpeakAndWaitAsync(Strings.Settings_TestPhrase, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("TestVoice", ex);  // not user-visible
+            MessageBox.Show(
+                Application.Current.MainWindow!,
+                string.Format(Strings.Settings_TestVoiceFailed, ex.Message),
+                Strings.App_Name,
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
         finally
         {

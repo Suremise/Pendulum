@@ -1,7 +1,10 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Win32.SafeHandles;
 using Pendulum.Core.Audio;
+using Pendulum.Core.Resources;
 
 namespace Pendulum.Core.Speech;
 
@@ -17,6 +20,9 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
     private readonly float _speakingRate;
     private readonly float _volume;
     private readonly AudioService _audio = new();
+
+    /// How long piper may take to turn one phrase into audio before it's stopped. Tests set less.
+    internal TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
     public PiperSpeechService(string executablePath, string modelPath, float speakingRate, float volume)
     {
@@ -51,21 +57,12 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
             StandardInputEncoding = Encoding.UTF8,
         };
 
-        using var process = new Process { StartInfo = psi };
-        process.Start();
-
-        await process.StandardInput.WriteLineAsync(phrase);
-        process.StandardInput.Close();
-
-        using var pcm = new MemoryStream();
-        await process.StandardOutput.BaseStream.CopyToAsync(pcm, token);
-        await process.WaitForExitAsync(token);
-
+        var pcm = await RunPiperAsync(psi, phrase, token);
         if (pcm.Length == 0)
             return;
 
         var tempPath = Path.Combine(Path.GetTempPath(), $"pendulum-piper-{Guid.NewGuid():N}.wav");
-        await File.WriteAllBytesAsync(tempPath, BuildWavBytes(pcm.ToArray(), sampleRate), token);
+        await File.WriteAllBytesAsync(tempPath, BuildWavBytes(pcm, sampleRate), token);
         try
         {
             await _audio.PlayOnceAsync(tempPath, _volume, token);
@@ -73,6 +70,124 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
         finally
         {
             try { File.Delete(tempPath); } catch { /* best-effort cleanup */ }
+        }
+    }
+
+    /// Runs piper for one phrase and returns its audio (empty for none). Piper runs in a job of
+    /// its own: a dismiss or the time limit ends it and everything it started, and so does piper
+    /// finishing, so nothing it left running (a child holding its pipes) can keep the alert
+    /// waiting. stderr is never waited for.
+    private async Task<byte[]> RunPiperAsync(ProcessStartInfo psi, string phrase, CancellationToken token)
+    {
+        using var process = new Process { StartInfo = psi };
+        var exited = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        RegisteredWaitHandle? exitWait = null;
+        ManualResetEvent? exitHandle = null;
+
+        // stderr is read as it comes (left unread, a chatty piper fills the pipe and waits for
+        // ever); only its last line is kept, to say why piper failed.
+        var lastError = string.Empty;
+        var errorLock = new object();
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (!string.IsNullOrWhiteSpace(e.Data))
+                lock (errorLock) lastError = e.Data.Trim();
+        };
+
+        ProcessJob? job = null;
+        try
+        {
+            try
+            {
+                job = new ProcessJob();
+            }
+            catch (Win32Exception)
+            {
+                // No job (Windows refused one): a dismiss or timeout still ends piper's tree.
+            }
+
+            try
+            {
+                process.Start();
+            }
+            catch (Win32Exception e)
+            {
+                // piper.exe removed, or blocked by antivirus or policy.
+                throw new InvalidOperationException(string.Format(CoreStrings.Piper_CouldNotStart, _executablePath, e.Message), e);
+            }
+
+            job?.TryAdd(process);
+            process.BeginErrorReadLine();
+
+            // piper's own exit, from its process handle: Process.Exited and WaitForExitAsync also
+            // wait for its pipes to close, which a child it left running can hold open.
+            exitHandle = new ManualResetEvent(false) { SafeWaitHandle = new SafeWaitHandle(process.Handle, ownsHandle: false) };
+            exitWait = ThreadPool.RegisterWaitForSingleObject(exitHandle, (_, _) => exited.TrySetResult(), null, System.Threading.Timeout.Infinite, executeOnlyOnce: true);
+
+            using var pcm = new MemoryStream();
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(Timeout);
+            try
+            {
+                try
+                {
+                    await process.StandardInput.WriteLineAsync(phrase.AsMemory(), timeout.Token);
+                    process.StandardInput.Close();
+                }
+                catch (IOException)
+                {
+                    // piper has already exited: its exit code, below, says why.
+                }
+
+                var audio = process.StandardOutput.BaseStream.CopyToAsync(pcm, timeout.Token);
+                await exited.Task.WaitAsync(timeout.Token);
+
+                // piper has finished, so its audio is all in the pipe. Anything it left running
+                // (holding its pipes open) is ended now, which lets the pipe close after the
+                // audio rather than keep the alert waiting.
+                job?.Terminate();
+                await audio.WaitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                StopAll(process, job);
+                token.ThrowIfCancellationRequested();
+                throw new TimeoutException(string.Format(CoreStrings.Piper_TimedOut, (int)Timeout.TotalSeconds));
+            }
+
+            if (pcm.Length == 0 && process.ExitCode != 0)
+            {
+                string reason;
+                lock (errorLock) reason = lastError.Length > 300 ? lastError[..300] : lastError;
+                throw new InvalidOperationException(string.Format(CoreStrings.Piper_Failed, process.ExitCode, reason));
+            }
+
+            return pcm.ToArray();
+        }
+        finally
+        {
+            exitWait?.Unregister(null);
+            exitHandle?.Dispose();
+
+            // Ends anything piper left running.
+            if (job is not null)
+                job.Dispose();
+            else
+                StopAll(process, null);
+        }
+    }
+
+    /// Ends piper and everything it started, whether or not piper itself is still running.
+    private static void StopAll(Process process, ProcessJob? job)
+    {
+        job?.Terminate();
+        try
+        {
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
+        }
+        catch (Exception e) when (e is InvalidOperationException or Win32Exception or NotSupportedException)
+        {
         }
     }
 

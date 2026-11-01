@@ -178,6 +178,12 @@ public sealed class AppServices
             }
         }
 
+        return CreateWindowsSpeechEngine();
+    }
+
+    /// The Windows voice with the current voice, rate and volume: what speaks when Piper can't.
+    public ITextToSpeechEngine CreateWindowsSpeechEngine()
+    {
         var speech = new SpeechService();
         speech.SetVoice(Settings.TtsVoiceName);
         speech.SetRate(Settings.TtsRate);
