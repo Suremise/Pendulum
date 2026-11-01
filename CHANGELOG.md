@@ -81,6 +81,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Starting Pendulum after reminders were missed while it was closed no longer
   saves your reminders list part-way through loading it, which could have lost
   reminders if Pendulum was stopped at that moment.
+- Restore backup and Reset settings now cover every setting, including
+  "Delete spent reminders after", and save once. Neither changes Start with
+  Windows any more: only its own checkbox does.
 
 ### Changed
 - New alert sounds: the chime, bell and alert are now Pendulum's own, made for it. A reminder

@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -22,6 +23,11 @@ public enum TextToSpeechEngine
     Piper
 }
 
+/// Marks a saved value that isn't a setting the user chose (a cache, a hint shown once, the
+/// Reminders list's filters): Restore and Reset leave it as it is.
+[AttributeUsage(AttributeTargets.Property)]
+public sealed class BookkeepingAttribute : Attribute;
+
 public partial class AppSettings : ObservableObject, IJsonOnDeserializing
 {
     [ObservableProperty] private string defaultSoundFileName = "chime.wav";
@@ -45,8 +51,8 @@ public partial class AppSettings : ObservableObject, IJsonOnDeserializing
 
     /// Cache for UpdateCheckService, so it only actually hits GitHub once a day rather than
     /// on every launch. Null until the first check ever runs.
-    [ObservableProperty] private DateTime? lastUpdateCheckUtc;
-    [ObservableProperty] private string? lastKnownLatestVersion;
+    [ObservableProperty][property: Bookkeeping] private DateTime? lastUpdateCheckUtc;
+    [ObservableProperty][property: Bookkeeping] private string? lastKnownLatestVersion;
 
     [ObservableProperty] private bool use24HourTime;
     [ObservableProperty] private bool quickAddHotkeyEnabled = true;
@@ -72,25 +78,43 @@ public partial class AppSettings : ObservableObject, IJsonOnDeserializing
     /// Internal bookkeeping (not a user-facing setting): whether the "still running in
     /// the tray" toast has been shown yet. Fires once, the first time the window is
     /// ever minimized to the tray rather than closed.
-    [ObservableProperty] private bool hasShownTrayMinimizeHint;
+    [ObservableProperty][property: Bookkeeping] private bool hasShownTrayMinimizeHint;
 
     /// Internal bookkeeping: the Reminders list's filter state, restored on the next launch
     /// so the user doesn't have to reapply filters every time they open the app.
-    [ObservableProperty] private bool reminderFilterRowVisible;
-    [ObservableProperty] private string reminderFilterName = string.Empty;
-    [ObservableProperty] private bool reminderFilterTypeFixed;
-    [ObservableProperty] private bool reminderFilterTypeScheduled;
-    [ObservableProperty] private bool reminderFilterStatusUpcoming;
-    [ObservableProperty] private bool reminderFilterStatusSpent;
-    [ObservableProperty] private bool reminderFilterStatusDisabled;
-    [ObservableProperty] private bool reminderFilterModeSoundOnly;
-    [ObservableProperty] private bool reminderFilterModeSoundAndSpeech;
-    [ObservableProperty] private bool reminderFilterModeSpeechOnly;
-    [ObservableProperty] private DateTime? reminderFilterFrom;
-    [ObservableProperty] private DateTime? reminderFilterTo;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterRowVisible;
+    [ObservableProperty][property: Bookkeeping] private string reminderFilterName = string.Empty;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterTypeFixed;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterTypeScheduled;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterStatusUpcoming;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterStatusSpent;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterStatusDisabled;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterModeSoundOnly;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterModeSoundAndSpeech;
+    [ObservableProperty][property: Bookkeeping] private bool reminderFilterModeSpeechOnly;
+    [ObservableProperty][property: Bookkeeping] private DateTime? reminderFilterFrom;
+    [ObservableProperty][property: Bookkeeping] private DateTime? reminderFilterTo;
 
     /// Runs before a file's values are applied. Up to 1.1.0 the update check was on by default,
     /// so a file without the key had it on: keep it so, rather than turning a user's check off
     /// when they upgrade. A file that names the key sets it as it says.
     void IJsonOnDeserializing.OnDeserializing() => CheckForUpdatesOnStartup = true;
+
+    /// The settings Restore and Reset copy: every saved setting the user chose, found by
+    /// reflection so a new one is never left out. Not the bookkeeping, and not
+    /// LaunchOnWindowsStartup: only its own checkbox changes the Windows startup entry.
+    public static IReadOnlyList<PropertyInfo> CopiedSettings { get; } = typeof(AppSettings)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(p => p.CanRead && p.CanWrite && p.GetIndexParameters().Length == 0)
+        .Where(p => p.GetCustomAttribute<BookkeepingAttribute>() is null)
+        .Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() is null)
+        .Where(p => p.Name != nameof(LaunchOnWindowsStartup))
+        .ToList();
+
+    /// Sets every one of CopiedSettings to the value <paramref name="source"/> has.
+    public void CopySettingsFrom(AppSettings source)
+    {
+        foreach (var p in CopiedSettings)
+            p.SetValue(this, p.GetValue(source));
+    }
 }

@@ -267,7 +267,7 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Settings_PiperOneVoice" xml:space="preserve"><value>Ready: 1 voice found.</value></data>
   <data name="Settings_PiperVoice" xml:space="preserve"><value>Piper voice</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_PiperVoices" xml:space="preserve"><value>Ready: {0} voices found.</value><comment>{0}: how many.</comment></data>
-  <data name="Settings_PutsEverySettingInTheseSectionsBackToItsDefaultY" xml:space="preserve"><value>Puts every setting in these sections back to its default. Your reminders aren't touched.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PutsEverySettingInTheseSectionsBackToItsDefaultY" xml:space="preserve"><value>Puts every setting in these sections back to its default, except Start with Windows, which only its own checkbox changes. Your reminders aren't touched.</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_QuickReminder" xml:space="preserve"><value>Quick Reminder</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_Refresh" xml:space="preserve"><value>Refresh</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_RefreshPiperVoices" xml:space="preserve"><value>Refresh Piper voices</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
@@ -276,7 +276,7 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Settings_ResetSettings" xml:space="preserve"><value>Reset settings...</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_Restore" xml:space="preserve"><value>Restore...</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_RestoreABackup" xml:space="preserve"><value>Restore a backup</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
-  <data name="Settings_SavesEverySettingAndReminderToOneFileToMovePendu" xml:space="preserve"><value>Saves every setting and reminder to one file, to move Pendulum to another computer or keep a copy.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SavesEverySettingAndReminderToOneFileToMovePendu" xml:space="preserve"><value>Saves every setting and reminder to one file, to move Pendulum to another computer or keep a copy. Restoring one leaves Start with Windows as it is.</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_SetUpPiper" xml:space="preserve"><value>Set up Piper</value><comment>SettingsPanel.xaml, Header</comment></data>
   <data name="Settings_SetUpWhisper" xml:space="preserve"><value>Set up Whisper</value><comment>SettingsPanel.xaml, Header</comment></data>
   <data name="Settings_Settings" xml:space="preserve"><value>Settings</value><comment>SettingsPanel.xaml, Text</comment></data>

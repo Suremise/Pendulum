@@ -34,8 +34,15 @@ public sealed class AppServices
     public List<DataFileNotice> DataFileNotices { get; } = new();
 
     /// For tests only: settings loaded from a test's own file, without Initialize (which reads
-    /// the app's Data\ and can write the Run key). Never called by the app.
-    internal void UseSettingsForTests(AppSettings settings) => Settings = settings;
+    /// the app's Data\ and can write the Run key). With saveOnChange, each change saves as in the
+    /// app, through the same batching, but the Windows voice isn't touched: SAPI can stall a
+    /// test host. Never called by the app.
+    internal void UseSettingsForTests(AppSettings settings, bool saveOnChange = false)
+    {
+        Settings = settings;
+        if (saveOnChange)
+            settings.PropertyChanged += (_, _) => SaveUnlessBatched();
+    }
 
     /// True for the very first run after a fresh install (no settings.json on disk yet) —
     /// used to show the main window once even though StartMinimized defaults to true, so a
@@ -107,9 +114,35 @@ public sealed class AppServices
         return missed;
     }
 
+    private int _settingsBatch;
+
+    private void SaveUnlessBatched()
+    {
+        if (_settingsBatch == 0)
+            SettingsRepository.Save(Settings);
+    }
+
+    /// Makes many settings changes with one save at the end, so a restore or reset is never
+    /// saved half done. Each change is still announced, so the screen and the app follow it.
+    public void ChangeSettingsTogether(Action change)
+    {
+        _settingsBatch++;
+        try
+        {
+            change();
+        }
+        finally
+        {
+            _settingsBatch--;
+        }
+
+        if (_settingsBatch == 0)
+            SettingsRepository.Save(Settings);
+    }
+
     private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        SettingsRepository.Save(Settings);
+        SaveUnlessBatched();
         if (e.PropertyName is nameof(AppSettings.TtsVoiceName) or nameof(AppSettings.TtsRate) or nameof(AppSettings.TtsVolume))
             ApplySpeechSettings();
     }

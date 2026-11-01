@@ -308,28 +308,11 @@ public partial class SettingsViewModel : ObservableObject
         ApplySettingsFrom(defaults);
     }
 
-    private void ApplySettingsFrom(AppSettings source)
+    /// Restore and Reset: every setting the user chose, saved once. Start with Windows stays as
+    /// it is (only its checkbox changes the startup entry), and so does the bookkeeping.
+    internal void ApplySettingsFrom(AppSettings source)
     {
-        Settings.DefaultSoundFileName = source.DefaultSoundFileName;
-        Settings.TtsVoiceName = source.TtsVoiceName;
-        Settings.TtsRate = source.TtsRate;
-        Settings.TtsVolume = source.TtsVolume;
-        Settings.LaunchOnWindowsStartup = source.LaunchOnWindowsStartup;
-        Settings.StartMinimized = source.StartMinimized;
-        Settings.SnoozeMinutes = source.SnoozeMinutes;
-        Settings.RepeatAlertUntilDismissed = source.RepeatAlertUntilDismissed;
-        Settings.AutoResolveMinutes = source.AutoResolveMinutes;
-        Settings.Theme = source.Theme;
-        Settings.CheckForUpdatesOnStartup = source.CheckForUpdatesOnStartup;
-        Settings.Use24HourTime = source.Use24HourTime;
-        Settings.QuickAddHotkeyEnabled = source.QuickAddHotkeyEnabled;
-        Settings.QuickAddHotkeyGesture = source.QuickAddHotkeyGesture;
-        Settings.QuickAddAutoListen = source.QuickAddAutoListen;
-        Settings.SpeechToTextEngine = source.SpeechToTextEngine;
-        Settings.WhisperModelFileName = source.WhisperModelFileName;
-        Settings.TextToSpeechEngine = source.TextToSpeechEngine;
-        Settings.PiperVoiceModelFileName = source.PiperVoiceModelFileName;
-
+        AppServices.Instance.ChangeSettingsTogether(() => Settings.CopySettingsFrom(source));
         OnPropertyChanged(nameof(TimeFormatIndex));
     }
 }
