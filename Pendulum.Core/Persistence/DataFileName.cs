@@ -31,6 +31,21 @@ public static class DataFileName
             : null;
     }
 
+    /// The names of the files in <paramref name="folder"/> ending in any of
+    /// <paramref name="extensions"/> (".wav"), in name order: empty when the folder is missing.
+    public static List<string> ListIn(string folder, params string[] extensions)
+    {
+        if (!Directory.Exists(folder))
+            return new List<string>();
+
+        return Directory.EnumerateFiles(folder)
+            .Select(Path.GetFileName)
+            .OfType<string>()
+            .Where(f => extensions.Any(e => f.EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     /// Blanks each reminder's sound that isn't a plain file name: that reminder plays no sound.
     public static void Clean(IEnumerable<TriggerTimer> reminders)
     {

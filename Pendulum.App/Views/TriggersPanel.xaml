@@ -264,10 +264,10 @@
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_NAME}" Style="{StaticResource ColumnFilterLabel}"/>
                                                 <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
                                             </StackPanel>
-                                            <ui:TextBox Text="{Binding NameFilter, UpdateSourceTrigger=PropertyChanged}"
+                                            <ui:TextBox Text="{Binding Filter.Name, UpdateSourceTrigger=PropertyChanged}"
                                                         PlaceholderText="{x:Static res:Strings.Reminders_Filter}" FontSize="12" FontWeight="Normal"
                                                         Padding="6,4" Margin="0,6,10,0"
-                                                        Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                                        Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         </StackPanel>
                                     </GridViewColumnHeader>
                                 </GridViewColumn.Header>
@@ -288,17 +288,17 @@
                                         </StackPanel>
                                         <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
-                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                                      Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=TypeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=TypeFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding TypeFilterFixed}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.TypeFixed}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource FixedBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding TypeFilterScheduled}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.TypeScheduled}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource ScheduledBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
@@ -336,17 +336,17 @@
                                         </StackPanel>
                                         <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
-                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                                      Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=DateFilterToggle}" IsOpen="{Binding IsChecked, ElementName=DateFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel Width="190">
                                                     <TextBlock Text="{x:Static res:Strings.Reminders_From}" FontSize="11" FontWeight="Normal"
                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
-                                                    <DatePicker SelectedDate="{Binding TriggerFromFilter}" Margin="0,0,0,10"/>
+                                                    <DatePicker SelectedDate="{Binding Filter.From}" Margin="0,0,0,10"/>
                                                     <TextBlock Text="{x:Static res:Strings.Reminders_To}" FontSize="11" FontWeight="Normal"
                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
-                                                    <DatePicker SelectedDate="{Binding TriggerToFilter}" Margin="0,0,0,10"/>
+                                                    <DatePicker SelectedDate="{Binding Filter.To}" Margin="0,0,0,10"/>
                                                     <ui:Button Content="{x:Static res:Strings.Reminders_Clear}" Appearance="Secondary" HorizontalAlignment="Left"
                                                                Command="{Binding ClearTriggerFilterCommand}"/>
                                                 </StackPanel>
@@ -379,22 +379,22 @@
                                         </StackPanel>
                                         <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
-                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                                      Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=ModeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=ModeFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding ModeFilterSoundOnly}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.ModeSoundOnly}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundOnlyBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SoundOnly}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding ModeFilterSoundAndSpeech}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.ModeSoundAndSpeech}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundSpeechBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SoundSpeech}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding ModeFilterSpeechOnly}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.ModeSpeechOnly}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource SpeechOnlyBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SpeechOnly}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
@@ -440,22 +440,22 @@
                                         </StackPanel>
                                         <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
-                                                      Visibility="{Binding IsFilterRowVisible, Converter={StaticResource BoolToVis}}"/>
+                                                      Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=StatusFilterToggle}" IsOpen="{Binding IsChecked, ElementName=StatusFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding StatusFilterUpcoming}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.StatusUpcoming}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Upcoming}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding StatusFilterSpent}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.StatusSpent}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{DynamicResource ControlFillColorSecondaryBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Spent}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
-                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding StatusFilterDisabled}">
+                                                    <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.StatusDisabled}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{StaticResource DisabledBadgeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Disabled}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>

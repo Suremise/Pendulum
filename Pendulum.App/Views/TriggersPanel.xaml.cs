@@ -107,21 +107,7 @@ public partial class TriggersPanel : UserControl
 
         if (DataContext is TriggersViewModel vm)
         {
-            vm.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName is nameof(TriggersViewModel.NameFilter)
-                    or nameof(TriggersViewModel.TypeFilterFixed)
-                    or nameof(TriggersViewModel.TypeFilterScheduled)
-                    or nameof(TriggersViewModel.StatusFilterUpcoming)
-                    or nameof(TriggersViewModel.StatusFilterSpent)
-                    or nameof(TriggersViewModel.StatusFilterDisabled)
-                    or nameof(TriggersViewModel.ModeFilterSoundOnly)
-                    or nameof(TriggersViewModel.ModeFilterSoundAndSpeech)
-                    or nameof(TriggersViewModel.ModeFilterSpeechOnly)
-                    or nameof(TriggersViewModel.TriggerFromFilter)
-                    or nameof(TriggersViewModel.TriggerToFilter))
-                    _view?.Refresh();
-            };
+            vm.Filter.Changed += (_, _) => _view?.Refresh();
         }
     }
 

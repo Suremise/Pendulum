@@ -26,9 +26,8 @@ public partial class TriggerEditWindow : FluentWindow
     // The date and time the window loaded, so Save can tell whether the user changed them.
     private DateTime _shownAt;
 
-    // The Test button previews sound/speech independently of AppServices.Instance.AlertPlayback —
-    // that controller may be actively sounding a real, currently-firing alert, and sharing it here
-    // would let closing this dialog (Save/Cancel) cut that live alert off.
+    // The Test button previews sound/speech through players of its own, never an alert's: an
+    // alert may be sounding now, and closing this dialog (Save/Cancel) must not cut it off.
     private readonly AudioService _previewAudio = new();
     private readonly ITextToSpeechEngine _previewSpeech;
     private readonly AlertPlaybackController _previewPlayback;

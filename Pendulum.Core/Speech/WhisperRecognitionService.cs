@@ -1,5 +1,6 @@
 using System.Text;
 using NAudio.Wave;
+using Pendulum.Core.Audio;
 using Whisper.net;
 
 namespace Pendulum.Core.Speech;
@@ -43,7 +44,7 @@ public sealed class WhisperRecognitionService : IDisposable
         var isEnglishOnly = Path.GetFileNameWithoutExtension(modelPath)
             .EndsWith(".en", StringComparison.OrdinalIgnoreCase);
 
-        using var wavStream = BuildWavStream(pcm, SampleRate, bitsPerSample: 16, channels: 1);
+        using var wavStream = WavWriter.ToStream(pcm, SampleRate);
 
         WhisperFactory factory;
         try
@@ -174,34 +175,6 @@ public sealed class WhisperRecognitionService : IDisposable
         }
 
         return tcs.Task;
-    }
-
-    private static MemoryStream BuildWavStream(byte[] pcmData, int sampleRate, int bitsPerSample, int channels)
-    {
-        var stream = new MemoryStream();
-        var byteRate = sampleRate * channels * bitsPerSample / 8;
-        var blockAlign = (short)(channels * bitsPerSample / 8);
-
-        using (var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true))
-        {
-            writer.Write("RIFF"u8.ToArray());
-            writer.Write(36 + pcmData.Length);
-            writer.Write("WAVE"u8.ToArray());
-            writer.Write("fmt "u8.ToArray());
-            writer.Write(16);
-            writer.Write((short)1); // PCM
-            writer.Write((short)channels);
-            writer.Write(sampleRate);
-            writer.Write(byteRate);
-            writer.Write(blockAlign);
-            writer.Write((short)bitsPerSample);
-            writer.Write("data"u8.ToArray());
-            writer.Write(pcmData.Length);
-            writer.Write(pcmData);
-        }
-
-        stream.Seek(0, SeekOrigin.Begin);
-        return stream;
     }
 
     /// Stops an in-progress recording without keeping the audio captured so far.

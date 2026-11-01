@@ -76,6 +76,9 @@ public partial class AboutWindow : FluentWindow
         // Launch Notepad directly rather than UseShellExecute (which opens whatever's
         // registered for the extension) — on a dev machine that's often VS Code, which throws up
         // its own "untrusted files" workspace-trust prompt for a file opened outside a workspace.
-        Process.Start(new ProcessStartInfo("notepad.exe", $"\"{path}\""));
+        // By its full path in System32, so no notepad.exe in the app's or current folder is run.
+        var notepad = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "notepad.exe")); // not user-visible
+        notepad.ArgumentList.Add(path);
+        Process.Start(notepad);
     }
 }

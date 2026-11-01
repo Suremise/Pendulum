@@ -56,7 +56,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public SettingsViewModel()
     {
-        VoiceNames = AppServices.Instance.Speech.GetVoiceNames().ToList();
+        VoiceNames = SpeechService.GetVoiceNames().ToList();
 
         if (string.IsNullOrEmpty(Settings.TtsVoiceName) && VoiceNames.Count > 0)
             Settings.TtsVoiceName = VoiceNames[0];
@@ -92,12 +92,7 @@ public partial class SettingsViewModel : ObservableObject
     private void RefreshWhisperModels()
     {
         AppPaths.EnsureDirectories();
-        WhisperModels = Directory.EnumerateFiles(AppPaths.WhisperModelsDirectory, "*.bin")
-            .Select(Path.GetFileName)
-            .Where(f => f is not null)
-            .Select(f => f!)
-            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        WhisperModels = DataFileName.ListIn(AppPaths.WhisperModelsDirectory, ".bin"); // not user-visible: a file type
 
         if (Settings.WhisperModelFileName is null || !WhisperModels.Contains(Settings.WhisperModelFileName))
             Settings.WhisperModelFileName = WhisperModels.FirstOrDefault();
@@ -117,12 +112,7 @@ public partial class SettingsViewModel : ObservableObject
     private void RefreshPiperModels()
     {
         AppPaths.EnsureDirectories();
-        PiperModels = Directory.EnumerateFiles(AppPaths.PiperModelsDirectory, "*.onnx")
-            .Select(Path.GetFileName)
-            .Where(f => f is not null)
-            .Select(f => f!)
-            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        PiperModels = DataFileName.ListIn(AppPaths.PiperModelsDirectory, ".onnx"); // not user-visible: a file type
 
         OnPropertyChanged(nameof(IsPiperExecutableAvailable));
 

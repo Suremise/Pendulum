@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
 using Pendulum.App.Resources;
-using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
@@ -22,8 +20,6 @@ public sealed class AppServices
 
     public TriggerRepository TriggerRepository { get; } = new();
     public SettingsRepository SettingsRepository { get; } = new();
-    public AudioService Audio { get; } = new();
-    public SpeechService Speech { get; } = new();
     public TimerEngine Engine { get; } = new();
 
     public ObservableCollection<TriggerTimer> Triggers { get; } = new();
@@ -35,8 +31,7 @@ public sealed class AppServices
 
     /// For tests only: settings loaded from a test's own file, without Initialize (which reads
     /// the app's Data\ and can write the Run key). With saveOnChange, each change saves as in the
-    /// app, through the same batching, but the Windows voice isn't touched: SAPI can stall a
-    /// test host. Never called by the app.
+    /// app, through the same batching. Never called by the app.
     internal void UseSettingsForTests(AppSettings settings, bool saveOnChange = false)
     {
         Settings = settings;
@@ -75,8 +70,7 @@ public sealed class AppServices
         var settingsLoad = SettingsRepository.LoadWithOutcome();
         Settings = settingsLoad.Value ?? new AppSettings();
         NoteProblem(AppPaths.SettingsFile, settingsLoad);
-        Settings.PropertyChanged += OnSettingsChanged;
-        ApplySpeechSettings();
+        Settings.PropertyChanged += (_, _) => SaveUnlessBatched();
 
         // Defaults are launch-on-startup enabled, but that default alone doesn't create the
         // registry value — only an explicit change through Settings does. Create it here so a
@@ -138,20 +132,6 @@ public sealed class AppServices
 
         if (_settingsBatch == 0)
             SettingsRepository.Save(Settings);
-    }
-
-    private void OnSettingsChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        SaveUnlessBatched();
-        if (e.PropertyName is nameof(AppSettings.TtsVoiceName) or nameof(AppSettings.TtsRate) or nameof(AppSettings.TtsVolume))
-            ApplySpeechSettings();
-    }
-
-    public void ApplySpeechSettings()
-    {
-        Speech.SetVoice(Settings.TtsVoiceName);
-        Speech.SetRate(Settings.TtsRate);
-        Speech.SetVolume(Settings.TtsVolume);
     }
 
     public string PiperExecutablePath => Path.Combine(AppPaths.PiperModelsDirectory, "piper.exe");
@@ -235,19 +215,8 @@ public sealed class AppServices
     public string ResolveSoundPath(string? fileName) =>
         DataFileName.PathInside(AppPaths.SoundsDirectory, fileName) ?? string.Empty;
 
-    public List<string> GetAvailableSoundFiles()
-    {
-        if (!Directory.Exists(AppPaths.SoundsDirectory))
-            return new List<string>();
-
-        return Directory.EnumerateFiles(AppPaths.SoundsDirectory)
-            .Where(f => f.EndsWith(".wav", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
-            .Select(Path.GetFileName)
-            .Where(f => f is not null)
-            .Select(f => f!)
-            .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
+    public List<string> GetAvailableSoundFiles() =>
+        DataFileName.ListIn(AppPaths.SoundsDirectory, ".wav", ".mp3"); // not user-visible: file types
 
     /// Exports the given reminders (or all of them, if none specified) to a JSON file.
     public void ExportTriggers(string path, IEnumerable<TriggerTimer>? subset = null) =>
@@ -329,7 +298,5 @@ public sealed class AppServices
     public void Shutdown()
     {
         Engine.Dispose();
-        Audio.Dispose();
-        Speech.Dispose();
     }
 }

@@ -6,11 +6,15 @@ public class SpeechService : IDisposable, ITextToSpeechEngine
 {
     private readonly SpeechSynthesizer _synth = new();
 
-    public IReadOnlyList<string> GetVoiceNames() =>
-        _synth.GetInstalledVoices()
+    /// The names of the Windows voices installed and enabled, for Settings to offer.
+    public static IReadOnlyList<string> GetVoiceNames()
+    {
+        using var synth = new SpeechSynthesizer();
+        return synth.GetInstalledVoices()
             .Where(v => v.Enabled)
             .Select(v => v.VoiceInfo.Name)
             .ToList();
+    }
 
     public void SetVoice(string? voiceName)
     {

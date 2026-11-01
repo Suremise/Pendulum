@@ -43,6 +43,21 @@ public sealed class PiperProcessTests : IDisposable
     }
 
     [Fact]
+    public async Task A_model_path_with_spaces_reaches_piper_whole()
+    {
+        var folder = _temp.File("my voices");
+        Directory.CreateDirectory(folder);
+        var model = Path.Combine(folder, "en GB voice.onnx");
+        var got = _temp.File("model.txt");
+        var exe = FakePiper($"set /p phrase=\n>\"{got}\" echo %~4\nexit /b 0");
+        using var piper = new PiperSpeechService(exe, model, 0.8f, 1f) { Timeout = TimeSpan.FromSeconds(60) };
+
+        await piper.SpeakAndWaitAsync("Dentist", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(60));
+
+        Assert.Equal(model, File.ReadAllText(got).TrimEnd());
+    }
+
+    [Fact]
     public async Task A_missing_piper_says_it_couldnt_start()
     {
         using var piper = Piper(_temp.File("piper.exe"));

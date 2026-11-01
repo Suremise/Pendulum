@@ -39,15 +39,9 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
 
         var sampleRate = ReadSampleRate(_modelPath);
 
-        var args = new StringBuilder()
-            .Append("--quiet --output-raw --model ").Append(Quote(_modelPath));
-        if (Math.Abs(_speakingRate - 1f) > 0.01f)
-            args.Append(" --length_scale ").Append(_speakingRate.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
-
         var psi = new ProcessStartInfo
         {
             FileName = _executablePath,
-            Arguments = args.ToString(),
             WorkingDirectory = Path.GetDirectoryName(_executablePath),
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -56,13 +50,15 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
             CreateNoWindow = true,
             StandardInputEncoding = Encoding.UTF8,
         };
+        foreach (var arg in Arguments(_modelPath, _speakingRate))
+            psi.ArgumentList.Add(arg);
 
         var pcm = await RunPiperAsync(psi, phrase, token);
         if (pcm.Length == 0)
             return;
 
         var tempPath = Path.Combine(Path.GetTempPath(), $"pendulum-piper-{Guid.NewGuid():N}.wav");
-        await File.WriteAllBytesAsync(tempPath, BuildWavBytes(pcm, sampleRate), token);
+        await File.WriteAllBytesAsync(tempPath, WavWriter.ToBytes(pcm, sampleRate), token);
         try
         {
             await _audio.PlayOnceAsync(tempPath, _volume, token);
@@ -70,6 +66,20 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
         finally
         {
             try { File.Delete(tempPath); } catch { /* best-effort cleanup */ }
+        }
+    }
+
+    /// piper's arguments, each passed as it is: Windows quotes any that need it (a space, a quote).
+    internal static IEnumerable<string> Arguments(string modelPath, float speakingRate)
+    {
+        yield return "--quiet"; // not user-visible: piper's arguments
+        yield return "--output-raw"; // not user-visible
+        yield return "--model"; // not user-visible
+        yield return modelPath;
+        if (Math.Abs(speakingRate - 1f) > 0.01f)
+        {
+            yield return "--length_scale"; // not user-visible
+            yield return speakingRate.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
         }
     }
 
@@ -214,37 +224,6 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
         }
 
         return defaultSampleRate;
-    }
-
-    private static string Quote(string path) => path.Contains(' ') ? $"\"{path}\"" : path;
-
-    private static byte[] BuildWavBytes(byte[] pcmData, int sampleRate)
-    {
-        const int bitsPerSample = 16;
-        const int channels = 1;
-        var byteRate = sampleRate * channels * bitsPerSample / 8;
-        var blockAlign = (short)(channels * bitsPerSample / 8);
-
-        using var stream = new MemoryStream();
-        using (var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true))
-        {
-            writer.Write("RIFF"u8.ToArray());
-            writer.Write(36 + pcmData.Length);
-            writer.Write("WAVE"u8.ToArray());
-            writer.Write("fmt "u8.ToArray());
-            writer.Write(16);
-            writer.Write((short)1); // PCM
-            writer.Write((short)channels);
-            writer.Write(sampleRate);
-            writer.Write(byteRate);
-            writer.Write(blockAlign);
-            writer.Write((short)bitsPerSample);
-            writer.Write("data"u8.ToArray());
-            writer.Write(pcmData.Length);
-            writer.Write(pcmData);
-        }
-
-        return stream.ToArray();
     }
 
     public void Stop() => _audio.Stop();
