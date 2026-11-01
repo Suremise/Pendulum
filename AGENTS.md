@@ -29,7 +29,11 @@ docs/screenshots/ the README's pictures
 - **The data lives beside the exe** (`AppPaths`): `Data\settings.json`, `Data\triggers.json`,
   `Data\crash.log`, `Data\WhisperModels\`, `Data\PiperModels\` and `Sounds\`. A dev build writes
   its own `Data\` under `bin\`. The registry is touched only by the opt-in launch-on-startup
-  (one `Run` value).
+  (one `Run` value), and `StartupEntry` (Pendulum.Core) decides when a copy may change it: a first
+  launch registers only an installed copy (its uninstaller sits beside the exe), never over
+  another copy's entry, and turning the setting off removes only this copy's. So a dev build's
+  first launch leaves the installed Pendulum's entry alone; still, **never toggle the setting in a
+  dev build**, since turning it on points Windows at that build.
 - **`excluded/`** (git-ignored, in the maintainer's main checkout only) holds the archived
   website, an old TODO and design notes, and the Whisper and Piper resources used to try speech
   locally: about 280 MB. It is **never committed**: don't add it, move files out of it into the

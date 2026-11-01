@@ -8,6 +8,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Launch on Windows startup: the first run of a second copy of Pendulum (a
+  portable copy, or one unzipped to try out) no longer takes over the startup
+  entry from your installed Pendulum, and turning the setting off in that copy
+  no longer removes the installed one's. A copy that doesn't start with
+  Windows now shows the setting off.
 - Quick Reminder: a weekday that's today with a time already gone ("report
   wednesday 9am", typed on a Wednesday afternoon) now means next week's, not
   a reminder that goes off straight away.

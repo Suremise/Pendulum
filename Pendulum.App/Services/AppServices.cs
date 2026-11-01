@@ -59,10 +59,11 @@ public sealed class AppServices
         ApplySpeechSettings();
 
         // Defaults are launch-on-startup enabled, but that default alone doesn't create the
-        // registry key — only an explicit change through Settings does. Create it here so a
-        // fresh install actually launches on startup, matching what the toggle already shows.
+        // registry value — only an explicit change through Settings does. Create it here so a
+        // fresh install actually launches on startup, unless another copy's entry is already
+        // there or this isn't an installed copy; the toggle then shows what really happens.
         if (IsFirstLaunch && Settings.LaunchOnWindowsStartup)
-            StartupRegistration.SetEnabled(true);
+            Settings.LaunchOnWindowsStartup = StartupRegistration.RegisterOnFirstLaunch();
 
         var now = DateTime.Now;
         var loaded = TriggerRepository.Load();
