@@ -130,10 +130,11 @@ public class RingingAtCloseTests
         var now = Rang;
         var t = new TriggerTimer { Name = "stand-up", TriggerAt = Rang, RecurrenceAnchor = Rang, Recurrence = new RecurrenceRule { Frequency = RecurrenceFrequency.Daily } };
         var fired = new List<TriggerTimer>();
-        using (var engine = new TimerEngine(() => now, startPolling: false))
+        using (var engine = new TimerEngine(() => now, polls: false))
         {
             engine.TriggerFired += fired.Add;
             engine.SetTriggers(new[] { t });
+            engine.Start(null);
             engine.CheckDue();
         }
         Assert.Single(fired);
@@ -144,9 +145,10 @@ public class RingingAtCloseTests
         now = new DateTime(2026, 6, 3, 12, 0, 0);
         TriggerReconciler.CatchUpMissed(reloaded, now);
         fired.Clear();
-        using var restarted = new TimerEngine(() => now, startPolling: false);
+        using var restarted = new TimerEngine(() => now, polls: false);
         restarted.TriggerFired += fired.Add;
         restarted.SetTriggers(reloaded);
+        restarted.Start(null);
 
         now = new DateTime(2026, 6, 4, 8, 59, 59);
         restarted.CheckDue();

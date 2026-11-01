@@ -89,6 +89,9 @@ public partial class App : Application
             var missed = AppServices.Instance.Initialize();
             AppServices.Instance.Engine.TriggerFired += OnTriggerFired;
             AppServices.Instance.Engine.TickFailed += ex => CrashLog.Write("TimerEngine.Tick", ex);
+            // Only now, with the handlers in place, and on this (the UI) thread, which the engine
+            // fires reminders on, so their saves and the reminders list never run elsewhere.
+            AppServices.Instance.Engine.Start();
 
             AppThemeManager.Apply(AppServices.Instance.Settings.Theme);
 

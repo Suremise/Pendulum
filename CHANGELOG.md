@@ -18,6 +18,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- A reminder's alert could be lost without a trace when saving the reminders
+  list failed at the moment it went off (for example while another program had
+  the file open), and so could the alerts of other reminders due at the same
+  time. Each alert now goes off whatever happens to the save, and a reminder
+  due in the first second after Pendulum starts is no longer missed.
 - Saves survive a power cut or crash: your reminders and settings are written
   safely, and the save before is kept beside each as a `.bak`. If a file is ever
   damaged, Pendulum keeps it aside unchanged, uses the save before, and tells you

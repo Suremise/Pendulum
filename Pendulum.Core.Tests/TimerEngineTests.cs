@@ -11,9 +11,10 @@ public class TimerEngineTests
 
     private TimerEngine Engine(params TriggerTimer[] triggers)
     {
-        var engine = new TimerEngine(() => _now, startPolling: false);
+        var engine = new TimerEngine(() => _now, polls: false);
         engine.TriggerFired += _fired.Add;
         engine.SetTriggers(triggers);
+        engine.Start(null);
         return engine;
     }
 
@@ -130,10 +131,11 @@ public class TimerEngineTests
         var first = new TriggerTimer { Name = "first", TriggerAt = _now };
         var second = new TriggerTimer { Name = "second", TriggerAt = _now };
         var failures = new List<Exception>();
-        using var engine = new TimerEngine(() => _now, startPolling: false);
+        using var engine = new TimerEngine(() => _now, polls: false);
         engine.TriggerFired += t => { if (t == first) throw new InvalidOperationException("boom"); _fired.Add(t); };
         engine.TickFailed += failures.Add;
         engine.SetTriggers(new[] { first, second });
+        engine.Start(null);
 
         engine.CheckDue();
 
