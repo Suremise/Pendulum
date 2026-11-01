@@ -364,11 +364,36 @@
                                                Text="{x:Static res:Strings.Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds}"/>
                                     <TextBlock Style="{StaticResource Help}"
                                                Text="{x:Static res:Strings.Settings_ItRunsOnTheCPUNoGraphicsCardNeededAndNothingIsSe}"/>
-                                    <StackPanel Style="{StaticResource Buttons}">
+                                    <StackPanel Style="{StaticResource Buttons}" Margin="0,0,0,2">
                                         <ui:Button Content="{x:Static res:Strings.Settings_DownloadPiper}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperEnginePageCommand}"/>
-                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadVoices}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperVoicePageCommand}"/>
                                         <ui:Button Content="{x:Static res:Strings.Settings_OpenPiperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperModelsFolderCommand}"/>
                                     </StackPanel>
+                                    <TextBlock Style="{StaticResource Help}" Text="{x:Static res:Strings.Settings_PiperLicence}"/>
+
+                                    <!-- Only the voices whose terms let anyone use them, each with its licence and credit. -->
+                                    <TextBlock Text="{x:Static res:Strings.Settings_VoicesHeading}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,6"/>
+                                    <ItemsControl x:Name="VoiceOffers" ItemsSource="{Binding PiperVoiceOffers}" Focusable="False"
+                                                  AutomationProperties.Name="{x:Static res:Strings.Settings_VoicesHeading}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Margin="0,0,12,0">
+                                                        <TextBlock Text="{Binding Name}" FontSize="13"/>
+                                                        <TextBlock Text="{Binding Licence}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                        <TextBlock Text="{Binding Credit}" FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                    </StackPanel>
+                                                    <ui:Button Grid.Column="1" Content="{x:Static res:Strings.Settings_DownloadVoice}" Appearance="Secondary" VerticalAlignment="Center"
+                                                               Command="{Binding DataContext.OpenVoicePageCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                               CommandParameter="{Binding}"
+                                                               AutomationProperties.Name="{Binding Name, StringFormat={x:Static res:Strings.Settings_DownloadVoiceNameFormat}}"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
                                 </StackPanel>
                             </Expander>
                         </StackPanel>
@@ -457,6 +482,7 @@
                                         <ui:Button Content="{x:Static res:Strings.Settings_DownloadModels}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelPageCommand}"/>
                                         <ui:Button Content="{x:Static res:Strings.Settings_OpenWhisperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelsFolderCommand}"/>
                                     </StackPanel>
+                                    <TextBlock Style="{StaticResource Help}" Margin="0,6,0,0" Text="{x:Static res:Strings.Settings_WhisperLicence}"/>
                                 </StackPanel>
                             </Expander>
                         </StackPanel>

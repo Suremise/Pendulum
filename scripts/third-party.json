@@ -1,0 +1,211 @@
+{
+  "_about": "What Pendulum ships and offers to download, with each licence. scripts/third-party-notices.ps1 builds THIRD-PARTY-NOTICES.md from this and the packages the App actually uses: every package must have an entry here, and every entry here must still ship. Licence evidence is each package's own nuspec and licence or notice files.",
+  "packages": [
+    {
+      "id": "CommunityToolkit.Mvvm",
+      "licence": "MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "url": "https://github.com/CommunityToolkit/dotnet",
+      "notices": "ThirdPartyNotices.txt"
+    },
+    {
+      "id": "WPF-UI",
+      "licence": "MIT",
+      "copyright": "Leszek Pomianowski and WPF UI Contributors",
+      "url": "https://github.com/lepoco/wpfui",
+      "notices": "ThirdPartyNotices.txt",
+      "note": "Embeds the Fluent System Icons fonts (MIT). Its notices also list Microsoft's Segoe Fluent Icons font, which Pendulum and WPF-UI use by name from Windows and don't ship."
+    },
+    {
+      "id": "H.NotifyIcon",
+      "licence": "MIT",
+      "copyright": "HavenDV",
+      "url": "https://github.com/HavenDV/H.NotifyIcon"
+    },
+    {
+      "id": "H.NotifyIcon.Wpf",
+      "licence": "MIT",
+      "copyright": "HavenDV",
+      "url": "https://github.com/HavenDV/H.NotifyIcon"
+    },
+    {
+      "id": "H.GeneratedIcons.System.Drawing",
+      "licence": "MIT",
+      "copyright": "HavenDV",
+      "url": "https://github.com/HavenDV/H.NotifyIcon"
+    },
+    {
+      "id": "NAudio",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.Core",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.Asio",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.Midi",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.Wasapi",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.WinForms",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "NAudio.WinMM",
+      "licence": "MIT",
+      "copyright": "Mark Heath and NAudio Contributors",
+      "url": "https://github.com/naudio/NAudio"
+    },
+    {
+      "id": "Whisper.net",
+      "licence": "MIT",
+      "copyright": "Sandro Hanea",
+      "url": "https://github.com/sandrohanea/whisper.net",
+      "licenceFile": "LICENSE"
+    },
+    {
+      "id": "Whisper.net.Runtime",
+      "licence": "MIT",
+      "copyright": "The ggml authors (whisper.cpp and ggml); Whisper.net: Sandro Hanea",
+      "url": "https://github.com/ggml-org/whisper.cpp",
+      "licenceText": "scripts/licences/whisper.cpp-LICENSE.txt",
+      "auditedVersion": "1.9.1",
+      "nativeSource": "whisper.cpp f24588a272ae8e23280d9c220536437164e6ed28, the submodule Whisper.net 1.9.1 builds from",
+      "note": "The native whisper.cpp and ggml libraries in runtimes\\, built by Whisper.net's windows-scripts.ps1 with ggml's defaults for llamafile and KleidiAI (both off), so neither Mozilla's llamafile code nor Arm's KleidiAI is in them. They use the Visual C++ and OpenMP runtimes found on the PC (VCRUNTIME140, MSVCP140, VCOMP140), which Pendulum doesn't ship."
+    },
+    {
+      "id": "Whisper.net.Runtime.Metal",
+      "licence": "MIT",
+      "copyright": "Sandro Hanea",
+      "url": "https://github.com/sandrohanea/whisper.net",
+      "note": "For macOS only: nothing of it is copied into the Windows app."
+    },
+    {
+      "id": "System.Speech",
+      "licence": "MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "url": "https://github.com/dotnet/runtime"
+    },
+    {
+      "id": "Microsoft.Extensions.AI.Abstractions",
+      "licence": "MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "url": "https://github.com/dotnet/extensions"
+    }
+  ],
+  "runtimePacks": [
+    {
+      "id": "Microsoft.NETCore.App.Runtime.win-x64",
+      "name": ".NET runtime",
+      "licence": "MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "url": "https://github.com/dotnet/runtime",
+      "notices": "THIRD-PARTY-NOTICES.TXT"
+    },
+    {
+      "id": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+      "name": "Windows Desktop runtime (WPF and Windows Forms)",
+      "licence": "MIT",
+      "copyright": ".NET Foundation and Contributors",
+      "url": "https://github.com/dotnet/wpf"
+    }
+  ],
+  "other": [
+    {
+      "name": "Microsoft Visual C++ runtime (vcruntime140_cor3.dll) and DirectX shader compiler (D3DCompiler_47_cor3.dll)",
+      "licence": "Microsoft's redistribution terms",
+      "copyright": "Microsoft Corporation",
+      "ships": "Inside the Windows Desktop runtime, unmodified",
+      "decision": "Allowed: Darren (1 Nov 2026) extended the family's exception for Microsoft's C runtime, used unmodified under Microsoft's redistribution terms, to these files that come inside .NET's runtime."
+    },
+    {
+      "name": "Inno Setup (the installer's setup program)",
+      "version": "6",
+      "licence": "Inno Setup License",
+      "licenceText": "scripts/licences/InnoSetup.txt",
+      "copyright": "Jordan Russell; portions Martijn Laan",
+      "url": "https://jrsoftware.org/isinfo.php",
+      "ships": "Inside PendulumSetup.exe",
+      "decision": "Allowed: Darren (1 Nov 2026), a permissive licence; its copyright notice is kept here."
+    },
+    {
+      "name": "Alert sounds (alert.wav, bell.wav, chime.wav)",
+      "licence": "MIT",
+      "copyright": "Darren Marshall",
+      "ships": "Sounds\\",
+      "note": "Pendulum's own tones, drawn by assets/sounds/generate.py."
+    },
+    {
+      "name": "Pendulum's icons",
+      "licence": "MIT",
+      "copyright": "Darren Marshall",
+      "ships": "The app and the installer",
+      "note": "Original art, drawn by assets/export.py."
+    },
+    {
+      "name": "Segoe Fluent Icons and Segoe MDL2 Assets",
+      "licence": "Windows' own fonts",
+      "copyright": "Microsoft Corporation",
+      "ships": "Not shipped: used by name from Windows"
+    }
+  ],
+  "downloads": [
+    {
+      "name": "Whisper speech-recognition models",
+      "licence": "MIT",
+      "source": "https://huggingface.co/ggerganov/whisper.cpp",
+      "note": "OpenAI's Whisper weights in whisper.cpp's format."
+    },
+    {
+      "name": "Piper text-to-speech engine, 2023.11.14-2 for Windows",
+      "licence": "MIT, includes eSpeak NG (GPL-3.0)",
+      "source": "https://github.com/rhasspy/piper/releases/tag/2023.11.14-2",
+      "note": "Piper's last MIT release (its successor is GPL). Its download bundles espeak-ng.dll and its data under the GPL-3.0, and ONNX Runtime (MIT). Pendulum runs piper.exe as a separate program and never bundles it (Darren, 1 Nov 2026)."
+    },
+    {
+      "name": "Piper voice: Alba (en_GB, medium)",
+      "licence": "CC BY 4.0",
+      "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/alba/medium",
+      "note": "Trained on https://datashare.ed.ac.uk/handle/10283/3270."
+    },
+    {
+      "name": "Piper voice: Jenny (Dioco) (en_GB, medium)",
+      "licence": "Jenny dataset licence: commercial use allowed; credit as \"Jenny (Dioco)\"",
+      "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/jenny_dioco/medium",
+      "note": "Terms at https://github.com/dioco-group/jenny-tts-dataset."
+    },
+    {
+      "name": "Piper voice: LibriTTS-R (en_US, medium)",
+      "licence": "CC BY 4.0",
+      "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/libritts_r/medium",
+      "note": "Trained on LibriTTS-R, http://www.openslr.org/141/."
+    },
+    {
+      "name": "Piper voice: Northern English Male (en_GB, medium)",
+      "licence": "CC BY-SA 4.0",
+      "source": "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/northern_english_male/medium",
+      "note": "Trained on http://www.openslr.org/83/."
+    }
+  ],
+  "notOffered": "Other Piper voices aren't offered: some are for research only (Lessac) or have unclear terms (Amy) (Darren, 1 Nov 2026)."
+}

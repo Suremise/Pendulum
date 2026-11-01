@@ -1,4 +1,11 @@
-# Pendulum's icons
+# Pendulum's icons and sounds
+
+The alert sounds (`Pendulum.App/Resources/Sounds/chime.wav`, `bell.wav`, `alert.wav`) are made
+from sine waves by `assets/sounds/generate.py` (Python 3.10+, standard library only, build-only),
+so they're Pendulum's own, under its MIT licence. Run `python assets/sounds/generate.py` to redraw
+them; the same bytes come out every time. Their names stay the same, because reminders save the
+name of the sound they play.
+
 
 Original art for Pendulum, under Pendulum's MIT licence. No third-party icon sets, fonts or
 images are used in any of the icons.

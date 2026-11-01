@@ -111,10 +111,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenWhisperModelPage()
-    {
-        Process.Start(new ProcessStartInfo("https://huggingface.co/ggerganov/whisper.cpp/tree/main") { UseShellExecute = true });
-    }
+    private void OpenWhisperModelPage() => OpenDownloadPage("https://huggingface.co/ggerganov/whisper.cpp/tree/main");
 
     [RelayCommand]
     private void RefreshPiperModels()
@@ -140,17 +137,35 @@ public partial class SettingsViewModel : ObservableObject
         Process.Start(new ProcessStartInfo(AppPaths.PiperModelsDirectory) { UseShellExecute = true });
     }
 
+    /// Piper's last release under the MIT licence (its project has since moved to a GPL one).
     [RelayCommand]
-    private void OpenPiperEnginePage()
-    {
-        Process.Start(new ProcessStartInfo("https://github.com/rhasspy/piper/releases/latest") { UseShellExecute = true });
-    }
+    private void OpenPiperEnginePage() => OpenDownloadPage("https://github.com/rhasspy/piper/releases/tag/2023.11.14-2");
+
+    /// The Piper voices Pendulum offers: only those whose terms allow anyone to use them, each with
+    /// its licence and the credit it asks for. A voice's own folder holds its MODEL_CARD.
+    public IReadOnlyList<VoiceOffer> PiperVoiceOffers => OfferedVoices;
+
+    internal static IReadOnlyList<VoiceOffer> OfferedVoices { get; } =
+    [
+        new(Strings.Voice_Alba_Name, Strings.Voice_Alba_Licence, Strings.Voice_Alba_Credit,
+            "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/alba/medium"),
+        new(Strings.Voice_Jenny_Name, Strings.Voice_Jenny_Licence, Strings.Voice_Jenny_Credit,
+            "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/jenny_dioco/medium"),
+        new(Strings.Voice_LibriTts_Name, Strings.Voice_LibriTts_Licence, Strings.Voice_LibriTts_Credit,
+            "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_US/libritts_r/medium"),
+        new(Strings.Voice_NorthernEnglishMale_Name, Strings.Voice_NorthernEnglishMale_Licence, Strings.Voice_NorthernEnglishMale_Credit,
+            "https://huggingface.co/rhasspy/piper-voices/tree/main/en/en_GB/northern_english_male/medium"),
+    ];
 
     [RelayCommand]
-    private void OpenPiperVoicePage()
+    private void OpenVoicePage(VoiceOffer? voice)
     {
-        Process.Start(new ProcessStartInfo("https://huggingface.co/rhasspy/piper-voices/tree/main") { UseShellExecute = true });
+        if (voice is not null)
+            OpenDownloadPage(voice.Url);
     }
+
+    private static void OpenDownloadPage(string url) =>
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
 
     [RelayCommand]
     private void OpenSoundsFolder()

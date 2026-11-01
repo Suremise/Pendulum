@@ -47,6 +47,13 @@ and this project follows [Semantic Versioning](https://semver.org/).
   reminders if Pendulum was stopped at that moment.
 
 ### Changed
+- New alert sounds: the chime, bell and alert are now Pendulum's own, made for it. A reminder
+  set to one of them keeps its sound.
+- Settings offers four Piper voices (Alba, Jenny (Dioco), LibriTTS-R and Northern English Male),
+  each with its licence and credit, in place of a link to every voice: some voices' terms don't
+  allow general use. The Piper and Whisper downloads show their licences too.
+- THIRD-PARTY-NOTICES lists everything Pendulum ships, the .NET runtime included, with every
+  licence in full.
 - Times now follow the 12/24-hour setting everywhere they're shown (the reminder
   list, alerts, the calendar and messages), not just when setting a reminder,
   and dates and day names follow your Windows region.

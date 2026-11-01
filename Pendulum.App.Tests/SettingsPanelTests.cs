@@ -157,6 +157,41 @@ public sealed class SettingsPanelTests : IDisposable
     }
 
     [Fact]
+    public void The_download_offers_show_their_licences()
+    {
+        var settings = new SettingsRepository().Load();
+        UiThread.Invoke(() =>
+        {
+            var panel = Build(settings);
+            var texts = Descendants(panel).OfType<TextBlock>().Select(t => t.Text).ToList();
+            Assert.Contains(Pendulum.App.Resources.Strings.Settings_PiperLicence, texts);
+            Assert.Contains(Pendulum.App.Resources.Strings.Settings_WhisperLicence, texts);
+
+            // Each voice offered shows its name, licence and credit, beside a button named for it.
+            // The rows are the list's own item template, laid out for each voice: the list itself
+            // sits in an expander whose content WPF-UI brings in by animation, which never runs
+            // without a window.
+            var offers = (ItemsControl)panel.FindName("VoiceOffers");
+            Assert.Equal(4, offers.Items.Count);
+            foreach (Pendulum.App.ViewModels.VoiceOffer voice in offers.Items)
+            {
+                var row = (FrameworkElement)offers.ItemTemplate.LoadContent();
+                row.DataContext = voice;
+                row.Width = 700;
+                row.Height = 120;
+                Layout(row);
+                var shown = VisualDescendants(row).OfType<TextBlock>().Select(t => t.Text).ToList();
+                Assert.Contains(voice.Name, shown);
+                Assert.Contains(voice.Licence, shown);
+                Assert.Contains(voice.Credit, shown);
+                var button = VisualDescendants(row).OfType<Wpf.Ui.Controls.Button>().Single();
+                Assert.Equal(string.Format(Pendulum.App.Resources.Strings.Settings_DownloadVoiceNameFormat, voice.Name),
+                    UIElementAutomationPeer.CreatePeerForElement(button).GetName());
+            }
+        });
+    }
+
+    [Fact]
     public void Settings_that_depend_on_another_follow_it()
     {
         var settings = new SettingsRepository().Load();
@@ -264,6 +299,17 @@ public sealed class SettingsPanelTests : IDisposable
         {
             yield return child;
             foreach (var deeper in Descendants(child))
+                yield return deeper;
+        }
+    }
+
+    private static IEnumerable<DependencyObject> VisualDescendants(DependencyObject root)
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            yield return child;
+            foreach (var deeper in VisualDescendants(child))
                 yield return deeper;
         }
     }

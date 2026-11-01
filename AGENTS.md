@@ -96,7 +96,11 @@ dotnet test Pendulum.sln             # every test project in the solution
 - **The licence rule:** everything shipped (NuGet packages, native libraries, sounds, icons) is
   **MIT or equally permissive** (Apache-2.0, BSD, ISC, Zlib, ...). No copyleft, and system fonts
   only. Build-only tools may use any open-source licence. A dependency outside the rule stops the
-  work for the maintainer's decision. A new or changed package updates THIRD-PARTY-NOTICES.md.
+  work for the maintainer's decision, recorded in `scripts/third-party.json`. THIRD-PARTY-NOTICES.md is
+  generated: a new or changed package, sound or download updates `scripts/third-party.json`, then
+  `pwsh scripts/third-party-notices.ps1` rebuilds it, and `-Check` fails when it's stale. Piper voices
+  are offered only when their terms let anyone use them (`SettingsViewModel.OfferedVoices`, with
+  each licence and credit).
 - **No network beyond two things:** the update check (`UpdateCheckService`) and the links in
   Settings that open the Whisper and Piper download pages in the user's browser. The update check
   is off unless the user turns on Settings > General, "Check for updates on startup" (settings

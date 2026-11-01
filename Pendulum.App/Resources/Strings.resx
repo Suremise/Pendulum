@@ -235,7 +235,8 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Settings_DeleteSpentRemindersAfterDays" xml:space="preserve"><value>Delete spent reminders after, days</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
   <data name="Settings_DownloadModels" xml:space="preserve"><value>Download models...</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_DownloadPiper" xml:space="preserve"><value>Download Piper...</value><comment>SettingsPanel.xaml, Content</comment></data>
-  <data name="Settings_DownloadVoices" xml:space="preserve"><value>Download voices...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_DownloadVoice" xml:space="preserve"><value>Download...</value><comment>Opens a voice's page.</comment></data>
+  <data name="Settings_DownloadVoiceNameFormat" xml:space="preserve"><value>Download {0}</value><comment>For screen readers; {0}: the voice's name.</comment></data>
   <data name="Settings_ForTheMicrophoneButtonInQuickReminder" xml:space="preserve"><value>For the microphone button in Quick Reminder.</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_General" xml:space="preserve"><value>General</value><comment>SettingsPanel.xaml, Content</comment></data>
   <data name="Settings_ItRunsOnTheCPUNoGraphicsCardNeededAndNothingIsSe" xml:space="preserve"><value>It runs on the CPU, no graphics card needed, and nothing is sent anywhere. Its Windows build is a few years old but still works well for this.</value><comment>SettingsPanel.xaml, Text</comment></data>
@@ -251,7 +252,8 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Settings_OtherwiseDismissItAfter" xml:space="preserve"><value>Otherwise dismiss it after</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_OtherwiseDismissItAfterMinutes" xml:space="preserve"><value>Otherwise dismiss it after, minutes</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
   <data name="Settings_PendulumOpensWhenYouSignInSoYourRemindersGoOffEv" xml:space="preserve"><value>Pendulum opens when you sign in, so your reminders go off even if you forget to start it.</value><comment>SettingsPanel.xaml, Text</comment></data>
-  <data name="Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds" xml:space="preserve"><value>Piper is a free voice that runs on your computer and sounds more natural than the Windows one. Download Piper and extract the whole zip into the Piper folder, then download a voice: two files, for example en_US-lessac-medium.onnx and en_US-lessac-medium.onnx.json, into the same folder. Then click Refresh.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds" xml:space="preserve"><value>Piper is a free voice that runs on your computer and sounds more natural than the Windows one. Download Piper and extract the whole zip into the Piper folder, then download one of the voices below: two files, for example en_GB-alba-medium.onnx and en_GB-alba-medium.onnx.json, into the same folder. Then click Refresh.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PiperLicence" xml:space="preserve"><value>Piper is MIT-licensed. Its Windows download includes eSpeak NG, which is GPL-3.0. Pendulum includes neither, and runs Piper as a separate program.</value><comment>Under the Piper download link.</comment></data>
   <data name="Settings_PiperMissing" xml:space="preserve"><value>Piper isn't installed yet: see Set up Piper below.</value></data>
   <data name="Settings_PiperNoVoices" xml:space="preserve"><value>Piper is installed, but no voices yet: see Set up Piper below.</value></data>
   <data name="Settings_PiperOfflineMoreNatural" xml:space="preserve"><value>Piper (offline, more natural)</value><comment>SettingsPanel.xaml, a setter</comment></data>
@@ -295,10 +297,12 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Settings_UsedForRemindersSetToSpeakAndForTestVoice" xml:space="preserve"><value>Used for reminders set to speak, and for Test voice.</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_UsedOnlyWhenAlertsDontKeepGoingAnUnansweredAlert" xml:space="preserve"><value>Used only when alerts don't keep going: an unanswered alert is dismissed for you, so a repeating reminder moves to its next time and a one-off is marked spent.</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_Voice" xml:space="preserve"><value>Voice</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_VoicesHeading" xml:space="preserve"><value>Voices</value><comment>Piper voices offered for download.</comment></data>
   <data name="Settings_Volume" xml:space="preserve"><value>Volume</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_WhenAnAlertAppears" xml:space="preserve"><value>When an alert appears</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_WhenPendulumStarts" xml:space="preserve"><value>When Pendulum starts</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_WhisperIsFreeSpeechRecognitionThatRunsOnYourComp" xml:space="preserve"><value>Whisper is free speech recognition that runs on your computer and is usually far more accurate with accents than the Windows one. Download a model (a .bin file) into the Whisper folder, then click Refresh. Names ending in .en, like ggml-base.en.bin, are English only; the others are multilingual. The base and small models are a good balance of speed and accuracy.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhisperLicence" xml:space="preserve"><value>The Whisper models are MIT-licensed.</value><comment>Under the Whisper download link.</comment></data>
   <data name="Settings_WhisperMany" xml:space="preserve"><value>{0} models found.</value><comment>{0}: how many.</comment></data>
   <data name="Settings_WhisperModel" xml:space="preserve"><value>Whisper model</value><comment>SettingsPanel.xaml, Text</comment></data>
   <data name="Settings_WhisperNone" xml:space="preserve"><value>No Whisper models found yet: see Set up Whisper below.</value></data>
@@ -316,4 +320,16 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Tray_Open" xml:space="preserve"><value>Open Pendulum</value><comment>The tray menu.</comment></data>
   <data name="Tray_StillRunning" xml:space="preserve"><value>Still running in the system tray. Click the tray icon to reopen, or right-click it to exit.</value></data>
   <data name="Tray_ToolTipWithStatus" xml:space="preserve"><value>Pendulum - {0}</value><comment>{0}: the next reminder, as Status_Next says it.</comment></data>
+  <data name="Voice_Alba_Credit" xml:space="preserve"><value>Trained on the Alba recordings, datashare.ed.ac.uk/handle/10283/3270.</value><comment>The credit the voice's licence asks for.</comment></data>
+  <data name="Voice_Alba_Licence" xml:space="preserve"><value>Licence: CC BY 4.0</value><comment>A voice's licence.</comment></data>
+  <data name="Voice_Alba_Name" xml:space="preserve"><value>Alba (British English)</value><comment>A voice's name: keep Alba.</comment></data>
+  <data name="Voice_Jenny_Credit" xml:space="preserve"><value>Voice: Jenny (Dioco), github.com/dioco-group/jenny-tts-dataset.</value><comment>The credit the voice's licence asks for.</comment></data>
+  <data name="Voice_Jenny_Licence" xml:space="preserve"><value>Licence: free to use, including commercially, with credit</value><comment>A voice's licence.</comment></data>
+  <data name="Voice_Jenny_Name" xml:space="preserve"><value>Jenny (Dioco) (British English)</value><comment>Its licence asks for the name "Jenny", and "Jenny (Dioco)" where practical: keep it.</comment></data>
+  <data name="Voice_LibriTts_Credit" xml:space="preserve"><value>Trained on LibriTTS-R, openslr.org/141.</value><comment>The credit the voice's licence asks for.</comment></data>
+  <data name="Voice_LibriTts_Licence" xml:space="preserve"><value>Licence: CC BY 4.0</value><comment>A voice's licence.</comment></data>
+  <data name="Voice_LibriTts_Name" xml:space="preserve"><value>LibriTTS-R (American English)</value><comment>A voice's name: keep LibriTTS-R.</comment></data>
+  <data name="Voice_NorthernEnglishMale_Credit" xml:space="preserve"><value>Trained on recordings from openslr.org/83.</value><comment>The credit the voice's licence asks for.</comment></data>
+  <data name="Voice_NorthernEnglishMale_Licence" xml:space="preserve"><value>Licence: CC BY-SA 4.0</value><comment>A voice's licence.</comment></data>
+  <data name="Voice_NorthernEnglishMale_Name" xml:space="preserve"><value>Northern English Male (British English)</value><comment>A voice's name.</comment></data>
 </root>

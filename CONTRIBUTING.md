@@ -57,10 +57,13 @@ libraries included), sounds and icons.
 
 - Before adding a package, check its licence and its dependencies'. Prefer a well-used, maintained
   one, and say in the pull request what it's for and why it's worth it.
-- Add it to [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md), and update the entry when a
-  package's version or licence changes.
-- Build-only tools (the SDK, Inno Setup, CI actions, scripts) don't ship, so the rule doesn't
-  apply to them.
+- Add it to `scripts/third-party.json` (its licence, copyright and link, and its notices file if
+  it carries one), then run `pwsh scripts/third-party-notices.ps1` to rebuild
+  [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md). Never edit that file by hand:
+  `pwsh scripts/third-party-notices.ps1 -Check` fails when it's stale, or when a package ships
+  without an entry.
+- Build-only tools (the SDK, CI actions, scripts) don't ship, so the rule doesn't apply to them.
+  Inno Setup is the exception: its setup program ships inside the installer, so it's listed.
 
 ## Tests
 

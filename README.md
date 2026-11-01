@@ -113,6 +113,12 @@ Pendulum is released under the [MIT License](LICENSE). © 2026 Darren Marshall.
 
 ## Third-party software
 
-Built on several open-source libraries, and optionally on the separately-downloaded
-Whisper and Piper speech engines — see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
-for the full list and licenses (all MIT).
+Built on open-source libraries, all MIT, and on .NET, which Pendulum carries with it. Two small
+Microsoft files that come inside .NET, and the installer's Inno Setup, are under their own
+permissive terms. [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) lists everything that ships,
+with every licence in full.
+
+The optional Whisper and Piper speech engines, models and voices aren't included: Settings links
+to them, each with its licence. Piper's Windows download includes eSpeak NG, which is GPL-3.0;
+Pendulum runs Piper as a separate program. Only voices whose terms let anyone use them are
+offered.
