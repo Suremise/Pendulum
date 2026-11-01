@@ -34,6 +34,20 @@
     <Resource Include="..\assets\tray\tray.ico" Link="Resources\tray.ico" />
   </ItemGroup>
 
+  <!-- Every user-visible string, English to start (Resources\Strings.resx). The Strings class is
+       generated from it before the XAML is compiled, so a missing key is a compile error and XAML
+       reads them with {x:Static res:Strings.Key}. -->
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)Strings.Designer.cs" Visible="false" />
+  </ItemGroup>
+  <Target Name="GeneratePendulumStrings" BeforeTargets="MarkupCompilePass1;CoreCompile"
+          Inputs="Resources\Strings.resx" Outputs="$(IntermediateOutputPath)Strings.Designer.cs">
+    <GenerateResource Sources="Resources\Strings.resx" OutputResources="$(IntermediateOutputPath)StringsClass.resources"
+                      StronglyTypedLanguage="CSharp" StronglyTypedNamespace="Pendulum.App.Resources" StronglyTypedClassName="Strings"
+                      StronglyTypedManifestPrefix="Pendulum.App.Resources" StronglyTypedFileName="$(IntermediateOutputPath)Strings.Designer.cs"
+                      PublicClass="true" ExecuteAsTool="false" />
+  </Target>
+
   <ItemGroup>
     <None Include="Resources\Sounds\*.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

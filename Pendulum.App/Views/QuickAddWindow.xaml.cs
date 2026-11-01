@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.Core.Models;
 using Pendulum.Core.Parsing;
@@ -52,7 +53,7 @@ public partial class QuickAddWindow : FluentWindow
         ErrorText.Visibility = Visibility.Collapsed;
         MicButton.IsEnabled = false;
         MicButton.Icon = new SymbolIcon { Symbol = SymbolRegular.MicPulse24 };
-        MicButton.ToolTip = "Listening…";
+        MicButton.ToolTip = Strings.QuickAdd_Listening;
 
         _listenCts = new CancellationTokenSource();
         try
@@ -61,7 +62,7 @@ public partial class QuickAddWindow : FluentWindow
             if (useWhisper)
             {
                 var modelPath = Path.Combine(AppPaths.WhisperModelsDirectory, whisperModel!);
-                text = await _whisperSpeech.ListenOnceAsync(modelPath, () => MicButton.ToolTip = "Transcribing…", _listenCts.Token);
+                text = await _whisperSpeech.ListenOnceAsync(modelPath, () => MicButton.ToolTip = Strings.QuickAdd_Transcribing, _listenCts.Token);
             }
             else
             {
@@ -75,7 +76,7 @@ public partial class QuickAddWindow : FluentWindow
             }
             else
             {
-                ShowError("Didn't catch that — try again, or type it instead.");
+                ShowError(Strings.QuickAdd_DidntCatch);
             }
         }
         catch (OperationCanceledException)
@@ -84,7 +85,7 @@ public partial class QuickAddWindow : FluentWindow
         }
         catch (Exception)
         {
-            ShowError("Couldn't start speech recognition. Make sure a microphone is set up in Windows.");
+            ShowError(Strings.QuickAdd_MicFailed);
         }
         finally
         {
@@ -92,7 +93,7 @@ public partial class QuickAddWindow : FluentWindow
             _listenCts = null;
             MicButton.IsEnabled = true;
             MicButton.Icon = new SymbolIcon { Symbol = SymbolRegular.Mic24 };
-            MicButton.ToolTip = "Speak a reminder";
+            MicButton.ToolTip = Strings.QuickAdd_SpeakAReminder;
             Keyboard.Focus(InputBox);
         }
     }
@@ -121,13 +122,13 @@ public partial class QuickAddWindow : FluentWindow
 
         if (result.When is null)
         {
-            ShowError("Couldn't find a time — try \"in 20 min\", \"3pm\", or \"tomorrow 9am\".");
+            ShowError(Strings.QuickAdd_NoTime);
             return;
         }
 
         if (string.IsNullOrWhiteSpace(result.Name))
         {
-            ShowError("Please enter a name for the reminder, not just a time.");
+            ShowError(Strings.QuickAdd_NoName);
             return;
         }
 

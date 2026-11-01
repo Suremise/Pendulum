@@ -1,3 +1,5 @@
+using Pendulum.App.Resources;
+
 namespace Pendulum.App.Services;
 
 /// Formats a one-line "what's coming up next" summary, shared by the main window's
@@ -12,23 +14,23 @@ public static class ReminderStatus
             .FirstOrDefault();
 
         if (next is null)
-            return "No upcoming reminders";
+            return Strings.Status_NoUpcoming;
 
         var remaining = next.TriggerAt - DateTime.Now;
         if (remaining < TimeSpan.Zero)
             remaining = TimeSpan.Zero;
 
-        return $"Next Reminder: {next.Name} in {FormatDuration(remaining)}";
+        return string.Format(Strings.Status_Next, next.Name, FormatDuration(remaining));
     }
 
     private static string FormatDuration(TimeSpan t)
     {
         if (t.TotalDays >= 1)
-            return $"{(int)t.TotalDays}d {t.Hours}h {t.Minutes}m";
+            return string.Format(Strings.Duration_DaysHoursMinutes, (int)t.TotalDays, t.Hours, t.Minutes);
         if (t.TotalHours >= 1)
-            return $"{(int)t.TotalHours}h {t.Minutes}m {t.Seconds}s";
+            return string.Format(Strings.Duration_HoursMinutesSeconds, (int)t.TotalHours, t.Minutes, t.Seconds);
         if (t.TotalMinutes >= 1)
-            return $"{(int)t.TotalMinutes}m {t.Seconds}s";
-        return $"{t.Seconds}s";
+            return string.Format(Strings.Duration_MinutesSeconds, (int)t.TotalMinutes, t.Seconds);
+        return string.Format(Strings.Duration_Seconds, t.Seconds);
     }
 }

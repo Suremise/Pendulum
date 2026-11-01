@@ -1,6 +1,7 @@
 <UserControl x:Class="Pendulum.App.Views.SettingsPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
              xmlns:conv="clr-namespace:Pendulum.App.Converters"
@@ -71,18 +72,18 @@
 
         <!-- The engines by plain names (the saved values stay the enum's). -->
         <DataTemplate x:Key="TtsEngineName">
-            <TextBlock x:Name="Name" Text="Windows (built in)"/>
+            <TextBlock x:Name="Name" Text="{x:Static res:Strings.Settings_WindowsBuiltIn}"/>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding}" Value="{x:Static models:TextToSpeechEngine.Piper}">
-                    <Setter TargetName="Name" Property="Text" Value="Piper (offline, more natural)"/>
+                    <Setter TargetName="Name" Property="Text" Value="{x:Static res:Strings.Settings_PiperOfflineMoreNatural}"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
         <DataTemplate x:Key="SttEngineName">
-            <TextBlock x:Name="Name" Text="Windows (built in)"/>
+            <TextBlock x:Name="Name" Text="{x:Static res:Strings.Settings_WindowsBuiltIn}"/>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding}" Value="{x:Static models:SpeechToTextEngine.Whisper}">
-                    <Setter TargetName="Name" Property="Text" Value="Whisper (offline, more accurate)"/>
+                    <Setter TargetName="Name" Property="Text" Value="{x:Static res:Strings.Settings_WhisperOfflineMoreAccurate}"/>
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -130,19 +131,19 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.ColumnSpan="2" Margin="0,0,0,12">
-            <TextBlock Text="Settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,2"/>
-            <TextBlock Text="Choose a section on the left." FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <TextBlock Text="{x:Static res:Strings.Settings_Settings}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,2"/>
+            <TextBlock Text="{x:Static res:Strings.Settings_ChooseASectionOnTheLeft}" FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
         </StackPanel>
 
         <!-- Arrow keys move between sections; Tab moves into the section shown. -->
         <ListBox x:Name="SectionList" Grid.Row="1" Grid.Column="0" Margin="0,0,10,0" BorderThickness="0" Background="Transparent"
                  ItemContainerStyle="{StaticResource SectionItem}" SelectedIndex="0" SelectionChanged="SectionList_SelectionChanged"
-                 AutomationProperties.Name="Settings sections" KeyboardNavigation.TabNavigation="Once">
-            <ListBoxItem Content="General" Tag="&#xE713;" AutomationProperties.Name="General"/>
-            <ListBoxItem Content="Alerts" Tag="&#xE7BA;" AutomationProperties.Name="Alerts"/>
-            <ListBoxItem Content="Spoken alerts" Tag="&#xE767;" AutomationProperties.Name="Spoken alerts"/>
-            <ListBoxItem Content="Quick Reminder" Tag="&#xE720;" AutomationProperties.Name="Quick Reminder"/>
-            <ListBoxItem Content="Backup and data" Tag="&#xE74E;" AutomationProperties.Name="Backup and data"/>
+                 AutomationProperties.Name="{x:Static res:Strings.Settings_SettingsSections}" KeyboardNavigation.TabNavigation="Once">
+            <ListBoxItem Content="{x:Static res:Strings.Settings_General}" Tag="&#xE713;" AutomationProperties.Name="{x:Static res:Strings.Settings_General}"/>
+            <ListBoxItem Content="{x:Static res:Strings.Settings_Alerts}" Tag="&#xE7BA;" AutomationProperties.Name="{x:Static res:Strings.Settings_Alerts}"/>
+            <ListBoxItem Content="{x:Static res:Strings.Settings_SpokenAlerts}" Tag="&#xE767;" AutomationProperties.Name="{x:Static res:Strings.Settings_SpokenAlerts}"/>
+            <ListBoxItem Content="{x:Static res:Strings.Settings_QuickReminder}" Tag="&#xE720;" AutomationProperties.Name="{x:Static res:Strings.Settings_QuickReminder}"/>
+            <ListBoxItem Content="{x:Static res:Strings.Settings_BackupAndData}" Tag="&#xE74E;" AutomationProperties.Name="{x:Static res:Strings.Settings_BackupAndData}"/>
         </ListBox>
 
         <ScrollViewer x:Name="SectionScroller" Grid.Row="1" Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
@@ -150,26 +151,26 @@
             <Grid MaxWidth="760" HorizontalAlignment="Stretch" Margin="0,0,12,4">
 
                 <!-- General -->
-                <StackPanel x:Name="GeneralSection" AutomationProperties.Name="General">
-                    <TextBlock Text="General" Style="{StaticResource SectionTitle}"/>
+                <StackPanel x:Name="GeneralSection" AutomationProperties.Name="{x:Static res:Strings.Settings_General}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_General}" Style="{StaticResource SectionTitle}"/>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="When Pendulum starts" Style="{StaticResource GroupTitle}"/>
-                            <CheckBox x:Name="LaunchOnStartupBox" Content="Start with Windows" IsChecked="{Binding Settings.LaunchOnWindowsStartup}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Text="Pendulum opens when you sign in, so your reminders go off even if you forget to start it."/>
-                            <CheckBox x:Name="StartMinimizedBox" Content="Start in the tray" IsChecked="{Binding Settings.StartMinimized}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Text="Opens hidden in the notification area instead of showing this window."/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_WhenPendulumStarts}" Style="{StaticResource GroupTitle}"/>
+                            <CheckBox x:Name="LaunchOnStartupBox" Content="{x:Static res:Strings.Settings_StartWithWindows}" IsChecked="{Binding Settings.LaunchOnWindowsStartup}"/>
+                            <TextBlock Style="{StaticResource CheckHelp}" Text="{x:Static res:Strings.Settings_PendulumOpensWhenYouSignInSoYourRemindersGoOffEv}"/>
+                            <CheckBox x:Name="StartMinimizedBox" Content="{x:Static res:Strings.Settings_StartInTheTray}" IsChecked="{Binding Settings.StartMinimized}"/>
+                            <TextBlock Style="{StaticResource CheckHelp}" Text="{x:Static res:Strings.Settings_OpensHiddenInTheNotificationAreaInsteadOfShowing}"/>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Appearance" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Appearance}" Style="{StaticResource GroupTitle}"/>
                             <Grid Style="{StaticResource Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ThemeLabel" Text="Theme" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="ThemeLabel" Text="{x:Static res:Strings.Settings_Theme}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="ThemeBox" Grid.Column="1" Style="{StaticResource Field}" Width="200"
                                           ItemsSource="{Binding ThemeModes}" SelectedItem="{Binding Settings.Theme}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=ThemeLabel}">
@@ -185,97 +186,97 @@
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TimeFormatLabel" Text="Time format" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="TimeFormatLabel" Text="{x:Static res:Strings.Settings_TimeFormat}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="TimeFormatBox" Grid.Column="1" Style="{StaticResource Field}" Width="200" SelectedIndex="{Binding TimeFormatIndex}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=TimeFormatLabel}">
-                                    <ComboBoxItem Content="12-hour (2:30 PM)"/>
-                                    <ComboBoxItem Content="24-hour (14:30)"/>
+                                    <ComboBoxItem Content="{x:Static res:Strings.Settings_12Hour230PM}"/>
+                                    <ComboBoxItem Content="{x:Static res:Strings.Settings_24Hour1430}"/>
                                 </ComboBox>
                             </Grid>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Updates" Style="{StaticResource GroupTitle}"/>
-                            <CheckBox x:Name="UpdateCheckBox" Content="Check for updates when Pendulum starts" IsChecked="{Binding Settings.CheckForUpdatesOnStartup}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Updates}" Style="{StaticResource GroupTitle}"/>
+                            <CheckBox x:Name="UpdateCheckBox" Content="{x:Static res:Strings.Settings_CheckForUpdatesWhenPendulumStarts}" IsChecked="{Binding Settings.CheckForUpdatesOnStartup}"/>
                             <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4"
-                                       Text="Off unless you turn it on. When Pendulum starts, it asks GitHub whether a newer version exists (an answer is kept for a day) and shows a link in the status bar. Nothing is downloaded."/>
+                                       Text="{x:Static res:Strings.Settings_OffUnlessYouTurnItOnWhenPendulumStartsItAsksGitH}"/>
                         </StackPanel>
                     </ui:Card>
                 </StackPanel>
 
                 <!-- Alerts -->
-                <StackPanel x:Name="AlertsSection" Visibility="Collapsed" AutomationProperties.Name="Alerts">
-                    <TextBlock Text="Alerts" Style="{StaticResource SectionTitle}"/>
+                <StackPanel x:Name="AlertsSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_Alerts}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_Alerts}" Style="{StaticResource SectionTitle}"/>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Sound" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Sound}" Style="{StaticResource GroupTitle}"/>
                             <Grid Style="{StaticResource Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="DefaultSoundLabel" Text="Sound for new reminders" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="DefaultSoundLabel" Text="{x:Static res:Strings.Settings_SoundForNewReminders}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="DefaultSoundBox" Grid.Column="1" Style="{StaticResource Field}" Width="200"
                                           ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=DefaultSoundLabel}"/>
                             </Grid>
                             <StackPanel Style="{StaticResource Buttons}" Margin="220,0,0,4">
-                                <ui:Button Content="Add sound..." Style="{StaticResource Secondary}" Command="{Binding AddSoundCommand}"/>
-                                <ui:Button Content="Open sounds folder" Style="{StaticResource Secondary}" Command="{Binding OpenSoundsFolderCommand}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_AddSound}" Style="{StaticResource Secondary}" Command="{Binding AddSoundCommand}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_OpenSoundsFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenSoundsFolderCommand}"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="When an alert appears" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_WhenAnAlertAppears}" Style="{StaticResource GroupTitle}"/>
                             <Grid Style="{StaticResource Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SnoozeLabel" Text="Snooze for" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="SnoozeLabel" Text="{x:Static res:Strings.Settings_SnoozeFor}" Style="{StaticResource RowLabel}"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <ui:TextBox x:Name="SnoozeBox" Style="{StaticResource Number}" MaxLength="3"
                                                 Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"
-                                                AutomationProperties.Name="Snooze for, minutes"/>
-                                    <TextBlock Text="minutes" Style="{StaticResource Unit}"/>
+                                                AutomationProperties.Name="{x:Static res:Strings.Settings_SnoozeForMinutes}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource Unit}"/>
                                 </StackPanel>
                             </Grid>
-                            <CheckBox x:Name="RepeatBox" Content="Keep alerting until I dismiss it" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}"/>
+                            <CheckBox x:Name="RepeatBox" Content="{x:Static res:Strings.Settings_KeepAlertingUntilIDismissIt}" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}"/>
                             <Grid Style="{StaticResource Row}" Margin="28,8,0,4"
                                   IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="192"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Otherwise dismiss it after" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_OtherwiseDismissItAfter}" Style="{StaticResource RowLabel}"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <ui:TextBox x:Name="AutoResolveBox" Style="{StaticResource Number}" MaxLength="3"
                                                 Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
-                                                AutomationProperties.Name="Otherwise dismiss it after, minutes"/>
-                                    <TextBlock Text="minutes" Style="{StaticResource Unit}"/>
+                                                AutomationProperties.Name="{x:Static res:Strings.Settings_OtherwiseDismissItAfterMinutes}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource Unit}"/>
                                 </StackPanel>
                             </Grid>
                             <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4"
-                                       Text="Used only when alerts don't keep going: an unanswered alert is dismissed for you, so a repeating reminder moves to its next time and a one-off is marked spent."/>
+                                       Text="{x:Static res:Strings.Settings_UsedOnlyWhenAlertsDontKeepGoingAnUnansweredAlert}"/>
                         </StackPanel>
                     </ui:Card>
                 </StackPanel>
 
                 <!-- Spoken alerts -->
-                <StackPanel x:Name="VoiceSection" Visibility="Collapsed" AutomationProperties.Name="Spoken alerts">
-                    <TextBlock Text="Spoken alerts" Style="{StaticResource SectionTitle}"/>
+                <StackPanel x:Name="VoiceSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_SpokenAlerts}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_SpokenAlerts}" Style="{StaticResource SectionTitle}"/>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Voice" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="Used for reminders set to speak, and for Test voice."/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Voice}" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_UsedForRemindersSetToSpeakAndForTestVoice}"/>
                             <Grid Style="{StaticResource Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TtsEngineLabel" Text="Speech engine" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="TtsEngineLabel" Text="{x:Static res:Strings.Settings_SpeechEngine}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="TtsEngineBox" Grid.Column="1" Style="{StaticResource Field}"
                                           ItemsSource="{Binding TextToSpeechEngines}" SelectedItem="{Binding Settings.TextToSpeechEngine}"
                                           ItemTemplate="{StaticResource TtsEngineName}"
@@ -297,7 +298,7 @@
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="WindowsVoiceLabel" Text="Windows voice" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="WindowsVoiceLabel" Text="{x:Static res:Strings.Settings_WindowsVoice}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="WindowsVoiceBox" Grid.Column="1" Style="{StaticResource Field}"
                                           ItemsSource="{Binding VoiceNames}" SelectedItem="{Binding Settings.TtsVoiceName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=WindowsVoiceLabel}"/>
@@ -318,14 +319,14 @@
                                         <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="PiperVoiceLabel" Text="Piper voice" Style="{StaticResource RowLabel}"/>
+                                    <TextBlock x:Name="PiperVoiceLabel" Text="{x:Static res:Strings.Settings_PiperVoice}" Style="{StaticResource RowLabel}"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                                         <ComboBox x:Name="PiperVoiceBox" Style="{StaticResource Field}"
                                                   ItemsSource="{Binding PiperModels}" SelectedItem="{Binding Settings.PiperVoiceModelFileName}"
                                                   IsEnabled="{Binding IsPiperAvailable}"
                                                   AutomationProperties.LabeledBy="{Binding ElementName=PiperVoiceLabel}"/>
-                                        <ui:Button Content="Refresh" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshPiperModelsCommand}"
-                                                   AutomationProperties.Name="Refresh Piper voices"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshPiperModelsCommand}"
+                                                   AutomationProperties.Name="{x:Static res:Strings.Settings_RefreshPiperVoices}"/>
                                     </StackPanel>
                                 </Grid>
                                 <TextBlock Text="{Binding PiperStatusText}" Style="{StaticResource Help}" Margin="220,0,0,10"/>
@@ -337,9 +338,9 @@
                                     <ColumnDefinition Width="260"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Speed" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_Speed}" Style="{StaticResource RowLabel}"/>
                                 <Slider x:Name="RateSlider" Grid.Column="1" Minimum="-10" Maximum="10" IsSnapToTickEnabled="True" TickFrequency="1"
-                                        Value="{Binding Settings.TtsRate}" VerticalAlignment="Center" AutomationProperties.Name="Speed"/>
+                                        Value="{Binding Settings.TtsRate}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Speed}"/>
                                 <TextBlock Grid.Column="2" Text="{Binding Settings.TtsRate}" Style="{StaticResource Unit}" Width="32" TextAlignment="Right"/>
                             </Grid>
                             <Grid Style="{StaticResource Row}">
@@ -348,25 +349,25 @@
                                     <ColumnDefinition Width="260"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Volume" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_Volume}" Style="{StaticResource RowLabel}"/>
                                 <Slider x:Name="VolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" IsSnapToTickEnabled="True" TickFrequency="1"
-                                        Value="{Binding Settings.TtsVolume}" VerticalAlignment="Center" AutomationProperties.Name="Volume"/>
+                                        Value="{Binding Settings.TtsVolume}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Volume}"/>
                                 <TextBlock Grid.Column="2" Text="{Binding Settings.TtsVolume}" Style="{StaticResource Unit}" Width="32" TextAlignment="Right"/>
                             </Grid>
                             <StackPanel Style="{StaticResource Buttons}" Margin="220,0,0,8">
-                                <ui:Button Content="Test voice" Style="{StaticResource Secondary}" Command="{Binding TestVoiceCommand}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_TestVoice}" Style="{StaticResource Secondary}" Command="{Binding TestVoiceCommand}"/>
                             </StackPanel>
 
-                            <Expander Header="Set up Piper" Margin="0,4,0,0" AutomationProperties.Name="Set up Piper">
+                            <Expander Header="{x:Static res:Strings.Settings_SetUpPiper}" Margin="0,4,0,0" AutomationProperties.Name="{x:Static res:Strings.Settings_SetUpPiper}">
                                 <StackPanel Margin="0,8,0,0">
                                     <TextBlock Style="{StaticResource Help}"
-                                               Text="Piper is a free voice that runs on your computer and sounds more natural than the Windows one. Download Piper and extract the whole zip into the Piper folder, then download a voice: two files, for example en_US-lessac-medium.onnx and en_US-lessac-medium.onnx.json, into the same folder. Then click Refresh."/>
+                                               Text="{x:Static res:Strings.Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds}"/>
                                     <TextBlock Style="{StaticResource Help}"
-                                               Text="It runs on the CPU, no graphics card needed, and nothing is sent anywhere. Its Windows build is a few years old but still works well for this."/>
+                                               Text="{x:Static res:Strings.Settings_ItRunsOnTheCPUNoGraphicsCardNeededAndNothingIsSe}"/>
                                     <StackPanel Style="{StaticResource Buttons}">
-                                        <ui:Button Content="Download Piper..." Style="{StaticResource Secondary}" Command="{Binding OpenPiperEnginePageCommand}"/>
-                                        <ui:Button Content="Download voices..." Style="{StaticResource Secondary}" Command="{Binding OpenPiperVoicePageCommand}"/>
-                                        <ui:Button Content="Open Piper folder" Style="{StaticResource Secondary}" Command="{Binding OpenPiperModelsFolderCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadPiper}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperEnginePageCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadVoices}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperVoicePageCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenPiperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperModelsFolderCommand}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -375,39 +376,39 @@
                 </StackPanel>
 
                 <!-- Quick Reminder -->
-                <StackPanel x:Name="QuickSection" Visibility="Collapsed" AutomationProperties.Name="Quick Reminder">
-                    <TextBlock Text="Quick Reminder" Style="{StaticResource SectionTitle}"/>
+                <StackPanel x:Name="QuickSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_QuickReminder}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_QuickReminder}" Style="{StaticResource SectionTitle}"/>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Shortcut" Style="{StaticResource GroupTitle}"/>
-                            <CheckBox x:Name="HotkeyEnabledBox" Content="Open Quick Reminder with a keyboard shortcut" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4" Text="Works from any app, so you can set a reminder without opening Pendulum."/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Shortcut}" Style="{StaticResource GroupTitle}"/>
+                            <CheckBox x:Name="HotkeyEnabledBox" Content="{x:Static res:Strings.Settings_OpenQuickReminderWithAKeyboardShortcut}" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}"/>
+                            <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4" Text="{x:Static res:Strings.Settings_WorksFromAnyAppSoYouCanSetAReminderWithoutOpenin}"/>
                             <Grid Style="{StaticResource Row}" Margin="28,4,0,4" IsEnabled="{Binding Settings.QuickAddHotkeyEnabled}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="192"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Shortcut" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_Shortcut}" Style="{StaticResource RowLabel}"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Padding="10,6" Margin="0,0,10,0">
                                         <TextBlock x:Name="HotkeyText" Text="{Binding Settings.QuickAddHotkeyGesture}" FontFamily="Consolas"
-                                                   AutomationProperties.Name="{Binding Settings.QuickAddHotkeyGesture, StringFormat=Shortcut: {0}}"/>
+                                                   AutomationProperties.Name="{Binding Settings.QuickAddHotkeyGesture, StringFormat={x:Static res:Strings.Settings_ShortcutNameFormat}}"/>
                                     </Border>
-                                    <ui:Button Content="Change..." Appearance="Secondary" Command="{Binding ChangeHotkeyCommand}" AutomationProperties.Name="Change the shortcut"/>
+                                    <ui:Button Content="{x:Static res:Strings.Settings_Change}" Appearance="Secondary" Command="{Binding ChangeHotkeyCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_ChangeTheShortcut}"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Speaking a reminder" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="For the microphone button in Quick Reminder."/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_SpeakingAReminder}" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_ForTheMicrophoneButtonInQuickReminder}"/>
                             <Grid Style="{StaticResource Row}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SttEngineLabel" Text="Speech recognition" Style="{StaticResource RowLabel}"/>
+                                <TextBlock x:Name="SttEngineLabel" Text="{x:Static res:Strings.Settings_SpeechRecognition}" Style="{StaticResource RowLabel}"/>
                                 <ComboBox x:Name="SttEngineBox" Grid.Column="1" Style="{StaticResource Field}"
                                           ItemsSource="{Binding SpeechToTextEngines}" SelectedItem="{Binding Settings.SpeechToTextEngine}"
                                           ItemTemplate="{StaticResource SttEngineName}"
@@ -431,30 +432,30 @@
                                         <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="WhisperModelLabel" Text="Whisper model" Style="{StaticResource RowLabel}"/>
+                                    <TextBlock x:Name="WhisperModelLabel" Text="{x:Static res:Strings.Settings_WhisperModel}" Style="{StaticResource RowLabel}"/>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
                                         <ComboBox x:Name="WhisperModelBox" Style="{StaticResource Field}"
                                                   ItemsSource="{Binding WhisperModels}" SelectedItem="{Binding Settings.WhisperModelFileName}"
                                                   IsEnabled="{Binding IsWhisperAvailable}"
                                                   AutomationProperties.LabeledBy="{Binding ElementName=WhisperModelLabel}"/>
-                                        <ui:Button Content="Refresh" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshWhisperModelsCommand}"
-                                                   AutomationProperties.Name="Refresh Whisper models"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshWhisperModelsCommand}"
+                                                   AutomationProperties.Name="{x:Static res:Strings.Settings_RefreshWhisperModels}"/>
                                     </StackPanel>
                                 </Grid>
                                 <TextBlock Text="{Binding WhisperStatusText}" Style="{StaticResource Help}" Margin="220,0,0,10"/>
                             </StackPanel>
 
-                            <CheckBox x:Name="AutoListenBox" Content="Start listening as soon as Quick Reminder opens" IsChecked="{Binding Settings.QuickAddAutoListen}" Margin="0,4,0,8"/>
+                            <CheckBox x:Name="AutoListenBox" Content="{x:Static res:Strings.Settings_StartListeningAsSoonAsQuickReminderOpens}" IsChecked="{Binding Settings.QuickAddAutoListen}" Margin="0,4,0,8"/>
 
-                            <Expander Header="Set up Whisper" Margin="0,4,0,0" AutomationProperties.Name="Set up Whisper">
+                            <Expander Header="{x:Static res:Strings.Settings_SetUpWhisper}" Margin="0,4,0,0" AutomationProperties.Name="{x:Static res:Strings.Settings_SetUpWhisper}">
                                 <StackPanel Margin="0,8,0,0">
                                     <TextBlock Style="{StaticResource Help}"
-                                               Text="Whisper is free speech recognition that runs on your computer and is usually far more accurate with accents than the Windows one. Download a model (a .bin file) into the Whisper folder, then click Refresh. Names ending in .en, like ggml-base.en.bin, are English only; the others are multilingual. The base and small models are a good balance of speed and accuracy."/>
+                                               Text="{x:Static res:Strings.Settings_WhisperIsFreeSpeechRecognitionThatRunsOnYourComp}"/>
                                     <TextBlock Style="{StaticResource Help}"
-                                               Text="It runs on the CPU, no graphics card needed, only while it listens, and nothing is sent anywhere."/>
+                                               Text="{x:Static res:Strings.Settings_ItRunsOnTheCPUNoGraphicsCardNeededOnlyWhileItLis}"/>
                                     <StackPanel Style="{StaticResource Buttons}">
-                                        <ui:Button Content="Download models..." Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelPageCommand}"/>
-                                        <ui:Button Content="Open Whisper folder" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelsFolderCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadModels}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelPageCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenWhisperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelsFolderCommand}"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -463,46 +464,46 @@
                 </StackPanel>
 
                 <!-- Backup and data -->
-                <StackPanel x:Name="DataSection" Visibility="Collapsed" AutomationProperties.Name="Backup and data">
-                    <TextBlock Text="Backup and data" Style="{StaticResource SectionTitle}"/>
+                <StackPanel x:Name="DataSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_BackupAndData}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_BackupAndData}" Style="{StaticResource SectionTitle}"/>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Spent reminders" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_SpentReminders}" Style="{StaticResource GroupTitle}"/>
                             <Grid Style="{StaticResource Row}" Margin="0,4,0,2">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="{StaticResource LabelWidth}"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Delete spent reminders after" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_DeleteSpentRemindersAfter}" Style="{StaticResource RowLabel}"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <ui:TextBox x:Name="AutoDeleteBox" Style="{StaticResource Number}" MaxLength="4"
                                                 Text="{Binding Settings.AutoDeleteSpentAfterDays, UpdateSourceTrigger=PropertyChanged}"
-                                                AutomationProperties.Name="Delete spent reminders after, days"/>
-                                    <TextBlock Text="days" Style="{StaticResource Unit}"/>
+                                                AutomationProperties.Name="{x:Static res:Strings.Settings_DeleteSpentRemindersAfterDays}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Days}" Style="{StaticResource Unit}"/>
                                 </StackPanel>
                             </Grid>
                             <TextBlock Style="{StaticResource Help}" Margin="0,0,0,4"
-                                       Text="A spent reminder is a one-off that has already gone off. They're deleted when Pendulum starts; 0 keeps them."/>
+                                       Text="{x:Static res:Strings.Settings_ASpentReminderIsAOneOffThatHasAlreadyGoneOffThey}"/>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Backup" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Backup}" Style="{StaticResource GroupTitle}"/>
                             <TextBlock Style="{StaticResource Help}" Margin="0,0,0,10"
-                                       Text="Saves every setting and reminder to one file, to move Pendulum to another computer or keep a copy."/>
+                                       Text="{x:Static res:Strings.Settings_SavesEverySettingAndReminderToOneFileToMovePendu}"/>
                             <StackPanel Style="{StaticResource Buttons}">
-                                <ui:Button Content="Back up..." Style="{StaticResource Secondary}" Command="{Binding ExportBackupCommand}" AutomationProperties.Name="Back up settings and reminders"/>
-                                <ui:Button Content="Restore..." Style="{StaticResource Secondary}" Command="{Binding RestoreBackupCommand}" AutomationProperties.Name="Restore a backup"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_BackUpButton}" Style="{StaticResource Secondary}" Command="{Binding ExportBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_BackUpSettingsAndReminders}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_Restore}" Style="{StaticResource Secondary}" Command="{Binding RestoreBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_RestoreABackup}"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:Card>
                     <ui:Card Style="{StaticResource Group}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="Reset" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Reset}" Style="{StaticResource GroupTitle}"/>
                             <TextBlock Style="{StaticResource Help}" Margin="0,0,0,10"
-                                       Text="Puts every setting in these sections back to its default. Your reminders aren't touched."/>
+                                       Text="{x:Static res:Strings.Settings_PutsEverySettingInTheseSectionsBackToItsDefaultY}"/>
                             <StackPanel Style="{StaticResource Buttons}">
-                                <ui:Button Content="Reset settings..." Style="{StaticResource Secondary}" Command="{Binding ResetToDefaultsCommand}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_ResetSettings}" Style="{StaticResource Secondary}" Command="{Binding ResetToDefaultsCommand}"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:Card>

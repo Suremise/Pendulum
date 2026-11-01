@@ -1,11 +1,12 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using Pendulum.App.Resources;
 using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
 using Pendulum.Core.Speech;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 
 namespace Pendulum.App.Services;
 
@@ -244,7 +245,7 @@ public sealed class AppServices
     public AppBackup RestoreBackup(string path)
     {
         var backup = BackupRepository.Load(path)
-            ?? throw new InvalidOperationException("That file isn't a valid Pendulum backup.");
+            ?? throw new InvalidOperationException(Strings.Backup_NotValid);
 
         // Build the full replacement in memory and persist once at the end, instead of wiping
         // triggers.json to empty and then saving again after every single re-added item — a

@@ -4,6 +4,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
@@ -31,9 +32,9 @@ public partial class SettingsViewModel : ObservableObject
 
     public string WhisperStatusText => WhisperModels.Count switch
     {
-        0 => "No Whisper models found yet: see Set up Whisper below.",
-        1 => "1 model found.",
-        var n => $"{n} models found."
+        0 => Strings.Settings_WhisperNone,
+        1 => Strings.Settings_WhisperOne,
+        var n => string.Format(Strings.Settings_WhisperMany, n)
     };
 
     public bool IsPiperExecutableAvailable => AppServices.Instance.IsPiperExecutableAvailable;
@@ -41,10 +42,10 @@ public partial class SettingsViewModel : ObservableObject
 
     public string PiperStatusText => (IsPiperExecutableAvailable, PiperModels.Count) switch
     {
-        (false, _) => "Piper isn't installed yet: see Set up Piper below.",
-        (true, 0) => "Piper is installed, but no voices yet: see Set up Piper below.",
-        (true, 1) => "Ready: 1 voice found.",
-        (true, var n) => $"Ready: {n} voices found."
+        (false, _) => Strings.Settings_PiperMissing,
+        (true, 0) => Strings.Settings_PiperNoVoices,
+        (true, 1) => Strings.Settings_PiperOneVoice,
+        (true, var n) => string.Format(Strings.Settings_PiperVoices, n)
     };
 
     public int TimeFormatIndex
@@ -162,8 +163,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "Audio files (*.wav;*.mp3)|*.wav;*.mp3",
-            Title = "Add sound"
+            Filter = Strings.Dialog_AudioFilter,
+            Title = Strings.Dialog_AddSoundTitle
         };
 
         if (dialog.ShowDialog() == true)
@@ -185,7 +186,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            await engine.SpeakAndWaitAsync("This is how Pendulum will sound.", CancellationToken.None);
+            await engine.SpeakAndWaitAsync(Strings.Settings_TestPhrase, CancellationToken.None);
         }
         finally
         {
@@ -198,9 +199,9 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new SaveFileDialog
         {
-            Filter = "Pendulum backup (*.json)|*.json",
+            Filter = Strings.Dialog_BackupFilter,
             FileName = $"pendulum-backup-{DateTime.Now:yyyy-MM-dd}.json",
-            Title = "Export backup"
+            Title = Strings.Dialog_ExportBackupTitle
         };
 
         if (dialog.ShowDialog() != true)
@@ -209,8 +210,8 @@ public partial class SettingsViewModel : ObservableObject
         AppServices.Instance.ExportBackup(dialog.FileName);
         MessageBox.Show(
             Application.Current.MainWindow!,
-            $"Backed up settings and {AppServices.Instance.Triggers.Count} reminder(s) to {Path.GetFileName(dialog.FileName)}.",
-            "Pendulum",
+            string.Format(Strings.Backup_Done, AppServices.Instance.Triggers.Count, Path.GetFileName(dialog.FileName)),
+            Strings.App_Name,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
@@ -220,8 +221,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "Pendulum backup (*.json)|*.json",
-            Title = "Restore backup"
+            Filter = Strings.Dialog_BackupFilter,
+            Title = Strings.Dialog_RestoreBackupTitle
         };
 
         if (dialog.ShowDialog() != true)
@@ -229,8 +230,8 @@ public partial class SettingsViewModel : ObservableObject
 
         var confirm = MessageBox.Show(
             Application.Current.MainWindow!,
-            "Restore this backup?\n\nThis replaces all your current settings and reminders. This cannot be undone.",
-            "Pendulum",
+            Strings.Backup_ConfirmRestore,
+            Strings.App_Name,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -246,8 +247,8 @@ public partial class SettingsViewModel : ObservableObject
         {
             MessageBox.Show(
                 Application.Current.MainWindow!,
-                $"Couldn't read that file as a Pendulum backup.\n\n{ex.Message}",
-                "Pendulum",
+                string.Format(Strings.Backup_CouldNotRead, ex.Message),
+                Strings.App_Name,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return;
@@ -258,8 +259,8 @@ public partial class SettingsViewModel : ObservableObject
 
         MessageBox.Show(
             Application.Current.MainWindow!,
-            $"Restored settings and {backup.Triggers.Count} reminder(s).",
-            "Pendulum",
+            string.Format(Strings.Backup_Restored, backup.Triggers.Count),
+            Strings.App_Name,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
@@ -277,8 +278,8 @@ public partial class SettingsViewModel : ObservableObject
     {
         var result = MessageBox.Show(
             Application.Current.MainWindow!,
-            "Reset all settings to their defaults?",
-            "Pendulum",
+            Strings.Settings_ConfirmReset,
+            Strings.App_Name,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 

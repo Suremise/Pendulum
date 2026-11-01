@@ -119,10 +119,10 @@ internal sealed class HotkeyManager : IDisposable
     public static string FormatGesture(ModifierKeys modifiers, Key key)
     {
         var parts = new List<string>();
-        if (modifiers.HasFlag(ModifierKeys.Control)) parts.Add("Ctrl");
-        if (modifiers.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");
-        if (modifiers.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");
-        if (modifiers.HasFlag(ModifierKeys.Windows)) parts.Add("Win");
+        if (modifiers.HasFlag(ModifierKeys.Control)) parts.Add("Ctrl");  // not user-visible: key names, as saved in settings.json
+        if (modifiers.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");  // not user-visible
+        if (modifiers.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");  // not user-visible
+        if (modifiers.HasFlag(ModifierKeys.Windows)) parts.Add("Win");  // not user-visible
         parts.Add(key.ToString());
         return string.Join("+", parts);
     }

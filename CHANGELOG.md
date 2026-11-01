@@ -47,6 +47,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
   reminders if Pendulum was stopped at that moment.
 
 ### Changed
+- Times now follow the 12/24-hour setting everywhere they're shown (the reminder
+  list, alerts, the calendar and messages), not just when setting a reminder,
+  and dates and day names follow your Windows region.
+- Pendulum is ready to be translated: every word it shows now comes from one
+  place. It's still in English.
 - Settings are easier to find: they're grouped into five sections (General,
   Alerts, Spoken alerts, Quick Reminder, Backup and data) with plainer labels and
   short explanations, and settings that only apply to another one sit under it.

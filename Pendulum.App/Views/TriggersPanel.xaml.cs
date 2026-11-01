@@ -35,7 +35,7 @@ public partial class TriggersPanel : UserControl
 
     private void EnableLiveSorting()
     {
-        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)
+        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)  // not user-visible: a resource key
             return;
 
         if (cvs.View is ICollectionViewLiveShaping liveShaping && liveShaping.CanChangeLiveSorting)
@@ -97,7 +97,7 @@ public partial class TriggersPanel : UserControl
 
     private void SetupFiltering()
     {
-        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)
+        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)  // not user-visible: a resource key
             return;
 
         _view = cvs.View;

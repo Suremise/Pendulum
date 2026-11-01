@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Wpf.Ui.Controls;
@@ -31,7 +32,7 @@ public partial class MainWindow : FluentWindow
     public void ShowUpdateAvailable(string version)
     {
         _updateReleaseVersion = version;
-        UpdateAvailableRun.Text = $"Version {version} available — ";
+        UpdateAvailableRun.Text = string.Format(Strings.Main_UpdateAvailable, version);
         UpdateAvailableText.Visibility = Visibility.Visible;
     }
 

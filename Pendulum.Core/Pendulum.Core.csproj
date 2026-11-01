@@ -15,4 +15,17 @@
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
   </ItemGroup>
 
+  <!-- Core's user-visible text (the repeat descriptions), English to start. The CoreStrings class
+       is generated from Resources\CoreStrings.resx before compiling, as Pendulum.App's Strings is. -->
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)CoreStrings.Designer.cs" Visible="false" />
+  </ItemGroup>
+  <Target Name="GenerateCoreStrings" BeforeTargets="CoreCompile"
+          Inputs="Resources\CoreStrings.resx" Outputs="$(IntermediateOutputPath)CoreStrings.Designer.cs">
+    <GenerateResource Sources="Resources\CoreStrings.resx" OutputResources="$(IntermediateOutputPath)CoreStringsClass.resources"
+                      StronglyTypedLanguage="CSharp" StronglyTypedNamespace="Pendulum.Core.Resources" StronglyTypedClassName="CoreStrings"
+                      StronglyTypedManifestPrefix="Pendulum.Core.Resources" StronglyTypedFileName="$(IntermediateOutputPath)CoreStrings.Designer.cs"
+                      ExecuteAsTool="false" />
+  </Target>
+
 </Project>

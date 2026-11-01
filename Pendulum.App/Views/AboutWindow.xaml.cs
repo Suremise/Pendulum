@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Wpf.Ui.Controls;
 
@@ -39,13 +40,13 @@ public partial class AboutWindow : FluentWindow
             return;
         }
 
-        CopyButton.Content = "Copied";
+        CopyButton.Content = Strings.About_Copied;
         _copiedTimer?.Stop();
         _copiedTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _copiedTimer.Tick += (_, _) =>
         {
             _copiedTimer.Stop();
-            CopyButton.Content = "Copy";
+            CopyButton.Content = Strings.About_Copy;
         };
         _copiedTimer.Start();
     }
@@ -68,7 +69,7 @@ public partial class AboutWindow : FluentWindow
         var path = Path.Combine(AppContext.BaseDirectory, fileName);
         if (!File.Exists(path))
         {
-            System.Windows.MessageBox.Show(this, $"{fileName} wasn't found next to the app.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(this, string.Format(Strings.About_FileNotFound, fileName), Strings.App_Name, System.Windows.MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 

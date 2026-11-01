@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="About_2026DarrenMarshall" xml:space="preserve"><value>© 2026 Darren Marshall.</value><comment>AboutWindow.xaml, Text</comment></data>
+  <data name="About_ATimerAndAlarmUtilityThatWaitsInTheTrayAndPopsUp" xml:space="preserve"><value>A timer and alarm utility that waits in the tray and pops up over whatever you're working in, with a sound or a spoken phrase.</value><comment>AboutWindow.xaml, Text</comment></data>
+  <data name="About_Copied" xml:space="preserve"><value>Copied</value><comment>Copy's label for two seconds after copying.</comment></data>
+  <data name="About_Copy" xml:space="preserve"><value>Copy</value><comment>AboutWindow.xaml, Content</comment></data>
+  <data name="About_CopyRow" xml:space="preserve"><value>{0}: {1}</value><comment>Each of Copy's other lines: a label and its value.</comment></data>
+  <data name="About_CopyTheVersionInformationForABugReport" xml:space="preserve"><value>Copy the version information, for a bug report</value><comment>AboutWindow.xaml, ToolTip</comment></data>
+  <data name="About_CopyTitle" xml:space="preserve"><value>Pendulum {0}</value><comment>Copy's first line; {0}: the version.</comment></data>
+  <data name="About_Fact_Built" xml:space="preserve"><value>Built</value><comment>About's table, and Copy's text.</comment></data>
+  <data name="About_Fact_DotNet" xml:space="preserve"><value>.NET</value><comment>About's table, and Copy's text.</comment></data>
+  <data name="About_Fact_Version" xml:space="preserve"><value>Version</value><comment>About's table, and Copy's text.</comment></data>
+  <data name="About_Fact_Windows" xml:space="preserve"><value>Windows</value><comment>About's table, and Copy's text.</comment></data>
+  <data name="About_FileNotFound" xml:space="preserve"><value>{0} wasn't found next to the app.</value><comment>{0}: a file name.</comment></data>
+  <data name="About_Includes" xml:space="preserve"><value>. Includes </value><comment>AboutWindow.xaml, Text</comment></data>
+  <data name="About_MitLicense" xml:space="preserve"><value>MIT License</value><comment>A link in About_OpenSourceUnderThe's line.</comment></data>
+  <data name="About_NoTelemetryPendulumGoesOnlineOnlyToCheckForUpdat" xml:space="preserve"><value>No telemetry. Pendulum goes online only to check for updates, and only when that's turned on in Settings.</value><comment>AboutWindow.xaml, Text</comment></data>
+  <data name="About_OK" xml:space="preserve"><value>OK</value><comment>AboutWindow.xaml, Content</comment></data>
+  <data name="About_OpenSourceUnderThe" xml:space="preserve"><value>Open source under the </value><comment>AboutWindow.xaml, Text</comment></data>
+  <data name="About_ReleaseNotes" xml:space="preserve"><value>Release notes</value><comment>AboutWindow.xaml, Content</comment></data>
+  <data name="About_SourceCode" xml:space="preserve"><value>Source code</value><comment>AboutWindow.xaml, Content</comment></data>
+  <data name="About_ThirdPartySoftware" xml:space="preserve"><value>third-party software</value><comment>A link in About_Includes's line.</comment></data>
+  <data name="About_Title" xml:space="preserve"><value>About Pendulum</value><comment>AboutWindow.xaml, Title</comment></data>
+  <data name="About_Unknown" xml:space="preserve"><value>Unknown</value><comment>A fact About couldn't read.</comment></data>
+  <data name="About_WindowsVersion" xml:space="preserve"><value>Windows {0} (build {1})</value><comment>{0}: 10 or 11; {1}: the build.</comment></data>
+  <data name="About_WindowsVersionRelease" xml:space="preserve"><value>Windows {0} {1} (build {2})</value><comment>{0}: 10 or 11; {1}: the release, as 24H2; {2}: the build.</comment></data>
+  <data name="Alert_AppNameHeading" xml:space="preserve"><value>PENDULUM</value><comment>AlertWindow.xaml, Text</comment></data>
+  <data name="Alert_Dismiss" xml:space="preserve"><value>Dismiss</value><comment>AlertWindow.xaml, Content</comment></data>
+  <data name="Alert_Snooze" xml:space="preserve"><value>Snooze</value><comment>AlertWindow.xaml, Content</comment></data>
+  <data name="App_FailedToStart" xml:space="preserve"><value>Pendulum failed to start and logged the details to Data\crash.log.
+
+{0}</value><comment>{0}: the error's message.</comment></data>
+  <data name="App_Name" xml:space="preserve"><value>Pendulum</value><comment>The app's name, everywhere it's shown.</comment></data>
+  <data name="App_UnexpectedError" xml:space="preserve"><value>Pendulum hit an unexpected error and logged the details to Data\crash.log.
+
+{0}</value><comment>{0}: the error's message.</comment></data>
+  <data name="Backup_ConfirmRestore" xml:space="preserve"><value>Restore this backup?
+
+This replaces all your current settings and reminders. This cannot be undone.</value></data>
+  <data name="Backup_CouldNotRead" xml:space="preserve"><value>Couldn't read that file as a Pendulum backup.
+
+{0}</value><comment>{0}: the error's message.</comment></data>
+  <data name="Backup_Done" xml:space="preserve"><value>Backed up settings and {0} reminder(s) to {1}.</value><comment>{0}: how many reminders; {1}: the file's name.</comment></data>
+  <data name="Backup_NotValid" xml:space="preserve"><value>That file isn't a valid Pendulum backup.</value></data>
+  <data name="Backup_Restored" xml:space="preserve"><value>Restored settings and {0} reminder(s).</value><comment>{0}: how many reminders.</comment></data>
+  <data name="Calendar_Calendar" xml:space="preserve"><value>Calendar</value><comment>CalendarPanel.xaml, Text</comment></data>
+  <data name="Calendar_MoreFormat" xml:space="preserve"><value>+{0} more</value><comment>{0}: how many more reminders that day.</comment></data>
+  <data name="Calendar_SeeYourRemindersLaidOutByDay" xml:space="preserve"><value>See your reminders laid out by day.</value><comment>CalendarPanel.xaml, Text</comment></data>
+  <data name="Calendar_Today" xml:space="preserve"><value>Today</value><comment>CalendarPanel.xaml, Content</comment></data>
+  <data name="Dialog_AddSoundTitle" xml:space="preserve"><value>Add sound</value></data>
+  <data name="Dialog_AudioFilter" xml:space="preserve"><value>Audio files (*.wav;*.mp3)|*.wav;*.mp3</value><comment>A file dialog's filter: keep the part after |.</comment></data>
+  <data name="Dialog_BackupFilter" xml:space="preserve"><value>Pendulum backup (*.json)|*.json</value><comment>A file dialog's filter: keep the part after |.</comment></data>
+  <data name="Dialog_ExportBackupTitle" xml:space="preserve"><value>Export backup</value></data>
+  <data name="Dialog_ExportRemindersTitle" xml:space="preserve"><value>Export reminders</value></data>
+  <data name="Dialog_ImportRemindersTitle" xml:space="preserve"><value>Import reminders</value></data>
+  <data name="Dialog_RemindersFilter" xml:space="preserve"><value>Pendulum reminders (*.json)|*.json</value><comment>A file dialog's filter: keep the part after |.</comment></data>
+  <data name="Dialog_RestoreBackupTitle" xml:space="preserve"><value>Restore backup</value></data>
+  <data name="Duration_DaysHoursMinutes" xml:space="preserve"><value>{0}d {1}h {2}m</value></data>
+  <data name="Duration_HoursMinutesSeconds" xml:space="preserve"><value>{0}h {1}m {2}s</value></data>
+  <data name="Duration_MinutesSeconds" xml:space="preserve"><value>{0}m {1}s</value></data>
+  <data name="Duration_Seconds" xml:space="preserve"><value>{0}s</value></data>
+  <data name="Edit_ALERTTYPE" xml:space="preserve"><value>ALERT TYPE</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_Am" xml:space="preserve"><value>AM</value></data>
+  <data name="Edit_Cancel" xml:space="preserve"><value>Cancel</value><comment>TriggerEditWindow.xaml, Content</comment></data>
+  <data name="Edit_Disabled" xml:space="preserve"><value> (disabled)</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_DoesNotRepeat" xml:space="preserve"><value>Does not repeat</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_EditReminder" xml:space="preserve"><value>Edit Reminder</value></data>
+  <data name="Edit_Enable" xml:space="preserve"><value>Enable</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_NameRequired" xml:space="preserve"><value>Please enter a name for this reminder.</value></data>
+  <data name="Edit_NewReminder" xml:space="preserve"><value>New Reminder</value><comment>TriggerEditWindow.xaml, Title</comment></data>
+  <data name="Edit_NoSound" xml:space="preserve"><value>(None)</value><comment>In the sound list: no sound.</comment></data>
+  <data name="Edit_PastDate" xml:space="preserve"><value>The date/time you set ({0}) is in the past, so this reminder would be saved as Spent instead of enabled.
+
+Save it as Spent anyway, or go back and change the date/time?</value><comment>{0}: the date and time, as Format_DateAndTime.</comment></data>
+  <data name="Edit_PhraseToSpeak" xml:space="preserve"><value>Phrase to speak</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_Pm" xml:space="preserve"><value>PM</value></data>
+  <data name="Edit_Reminder" xml:space="preserve"><value>Reminder</value><comment>TriggerEditWindow.xaml, Title</comment></data>
+  <data name="Edit_ReminderName" xml:space="preserve"><value>Reminder name</value><comment>TriggerEditWindow.xaml, PlaceholderText</comment></data>
+  <data name="Edit_Repeat" xml:space="preserve"><value>Repeat...</value><comment>TriggerEditWindow.xaml, Content</comment></data>
+  <data name="Edit_STARTDATETIME" xml:space="preserve"><value>START DATE &amp; TIME</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_SaveReminder" xml:space="preserve"><value>Save Reminder</value><comment>TriggerEditWindow.xaml, Content</comment></data>
+  <data name="Edit_Sound" xml:space="preserve"><value>Sound</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_SoundAndSpeech" xml:space="preserve"><value>Sound + speech</value></data>
+  <data name="Edit_SoundOnly" xml:space="preserve"><value>Sound only</value></data>
+  <data name="Edit_SpeechOnly" xml:space="preserve"><value>Speech only</value></data>
+  <data name="Edit_Test" xml:space="preserve"><value>Test</value><comment>TriggerEditWindow.xaml, Content</comment></data>
+  <data name="Edit_ThisReminderWillAutomaticallyRescheduleToItsNext" xml:space="preserve"><value> This reminder will automatically reschedule to its next occurrence when dismissed (not when snoozed).</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Edit_Volume" xml:space="preserve"><value>Volume</value><comment>TriggerEditWindow.xaml, Text</comment></data>
+  <data name="Enum_AlertMode_SoundAndSpeech" xml:space="preserve"><value>Sound And Speech</value></data>
+  <data name="Enum_AlertMode_SoundOnly" xml:space="preserve"><value>Sound Only</value></data>
+  <data name="Enum_AlertMode_SpeechOnly" xml:space="preserve"><value>Speech Only</value></data>
+  <data name="Enum_ThemeMode_Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Enum_ThemeMode_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Enum_ThemeMode_System" xml:space="preserve"><value>System</value></data>
+  <data name="Filter_AllModes" xml:space="preserve"><value>All modes</value></data>
+  <data name="Filter_AllStatus" xml:space="preserve"><value>All status</value></data>
+  <data name="Filter_AllTypes" xml:space="preserve"><value>All types</value></data>
+  <data name="Filter_AnyDate" xml:space="preserve"><value>Any date</value></data>
+  <data name="Filter_From" xml:space="preserve"><value>From {0}</value><comment>{0}: a date, as Format_ShortDate.</comment></data>
+  <data name="Filter_Multiple" xml:space="preserve"><value>Multiple</value></data>
+  <data name="Filter_Range" xml:space="preserve"><value>{0} – {1}</value><comment>{0} and {1}: dates, as Format_ShortDate.</comment></data>
+  <data name="Filter_Until" xml:space="preserve"><value>Until {0}</value><comment>{0}: a date, as Format_ShortDate.</comment></data>
+  <data name="Format_Date" xml:space="preserve"><value>ddd, dd MMM yyyy</value><comment>A .NET date pattern.</comment></data>
+  <data name="Format_DateAndTime" xml:space="preserve"><value>{0}  {1}</value><comment>{0}: the date (Format_Date); {1}: the time.</comment></data>
+  <data name="Format_LongDate" xml:space="preserve"><value>dd MMMM yyyy</value><comment>A .NET date pattern.</comment></data>
+  <data name="Format_LongDateAndTime" xml:space="preserve"><value>{0}, {1}</value><comment>{0}: the date (Format_LongDate); {1}: the time.</comment></data>
+  <data name="Format_MonthAndYear" xml:space="preserve"><value>MMMM yyyy</value><comment>A .NET date pattern, the calendar's heading.</comment></data>
+  <data name="Format_ShortDate" xml:space="preserve"><value>dd MMM</value><comment>A .NET date pattern, for filter ranges.</comment></data>
+  <data name="Format_Time12" xml:space="preserve"><value>h:mm tt</value><comment>A .NET time pattern, 12-hour; tt is the culture's AM/PM.</comment></data>
+  <data name="Format_Time24" xml:space="preserve"><value>HH:mm</value><comment>A .NET time pattern, 24-hour.</comment></data>
+  <data name="Hotkey_Cancel" xml:space="preserve"><value>Cancel</value><comment>HotkeyCaptureWindow.xaml, Content</comment></data>
+  <data name="Hotkey_NeedsModifier" xml:space="preserve"><value>Must include Ctrl, Alt, Shift, or Win — try again</value></data>
+  <data name="Hotkey_PressKeys" xml:space="preserve"><value>Press keys...</value><comment>HotkeyCaptureWindow.xaml, Text</comment></data>
+  <data name="Hotkey_PressTheNewKeyCombinationItMustIncludeCtrlAltShi" xml:space="preserve"><value>Press the new key combination — it must include Ctrl, Alt, Shift, or Win.</value><comment>HotkeyCaptureWindow.xaml, Text</comment></data>
+  <data name="Hotkey_Save" xml:space="preserve"><value>Save</value><comment>HotkeyCaptureWindow.xaml, Content</comment></data>
+  <data name="Hotkey_SetHotkey" xml:space="preserve"><value>Set Hotkey</value><comment>HotkeyCaptureWindow.xaml, Title</comment></data>
+  <data name="List_Separator" xml:space="preserve"><value>, </value><comment>Between names in a list.</comment></data>
+  <data name="Main_About" xml:space="preserve"><value>About</value><comment>MainWindow.xaml, Text</comment></data>
+  <data name="Main_Calendar" xml:space="preserve"><value>Calendar</value><comment>MainWindow.xaml, Header</comment></data>
+  <data name="Main_Reminders" xml:space="preserve"><value>Reminders</value><comment>MainWindow.xaml, Header</comment></data>
+  <data name="Main_Settings" xml:space="preserve"><value>Settings</value><comment>MainWindow.xaml, Header</comment></data>
+  <data name="Main_UpdateAvailable" xml:space="preserve"><value>Version {0} available — </value><comment>{0}: the new version; Main_ViewRelease follows as a link.</comment></data>
+  <data name="Main_ViewRelease" xml:space="preserve"><value>View release</value><comment>A link to the release's page.</comment></data>
+  <data name="QuickAdd_AddReminder" xml:space="preserve"><value>Add Reminder</value><comment>QuickAddWindow.xaml, Content</comment></data>
+  <data name="QuickAdd_Cancel" xml:space="preserve"><value>Cancel</value><comment>QuickAddWindow.xaml, Content</comment></data>
+  <data name="QuickAdd_DidntCatch" xml:space="preserve"><value>Didn't catch that — try again, or type it instead.</value></data>
+  <data name="QuickAdd_EGCallMom3pmIn20MinStandupTomorrow9am" xml:space="preserve"><value>e.g. "Call mom 3pm", "in 20 min", "standup tomorrow 9am"</value><comment>QuickAddWindow.xaml, Text</comment></data>
+  <data name="QuickAdd_Listening" xml:space="preserve"><value>Listening…</value></data>
+  <data name="QuickAdd_MicFailed" xml:space="preserve"><value>Couldn't start speech recognition. Make sure a microphone is set up in Windows.</value></data>
+  <data name="QuickAdd_NoName" xml:space="preserve"><value>Please enter a name for the reminder, not just a time.</value></data>
+  <data name="QuickAdd_NoTime" xml:space="preserve"><value>Couldn't find a time — try "in 20 min", "3pm", or "tomorrow 9am".</value><comment>The examples are phrases Quick Reminder understands, in English: keep them.</comment></data>
+  <data name="QuickAdd_QuickReminder" xml:space="preserve"><value>Quick Reminder</value><comment>QuickAddWindow.xaml, Title</comment></data>
+  <data name="QuickAdd_SpeakAReminder" xml:space="preserve"><value>Speak a reminder</value><comment>QuickAddWindow.xaml, ToolTip</comment></data>
+  <data name="QuickAdd_Transcribing" xml:space="preserve"><value>Transcribing…</value></data>
+  <data name="QuickAdd_WhatAndWhen" xml:space="preserve"><value>What, and when?</value><comment>QuickAddWindow.xaml, PlaceholderText</comment></data>
+  <data name="Recurrence_Cancel" xml:space="preserve"><value>Cancel</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Daily" xml:space="preserve"><value>Daily</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Day" xml:space="preserve"><value>Day</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_DayS" xml:space="preserve"><value>day(s)</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_DontRepeat" xml:space="preserve"><value>Don't Repeat</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_EndAfter" xml:space="preserve"><value>End after</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_EndBy" xml:space="preserve"><value>End by</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Every" xml:space="preserve"><value>Every</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_Fri" xml:space="preserve"><value>Fri</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Mon" xml:space="preserve"><value>Mon</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_MonthS" xml:space="preserve"><value>month(s)</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_Monthly" xml:space="preserve"><value>Monthly</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_NoEndDate" xml:space="preserve"><value>No end date</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_OK" xml:space="preserve"><value>OK</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Occurrences" xml:space="preserve"><value>occurrences</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_OfEvery" xml:space="preserve"><value>of every</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_OnDay" xml:space="preserve"><value>On day</value><comment>A choice: "On day [31]" of the month.</comment></data>
+  <data name="Recurrence_OnThe" xml:space="preserve"><value>On the</value><comment>A choice: "On the [last] [Sunday]" of the month.</comment></data>
+  <data name="Recurrence_PATTERN" xml:space="preserve"><value>PATTERN</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_RANGEOFRECURRENCE" xml:space="preserve"><value>RANGE OF RECURRENCE</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_RepeatSchedule" xml:space="preserve"><value>Repeat Schedule</value><comment>RecurrenceWindow.xaml, Title</comment></data>
+  <data name="Recurrence_Sat" xml:space="preserve"><value>Sat</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Start" xml:space="preserve"><value>Start: {0}</value><comment>{0}: the date and time, as Format_LongDateAndTime.</comment></data>
+  <data name="Recurrence_Sun" xml:space="preserve"><value>Sun</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_The" xml:space="preserve"><value>The</value><comment>A choice: "The [first] [Monday]" of the month.</comment></data>
+  <data name="Recurrence_Thu" xml:space="preserve"><value>Thu</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Tue" xml:space="preserve"><value>Tue</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_Wed" xml:space="preserve"><value>Wed</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_WeekSOn" xml:space="preserve"><value>week(s) on:</value><comment>RecurrenceWindow.xaml, Text</comment></data>
+  <data name="Recurrence_Weekly" xml:space="preserve"><value>Weekly</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Recurrence_YearSIn" xml:space="preserve"><value>year(s) in</value><comment>"Every [1] year(s) in [March]".</comment></data>
+  <data name="Recurrence_Yearly" xml:space="preserve"><value>Yearly</value><comment>RecurrenceWindow.xaml, Content</comment></data>
+  <data name="Reminders_AddReminder" xml:space="preserve"><value>Add Reminder</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_AlarmsThatFireAtAnExactDateAndTime" xml:space="preserve"><value>Alarms that fire at an exact date and time.</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Reminders_Clear" xml:space="preserve"><value>Clear</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_ClickAddReminderToCreateYourFirstAlarm" xml:space="preserve"><value>Click "Add Reminder" to create your first alarm.</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_ConfirmDelete" xml:space="preserve"><value>Delete "{0}"?</value><comment>{0}: the reminder's name.</comment></data>
+  <data name="Reminders_ConfirmDeleteSelected" xml:space="preserve"><value>Delete {0} selected reminder(s)? This cannot be undone.</value><comment>{0}: how many.</comment></data>
+  <data name="Reminders_ConfirmReplace" xml:space="preserve"><value>A reminder named "{0}" already exists. Replace it with the imported version?</value><comment>{0}: the name.</comment></data>
+  <data name="Reminders_CouldNotImport" xml:space="preserve"><value>Couldn't read that file as Pendulum reminders.
+
+{0}</value><comment>{0}: the error's message.</comment></data>
+  <data name="Reminders_Delete" xml:space="preserve"><value>Delete</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_Disable" xml:space="preserve"><value>Disable</value><comment>TriggersPanel.xaml, a setter</comment></data>
+  <data name="Reminders_Disabled" xml:space="preserve"><value>Disabled</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Edit" xml:space="preserve"><value>Edit</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_Enable" xml:space="preserve"><value>Enable</value><comment>TriggersPanel.xaml, a setter</comment></data>
+  <data name="Reminders_Export" xml:space="preserve"><value>Export</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_Exported" xml:space="preserve"><value>Exported {0} reminder(s) to {1}.</value><comment>{0}: how many; {1}: the file's name.</comment></data>
+  <data name="Reminders_Filter" xml:space="preserve"><value>Filter...</value><comment>TriggersPanel.xaml, PlaceholderText</comment></data>
+  <data name="Reminders_Filters" xml:space="preserve"><value>Filters</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_Fixed" xml:space="preserve"><value>Fixed</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_From" xml:space="preserve"><value>From</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Import" xml:space="preserve"><value>Import...</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_Imported" xml:space="preserve"><value>Imported {0} reminder(s)</value><comment>{0}: how many; Reminders_ImportedReplaced and _Skipped may follow.</comment></data>
+  <data name="Reminders_ImportedReplaced" xml:space="preserve"><value> ({0} replaced)</value><comment>{0}: how many.</comment></data>
+  <data name="Reminders_ImportedSkipped" xml:space="preserve"><value>, skipped {0}</value><comment>{0}: how many.</comment></data>
+  <data name="Reminders_MODE" xml:space="preserve"><value>MODE</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_NAME" xml:space="preserve"><value>NAME</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_NewReminderName" xml:space="preserve"><value>Timer</value><comment>The name a new reminder starts with, before the user types one.</comment></data>
+  <data name="Reminders_NoRemindersMatchTheseFilters" xml:space="preserve"><value>No reminders match these filters</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_NoRemindersYet" xml:space="preserve"><value>No reminders yet</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Reminders" xml:space="preserve"><value>Reminders</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_SOUND" xml:space="preserve"><value>SOUND</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_STATUS" xml:space="preserve"><value>STATUS</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Scheduled" xml:space="preserve"><value>Scheduled</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Select" xml:space="preserve"><value>Select</value></data>
+  <data name="Reminders_SoundOnly" xml:space="preserve"><value>Sound only</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_SoundSpeech" xml:space="preserve"><value>Sound + speech</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_SpeechOnly" xml:space="preserve"><value>Speech only</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Spent" xml:space="preserve"><value>Spent</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_TRIGGERSON" xml:space="preserve"><value>TRIGGERS ON</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_TYPE" xml:space="preserve"><value>TYPE</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_To" xml:space="preserve"><value>To</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_TryAdjustingOrClearingTheFiltersAbove" xml:space="preserve"><value>Try adjusting or clearing the filters above.</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_Upcoming" xml:space="preserve"><value>Upcoming</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Reminders_WithSelected" xml:space="preserve"><value>With selected:</value><comment>TriggersPanel.xaml, Text</comment></data>
+  <data name="Settings_12Hour230PM" xml:space="preserve"><value>12-hour (2:30 PM)</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_24Hour1430" xml:space="preserve"><value>24-hour (14:30)</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_ASpentReminderIsAOneOffThatHasAlreadyGoneOffThey" xml:space="preserve"><value>A spent reminder is a one-off that has already gone off. They're deleted when Pendulum starts; 0 keeps them.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_AddSound" xml:space="preserve"><value>Add sound...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Alerts" xml:space="preserve"><value>Alerts</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>Appearance</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_BackUpButton" xml:space="preserve"><value>Back up...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_BackUpSettingsAndReminders" xml:space="preserve"><value>Back up settings and reminders</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_Backup" xml:space="preserve"><value>Backup</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_BackupAndData" xml:space="preserve"><value>Backup and data</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Change" xml:space="preserve"><value>Change...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_ChangeTheShortcut" xml:space="preserve"><value>Change the shortcut</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_CheckForUpdatesWhenPendulumStarts" xml:space="preserve"><value>Check for updates when Pendulum starts</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_ChooseASectionOnTheLeft" xml:space="preserve"><value>Choose a section on the left.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_ConfirmReset" xml:space="preserve"><value>Reset all settings to their defaults?</value></data>
+  <data name="Settings_Days" xml:space="preserve"><value>days</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_DeleteSpentRemindersAfter" xml:space="preserve"><value>Delete spent reminders after</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_DeleteSpentRemindersAfterDays" xml:space="preserve"><value>Delete spent reminders after, days</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_DownloadModels" xml:space="preserve"><value>Download models...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_DownloadPiper" xml:space="preserve"><value>Download Piper...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_DownloadVoices" xml:space="preserve"><value>Download voices...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_ForTheMicrophoneButtonInQuickReminder" xml:space="preserve"><value>For the microphone button in Quick Reminder.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_General" xml:space="preserve"><value>General</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_ItRunsOnTheCPUNoGraphicsCardNeededAndNothingIsSe" xml:space="preserve"><value>It runs on the CPU, no graphics card needed, and nothing is sent anywhere. Its Windows build is a few years old but still works well for this.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_ItRunsOnTheCPUNoGraphicsCardNeededOnlyWhileItLis" xml:space="preserve"><value>It runs on the CPU, no graphics card needed, only while it listens, and nothing is sent anywhere.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_KeepAlertingUntilIDismissIt" xml:space="preserve"><value>Keep alerting until I dismiss it</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Minutes" xml:space="preserve"><value>minutes</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_OffUnlessYouTurnItOnWhenPendulumStartsItAsksGitH" xml:space="preserve"><value>Off unless you turn it on. When Pendulum starts, it asks GitHub whether a newer version exists (an answer is kept for a day) and shows a link in the status bar. Nothing is downloaded.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_OpenPiperFolder" xml:space="preserve"><value>Open Piper folder</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_OpenQuickReminderWithAKeyboardShortcut" xml:space="preserve"><value>Open Quick Reminder with a keyboard shortcut</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_OpenSoundsFolder" xml:space="preserve"><value>Open sounds folder</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_OpenWhisperFolder" xml:space="preserve"><value>Open Whisper folder</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_OpensHiddenInTheNotificationAreaInsteadOfShowing" xml:space="preserve"><value>Opens hidden in the notification area instead of showing this window.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_OtherwiseDismissItAfter" xml:space="preserve"><value>Otherwise dismiss it after</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_OtherwiseDismissItAfterMinutes" xml:space="preserve"><value>Otherwise dismiss it after, minutes</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_PendulumOpensWhenYouSignInSoYourRemindersGoOffEv" xml:space="preserve"><value>Pendulum opens when you sign in, so your reminders go off even if you forget to start it.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds" xml:space="preserve"><value>Piper is a free voice that runs on your computer and sounds more natural than the Windows one. Download Piper and extract the whole zip into the Piper folder, then download a voice: two files, for example en_US-lessac-medium.onnx and en_US-lessac-medium.onnx.json, into the same folder. Then click Refresh.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PiperMissing" xml:space="preserve"><value>Piper isn't installed yet: see Set up Piper below.</value></data>
+  <data name="Settings_PiperNoVoices" xml:space="preserve"><value>Piper is installed, but no voices yet: see Set up Piper below.</value></data>
+  <data name="Settings_PiperOfflineMoreNatural" xml:space="preserve"><value>Piper (offline, more natural)</value><comment>SettingsPanel.xaml, a setter</comment></data>
+  <data name="Settings_PiperOneVoice" xml:space="preserve"><value>Ready: 1 voice found.</value></data>
+  <data name="Settings_PiperVoice" xml:space="preserve"><value>Piper voice</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_PiperVoices" xml:space="preserve"><value>Ready: {0} voices found.</value><comment>{0}: how many.</comment></data>
+  <data name="Settings_PutsEverySettingInTheseSectionsBackToItsDefaultY" xml:space="preserve"><value>Puts every setting in these sections back to its default. Your reminders aren't touched.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_QuickReminder" xml:space="preserve"><value>Quick Reminder</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Refresh" xml:space="preserve"><value>Refresh</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_RefreshPiperVoices" xml:space="preserve"><value>Refresh Piper voices</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_RefreshWhisperModels" xml:space="preserve"><value>Refresh Whisper models</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_Reset" xml:space="preserve"><value>Reset</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_ResetSettings" xml:space="preserve"><value>Reset settings...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Restore" xml:space="preserve"><value>Restore...</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_RestoreABackup" xml:space="preserve"><value>Restore a backup</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_SavesEverySettingAndReminderToOneFileToMovePendu" xml:space="preserve"><value>Saves every setting and reminder to one file, to move Pendulum to another computer or keep a copy.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SetUpPiper" xml:space="preserve"><value>Set up Piper</value><comment>SettingsPanel.xaml, Header</comment></data>
+  <data name="Settings_SetUpWhisper" xml:space="preserve"><value>Set up Whisper</value><comment>SettingsPanel.xaml, Header</comment></data>
+  <data name="Settings_Settings" xml:space="preserve"><value>Settings</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SettingsSections" xml:space="preserve"><value>Settings sections</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_Shortcut" xml:space="preserve"><value>Shortcut</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_ShortcutNameFormat" xml:space="preserve"><value>Shortcut: {0}</value><comment>For screen readers; {0}: the shortcut, as Ctrl+Shift+R.</comment></data>
+  <data name="Settings_SnoozeFor" xml:space="preserve"><value>Snooze for</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SnoozeForMinutes" xml:space="preserve"><value>Snooze for, minutes</value><comment>SettingsPanel.xaml, AutomationProperties.Name</comment></data>
+  <data name="Settings_Sound" xml:space="preserve"><value>Sound</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SoundForNewReminders" xml:space="preserve"><value>Sound for new reminders</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SpeakingAReminder" xml:space="preserve"><value>Speaking a reminder</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SpeechEngine" xml:space="preserve"><value>Speech engine</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SpeechRecognition" xml:space="preserve"><value>Speech recognition</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_Speed" xml:space="preserve"><value>Speed</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SpentReminders" xml:space="preserve"><value>Spent reminders</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_SpokenAlerts" xml:space="preserve"><value>Spoken alerts</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_StartInTheTray" xml:space="preserve"><value>Start in the tray</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_StartListeningAsSoonAsQuickReminderOpens" xml:space="preserve"><value>Start listening as soon as Quick Reminder opens</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_StartWithWindows" xml:space="preserve"><value>Start with Windows</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_TestPhrase" xml:space="preserve"><value>This is how Pendulum will sound.</value><comment>Spoken by Test voice.</comment></data>
+  <data name="Settings_TestVoice" xml:space="preserve"><value>Test voice</value><comment>SettingsPanel.xaml, Content</comment></data>
+  <data name="Settings_Theme" xml:space="preserve"><value>Theme</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_TimeFormat" xml:space="preserve"><value>Time format</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_Updates" xml:space="preserve"><value>Updates</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_UsedForRemindersSetToSpeakAndForTestVoice" xml:space="preserve"><value>Used for reminders set to speak, and for Test voice.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_UsedOnlyWhenAlertsDontKeepGoingAnUnansweredAlert" xml:space="preserve"><value>Used only when alerts don't keep going: an unanswered alert is dismissed for you, so a repeating reminder moves to its next time and a one-off is marked spent.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_Voice" xml:space="preserve"><value>Voice</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_Volume" xml:space="preserve"><value>Volume</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhenAnAlertAppears" xml:space="preserve"><value>When an alert appears</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhenPendulumStarts" xml:space="preserve"><value>When Pendulum starts</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhisperIsFreeSpeechRecognitionThatRunsOnYourComp" xml:space="preserve"><value>Whisper is free speech recognition that runs on your computer and is usually far more accurate with accents than the Windows one. Download a model (a .bin file) into the Whisper folder, then click Refresh. Names ending in .en, like ggml-base.en.bin, are English only; the others are multilingual. The base and small models are a good balance of speed and accuracy.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhisperMany" xml:space="preserve"><value>{0} models found.</value><comment>{0}: how many.</comment></data>
+  <data name="Settings_WhisperModel" xml:space="preserve"><value>Whisper model</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WhisperNone" xml:space="preserve"><value>No Whisper models found yet: see Set up Whisper below.</value></data>
+  <data name="Settings_WhisperOfflineMoreAccurate" xml:space="preserve"><value>Whisper (offline, more accurate)</value><comment>SettingsPanel.xaml, a setter</comment></data>
+  <data name="Settings_WhisperOne" xml:space="preserve"><value>1 model found.</value></data>
+  <data name="Settings_WindowsBuiltIn" xml:space="preserve"><value>Windows (built in)</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WindowsVoice" xml:space="preserve"><value>Windows voice</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Settings_WorksFromAnyAppSoYouCanSetAReminderWithoutOpenin" xml:space="preserve"><value>Works from any app, so you can set a reminder without opening Pendulum.</value><comment>SettingsPanel.xaml, Text</comment></data>
+  <data name="Status_Next" xml:space="preserve"><value>Next Reminder: {0} in {1}</value><comment>{0}: the reminder's name; {1}: the time left, as a Duration_* string.</comment></data>
+  <data name="Status_NoUpcoming" xml:space="preserve"><value>No upcoming reminders</value><comment>The status bar and the tray's tooltip.</comment></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value><comment>The tray menu.</comment></data>
+  <data name="Tray_MissedFew" xml:space="preserve"><value>Missed while Pendulum was closed: {0}</value><comment>{0}: up to three names, joined by List_Separator.</comment></data>
+  <data name="Tray_MissedMany" xml:space="preserve"><value>{0} reminders were missed while Pendulum was closed.</value><comment>{0}: how many.</comment></data>
+  <data name="Tray_MissedOne" xml:space="preserve"><value>"{0}" was missed while Pendulum was closed.</value><comment>{0}: the reminder's name.</comment></data>
+  <data name="Tray_Open" xml:space="preserve"><value>Open Pendulum</value><comment>The tray menu.</comment></data>
+  <data name="Tray_StillRunning" xml:space="preserve"><value>Still running in the system tray. Click the tray icon to reopen, or right-click it to exit.</value></data>
+  <data name="Tray_ToolTipWithStatus" xml:space="preserve"><value>Pendulum - {0}</value><comment>{0}: the next reminder, as Status_Next says it.</comment></data>
+</root>

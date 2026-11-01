@@ -6,6 +6,8 @@ namespace Pendulum.Core.Models;
 public partial class TriggerTimer : ObservableObject
 {
     [ObservableProperty] private Guid id = Guid.NewGuid();
+    /// "Timer" only for a saved reminder that has no name; a new one is named by the App, from its
+    /// resources.
     [ObservableProperty] private string name = "Timer";
     [ObservableProperty] private DateTime triggerAt = DateTime.Now;
     [ObservableProperty] private bool enabled = true;

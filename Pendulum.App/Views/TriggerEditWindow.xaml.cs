@@ -1,4 +1,5 @@
 using System.Windows;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
@@ -12,9 +13,9 @@ public partial class TriggerEditWindow : FluentWindow
 {
     private static readonly (AlertMode Mode, string Label)[] AlertTypeOptions =
     {
-        (AlertMode.SoundOnly, "Sound only"),
-        (AlertMode.SoundAndSpeech, "Sound + speech"),
-        (AlertMode.SpeechOnly, "Speech only"),
+        (AlertMode.SoundOnly, Strings.Edit_SoundOnly),
+        (AlertMode.SoundAndSpeech, Strings.Edit_SoundAndSpeech),
+        (AlertMode.SpeechOnly, Strings.Edit_SpeechOnly),
     };
 
     private readonly TriggerTimer _target;
@@ -38,7 +39,7 @@ public partial class TriggerEditWindow : FluentWindow
         _target = target;
         _use24Hour = AppServices.Instance.Settings.Use24HourTime;
         _isNew = isNew;
-        Title = isNew ? "New Reminder" : "Edit Reminder";
+        Title = isNew ? Strings.Edit_NewReminder : Strings.Edit_EditReminder;
         EditorTitleBar.Title = Title;
 
         _previewSpeech = AppServices.Instance.CreateSpeechEngine();
@@ -55,13 +56,13 @@ public partial class TriggerEditWindow : FluentWindow
             MinuteBox.Items.Add(m.ToString("00"));
         for (int s = 0; s < 60; s++)
             SecondBox.Items.Add(s.ToString("00"));
-        AmPmBox.Items.Add("AM");
-        AmPmBox.Items.Add("PM");
+        AmPmBox.Items.Add(Strings.Edit_Am);
+        AmPmBox.Items.Add(Strings.Edit_Pm);
 
         foreach (var option in AlertTypeOptions)
             AlertTypeBox.Items.Add(option.Label);
 
-        SoundBox.Items.Add("(None)");
+        SoundBox.Items.Add(Strings.Edit_NoSound);
         foreach (var f in AppServices.Instance.GetAvailableSoundFiles())
             SoundBox.Items.Add(f);
 
@@ -112,13 +113,13 @@ public partial class TriggerEditWindow : FluentWindow
             int hour12 = dt.Hour % 12;
             if (hour12 == 0) hour12 = 12;
             HourBox.SelectedItem = hour12.ToString();
-            AmPmBox.SelectedItem = dt.Hour >= 12 ? "PM" : "AM";
+            AmPmBox.SelectedIndex = dt.Hour >= 12 ? 1 : 0;  // AM, then PM
         }
 
         var optionIndex = Array.FindIndex(AlertTypeOptions, o => o.Mode == t.Mode);
         AlertTypeBox.SelectedIndex = optionIndex >= 0 ? optionIndex : 0;
 
-        SoundBox.SelectedItem = string.IsNullOrEmpty(t.SoundFileName) ? "(None)" : t.SoundFileName;
+        SoundBox.SelectedIndex = string.IsNullOrEmpty(t.SoundFileName) ? 0 : SoundBox.Items.IndexOf(t.SoundFileName);
         PhraseBox.Text = t.Phrase ?? string.Empty;
         VolumeSlider.Value = t.Volume;
         VolumeValueText.Text = t.Volume.ToString();
@@ -136,7 +137,7 @@ public partial class TriggerEditWindow : FluentWindow
     {
         if (_recurrence is null)
         {
-            RecurrenceSummaryText.Text = "Does not repeat";
+            RecurrenceSummaryText.Text = Strings.Edit_DoesNotRepeat;
             RecurrenceNotice.Visibility = Visibility.Collapsed;
         }
         else
@@ -214,7 +215,7 @@ public partial class TriggerEditWindow : FluentWindow
         else
         {
             int hour = int.Parse((string)(HourBox.SelectedItem ?? "12"));
-            bool isPm = (string)(AmPmBox.SelectedItem ?? "AM") == "PM";
+            bool isPm = AmPmBox.SelectedIndex == 1;
             hour24 = hour % 12;
             if (isPm) hour24 += 12;
         }
@@ -224,8 +225,8 @@ public partial class TriggerEditWindow : FluentWindow
 
     private (string? soundFile, AlertMode mode, string? phrase, int volume) BuildAlertSettings()
     {
-        var soundSelection = SoundBox.SelectedItem as string;
-        string? soundFile = soundSelection == "(None)" ? null : soundSelection;
+        // The first item is "no sound", in the user's language; the others are file names.
+        string? soundFile = SoundBox.SelectedIndex <= 0 ? null : SoundBox.SelectedItem as string;
         var phrase = PhraseBox.Text;
         return (soundFile, CurrentMode, phrase, (int)VolumeSlider.Value);
     }
@@ -241,7 +242,7 @@ public partial class TriggerEditWindow : FluentWindow
     {
         if (string.IsNullOrWhiteSpace(NameBox.Text))
         {
-            System.Windows.MessageBox.Show(this, "Please enter a name for this timer.", "Pendulum", System.Windows.MessageBoxButton.OK, MessageBoxImage.Warning);
+            System.Windows.MessageBox.Show(this, Strings.Edit_NameRequired, Strings.App_Name, System.Windows.MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -265,8 +266,8 @@ public partial class TriggerEditWindow : FluentWindow
         {
             var choice = System.Windows.MessageBox.Show(
                 this,
-                $"The date/time you set ({scheduledAt:ddd, dd MMM yyyy  HH:mm}) is in the past, so this reminder would be saved as Spent instead of enabled.\n\nSave it as Spent anyway, or go back and change the date/time?",
-                "Pendulum",
+                string.Format(Strings.Edit_PastDate, DisplayFormat.DateAndTime(scheduledAt)),
+                Strings.App_Name,
                 System.Windows.MessageBoxButton.YesNo,
                 MessageBoxImage.Warning,
                 System.Windows.MessageBoxResult.No);

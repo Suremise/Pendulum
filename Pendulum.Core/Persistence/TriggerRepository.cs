@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Pendulum.Core.Models;
+using Pendulum.Core.Resources;
 
 namespace Pendulum.Core.Persistence;
 
@@ -20,15 +21,15 @@ public class TriggerRepository
         {
             using var doc = JsonDocument.Parse(json);
             if (!PendulumFileShape.IsReminderList(doc.RootElement))
-                throw new InvalidDataException("The file doesn't hold a list of Pendulum reminders.");
+                throw new InvalidDataException(CoreStrings.File_NotReminderList);
         }
         catch (JsonException e)
         {
-            throw new InvalidDataException("The file isn't in Pendulum's format.", e);
+            throw new InvalidDataException(CoreStrings.File_NotPendulumFormat, e);
         }
 
         return JsonStore.DeserializeUserJson<List<TriggerTimer>>(json)
-            ?? throw new InvalidDataException("The file doesn't hold a list of Pendulum reminders.");
+            ?? throw new InvalidDataException(CoreStrings.File_NotReminderList);
     }
 
     public void SaveTo(string path, IEnumerable<TriggerTimer> timers) =>

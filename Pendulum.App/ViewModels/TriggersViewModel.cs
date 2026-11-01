@@ -5,6 +5,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
@@ -21,7 +22,7 @@ public partial class TriggersViewModel : ObservableObject
     [ObservableProperty] private TriggerTimer? selectedTrigger;
     [ObservableProperty] private bool isSelecting;
 
-    public string SelectToggleLabel => IsSelecting ? "Cancel" : "Select";
+    public string SelectToggleLabel => IsSelecting ? Strings.Reminders_Cancel : Strings.Reminders_Select;
 
     [ObservableProperty] private bool isFilterRowVisible;
     [ObservableProperty] private string nameFilter = string.Empty;
@@ -55,10 +56,10 @@ public partial class TriggersViewModel : ObservableObject
 
     public string TriggerFilterSummary => (TriggerFromFilter, TriggerToFilter) switch
     {
-        (null, null) => "Any date",
-        ({ } from, null) => $"From {from:dd MMM}",
-        (null, { } to) => $"Until {to:dd MMM}",
-        ({ } from, { } to) => $"{from:dd MMM} – {to:dd MMM}"
+        (null, null) => Strings.Filter_AnyDate,
+        ({ } from, null) => string.Format(Strings.Filter_From, DisplayFormat.ShortDate(from)),
+        (null, { } to) => string.Format(Strings.Filter_Until, DisplayFormat.ShortDate(to)),
+        ({ } from, { } to) => string.Format(Strings.Filter_Range, DisplayFormat.ShortDate(from), DisplayFormat.ShortDate(to))
     };
 
     partial void OnTriggerFromFilterChanged(DateTime? value)
@@ -84,10 +85,10 @@ public partial class TriggersViewModel : ObservableObject
 
     public string TypeFilterSummary => (TypeFilterFixed, TypeFilterScheduled) switch
     {
-        (false, false) => "All types",
-        (true, false) => "Fixed",
-        (false, true) => "Scheduled",
-        _ => "Multiple"
+        (false, false) => Strings.Filter_AllTypes,
+        (true, false) => Strings.Reminders_Fixed,
+        (false, true) => Strings.Reminders_Scheduled,
+        _ => Strings.Filter_Multiple
     };
 
     public string StatusFilterSummary
@@ -95,26 +96,26 @@ public partial class TriggersViewModel : ObservableObject
         get
         {
             var active = new List<string>();
-            if (StatusFilterUpcoming) active.Add("Upcoming");
-            if (StatusFilterSpent) active.Add("Spent");
-            if (StatusFilterDisabled) active.Add("Disabled");
+            if (StatusFilterUpcoming) active.Add(Strings.Reminders_Upcoming);
+            if (StatusFilterSpent) active.Add(Strings.Reminders_Spent);
+            if (StatusFilterDisabled) active.Add(Strings.Reminders_Disabled);
 
             return active.Count switch
             {
-                0 => "All status",
+                0 => Strings.Filter_AllStatus,
                 1 => active[0],
-                _ => "Multiple"
+                _ => Strings.Filter_Multiple
             };
         }
     }
 
     public string ModeFilterSummary => (ModeFilterSoundOnly, ModeFilterSoundAndSpeech, ModeFilterSpeechOnly) switch
     {
-        (false, false, false) => "All modes",
-        (true, false, false) => "Sound only",
-        (false, true, false) => "Sound + speech",
-        (false, false, true) => "Speech only",
-        _ => "Multiple"
+        (false, false, false) => Strings.Filter_AllModes,
+        (true, false, false) => Strings.Reminders_SoundOnly,
+        (false, true, false) => Strings.Reminders_SoundSpeech,
+        (false, false, true) => Strings.Reminders_SpeechOnly,
+        _ => Strings.Filter_Multiple
     };
 
     partial void OnTypeFilterFixedChanged(bool value)
@@ -285,13 +286,18 @@ public partial class TriggersViewModel : ObservableObject
         }
     }
 
+    /// A new reminder, before the user edits it: its name from the resources (the model's own
+    /// default is only for a saved reminder with no name), and the default sound.
+    internal static TriggerTimer NewDraft(AppSettings settings) => new()
+    {
+        Name = Strings.Reminders_NewReminderName,
+        SoundFileName = settings.DefaultSoundFileName,
+    };
+
     [RelayCommand]
     private void Add()
     {
-        var draft = new TriggerTimer
-        {
-            SoundFileName = AppServices.Instance.Settings.DefaultSoundFileName
-        };
+        var draft = NewDraft(AppServices.Instance.Settings);
 
         var dialog = new TriggerEditWindow(draft, isNew: true) { Owner = Application.Current.MainWindow };
         if (dialog.ShowDialog() == true && dialog.Result is not null)
@@ -322,8 +328,8 @@ public partial class TriggersViewModel : ObservableObject
 
         var result = MessageBox.Show(
             Application.Current.MainWindow!,
-            $"Delete \"{trigger.Name}\"?",
-            "Pendulum",
+            string.Format(Strings.Reminders_ConfirmDelete, trigger.Name),
+            Strings.App_Name,
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
 
@@ -352,8 +358,8 @@ public partial class TriggersViewModel : ObservableObject
 
         var result = MessageBox.Show(
             Application.Current.MainWindow!,
-            $"Delete {selected.Count} selected reminder(s)? This cannot be undone.",
-            "Pendulum",
+            string.Format(Strings.Reminders_ConfirmDeleteSelected, selected.Count),
+            Strings.App_Name,
             MessageBoxButton.YesNo,
             MessageBoxImage.Warning);
 
@@ -373,9 +379,9 @@ public partial class TriggersViewModel : ObservableObject
 
         var dialog = new SaveFileDialog
         {
-            Filter = "Pendulum reminders (*.json)|*.json",
+            Filter = Strings.Dialog_RemindersFilter,
             FileName = $"pendulum-reminders-{DateTime.Now:yyyy-MM-dd}.json",
-            Title = "Export reminders"
+            Title = Strings.Dialog_ExportRemindersTitle
         };
 
         if (dialog.ShowDialog() != true)
@@ -386,8 +392,8 @@ public partial class TriggersViewModel : ObservableObject
 
         MessageBox.Show(
             Application.Current.MainWindow!,
-            $"Exported {selected.Count} reminder(s) to {System.IO.Path.GetFileName(dialog.FileName)}.",
-            "Pendulum",
+            string.Format(Strings.Reminders_Exported, selected.Count, System.IO.Path.GetFileName(dialog.FileName)),
+            Strings.App_Name,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }
@@ -397,8 +403,8 @@ public partial class TriggersViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Filter = "Pendulum reminders (*.json)|*.json",
-            Title = "Import reminders"
+            Filter = Strings.Dialog_RemindersFilter,
+            Title = Strings.Dialog_ImportRemindersTitle
         };
 
         if (dialog.ShowDialog() != true)
@@ -410,8 +416,8 @@ public partial class TriggersViewModel : ObservableObject
             result = AppServices.Instance.ImportTriggersMerge(dialog.FileName, name =>
                 MessageBox.Show(
                     Application.Current.MainWindow!,
-                    $"A reminder named \"{name}\" already exists. Replace it with the imported version?",
-                    "Pendulum",
+                    string.Format(Strings.Reminders_ConfirmReplace, name),
+                    Strings.App_Name,
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question) == MessageBoxResult.Yes);
         }
@@ -419,24 +425,24 @@ public partial class TriggersViewModel : ObservableObject
         {
             MessageBox.Show(
                 Application.Current.MainWindow!,
-                $"Couldn't read that file as Pendulum reminders.\n\n{ex.Message}",
-                "Pendulum",
+                string.Format(Strings.Reminders_CouldNotImport, ex.Message),
+                Strings.App_Name,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
             return;
         }
 
-        var summary = $"Imported {result.Added + result.Replaced} reminder(s)";
+        var summary = string.Format(Strings.Reminders_Imported, result.Added + result.Replaced);
         if (result.Replaced > 0)
-            summary += $" ({result.Replaced} replaced)";
+            summary += string.Format(Strings.Reminders_ImportedReplaced, result.Replaced);
         if (result.Skipped > 0)
-            summary += $", skipped {result.Skipped}";
+            summary += string.Format(Strings.Reminders_ImportedSkipped, result.Skipped);
         summary += ".";
 
         MessageBox.Show(
             Application.Current.MainWindow!,
             summary,
-            "Pendulum",
+            Strings.App_Name,
             MessageBoxButton.OK,
             MessageBoxImage.Information);
     }

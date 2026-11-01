@@ -31,6 +31,15 @@ A tray-resident Windows desktop timer and alarm utility. Pendulum stays out of t
 - **Tray integration** — minimizes to the system tray instead of closing; the tray icon's tooltip shows the next upcoming reminder.
 - **Resilient by design** — reminders that come due while the app is closed, or that go unanswered, resolve themselves sensibly (reschedule if recurring, mark spent otherwise) instead of getting stuck.
 
+## Languages
+
+Pendulum is in English. Every word it shows comes from `Pendulum.App/Resources/Strings.resx` (and
+`Pendulum.Core/Resources/CoreStrings.resx` for the repeat descriptions), so it's ready to be
+translated: a translation is a copy of those files for a language, as `Strings.fr.resx`. Dates and
+times already follow your Windows region and the 12/24-hour setting. Quick Reminder's typed and
+spoken phrases ("call mom 3pm", "in 20 min") stay English: they're a grammar Pendulum understands,
+not labels to translate.
+
 ## Getting Pendulum
 
 Download the latest `PendulumSetup-<version>.exe` from the [Releases](https://github.com/Suremise/Pendulum/releases) page — self-contained (no separate .NET install required), installs per-user (no admin/UAC prompt), adds a Start Menu entry and optional desktop shortcut, and registers a normal uninstaller. See [CHANGELOG.md](CHANGELOG.md) for what's new in each version.

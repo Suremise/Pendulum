@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
@@ -18,7 +19,7 @@ public partial class CalendarViewModel : ObservableObject
 
     [ObservableProperty] private DateTime displayedMonth;
 
-    public string MonthYearLabel => DisplayedMonth.ToString("MMMM yyyy");
+    public string MonthYearLabel => DisplayFormat.MonthAndYear(DisplayedMonth);
 
     public IReadOnlyList<string> MonthNames { get; } = Enumerable.Range(1, 12)
         .Select(m => new DateTime(2000, m, 1).ToString("MMMM"))

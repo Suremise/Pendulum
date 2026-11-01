@@ -19,7 +19,7 @@ public sealed class ReminderStatusVisibilityConverter : IMultiValueConverter
         if (hasFired)
             return Visibility.Collapsed;
 
-        var wantDisabled = string.Equals(parameter as string, "Disabled", StringComparison.Ordinal);
+        var wantDisabled = string.Equals(parameter as string, "Disabled", StringComparison.Ordinal);  // not user-visible: the ConverterParameter
         return (wantDisabled == !enabled) ? Visibility.Visible : Visibility.Collapsed;
     }
 

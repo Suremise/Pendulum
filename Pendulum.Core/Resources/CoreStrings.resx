@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Repeat_Daily" xml:space="preserve"><value>Daily</value></data>
+  <data name="Repeat_EveryNDays" xml:space="preserve"><value>Every {0} days</value><comment>{0}: the number of days.</comment></data>
+  <data name="Repeat_Weekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="Repeat_EveryNWeeks" xml:space="preserve"><value>Every {0} weeks</value><comment>{0}: the number of weeks.</comment></data>
+  <data name="Repeat_OnDays" xml:space="preserve"><value>{0} on {1}</value><comment>{0}: "Weekly" or "Every N weeks"; {1}: the days, as "Mon, Fri".</comment></data>
+  <data name="Repeat_DaySeparator" xml:space="preserve"><value>, </value><comment>Between the days in Repeat_OnDays.</comment></data>
+  <data name="Repeat_MonthlyOnDay" xml:space="preserve"><value>Monthly on day {0}</value><comment>{0}: the day of the month.</comment></data>
+  <data name="Repeat_EveryNMonthsOnDay" xml:space="preserve"><value>Every {0} months on day {1}</value><comment>{0}: the number of months; {1}: the day of the month.</comment></data>
+  <data name="Repeat_AnnuallyOn" xml:space="preserve"><value>Annually on {0} {1}</value><comment>{0}: the month's name; {1}: the day of the month.</comment></data>
+  <data name="Repeat_EveryNYearsOn" xml:space="preserve"><value>Every {0} years on {1} {2}</value><comment>{0}: the number of years; {1}: the month's name; {2}: the day of the month.</comment></data>
+  <data name="Repeat_DoesNotRepeat" xml:space="preserve"><value>Does not repeat</value></data>
+  <data name="Repeat_EndAfterTimes" xml:space="preserve"><value>{0}, {1} times</value><comment>{0}: the pattern; {1}: how many times it repeats.</comment></data>
+  <data name="Repeat_EndUntil" xml:space="preserve"><value>{0}, until {1}</value><comment>{0}: the pattern; {1}: the end date, formatted with Format_EndDate.</comment></data>
+  <data name="Format_EndDate" xml:space="preserve"><value>dd MMM yyyy</value><comment>A .NET date pattern for the end date in Repeat_EndUntil; names come from the user's culture.</comment></data>
+  <data name="File_NotPendulumFormat" xml:space="preserve"><value>The file isn't in Pendulum's format.</value><comment>Shown inside the import and restore error messages.</comment></data>
+  <data name="File_NotReminderList" xml:space="preserve"><value>The file doesn't hold a list of Pendulum reminders.</value><comment>Shown inside the import error message.</comment></data>
+  <data name="Repeat_MonthlyOnRelative" xml:space="preserve"><value>Monthly on {0}</value><comment>{0}: the day, as Repeat_RelativeDay says it.</comment></data>
+  <data name="Repeat_EveryNMonthsOnRelative" xml:space="preserve"><value>Every {0} months on {1}</value><comment>{0}: the number of months; {1}: the day, as Repeat_RelativeDay.</comment></data>
+  <data name="Repeat_AnnuallyOnRelative" xml:space="preserve"><value>Annually on {0} of {1}</value><comment>{0}: the day, as Repeat_RelativeDay; {1}: the month's name.</comment></data>
+  <data name="Repeat_EveryNYearsOnRelative" xml:space="preserve"><value>Every {0} years on {1} of {2}</value><comment>{0}: the number of years; {1}: the day, as Repeat_RelativeDay; {2}: the month's name.</comment></data>
+  <data name="Repeat_RelativeDay" xml:space="preserve"><value>the {0} {1}</value><comment>{0}: which, a Week_* word; {1}: a day's name or a DayKind_* word. As "the last Friday".</comment></data>
+  <data name="Week_First" xml:space="preserve"><value>first</value></data>
+  <data name="Week_Second" xml:space="preserve"><value>second</value></data>
+  <data name="Week_Third" xml:space="preserve"><value>third</value></data>
+  <data name="Week_Fourth" xml:space="preserve"><value>fourth</value></data>
+  <data name="Week_Last" xml:space="preserve"><value>last</value></data>
+  <data name="DayKind_Day" xml:space="preserve"><value>day</value><comment>Any day, as "the fourth day".</comment></data>
+  <data name="DayKind_Weekday" xml:space="preserve"><value>weekday</value></data>
+  <data name="DayKind_WeekendDay" xml:space="preserve"><value>weekend day</value></data>
+</root>

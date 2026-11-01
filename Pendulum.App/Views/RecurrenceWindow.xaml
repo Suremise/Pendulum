@@ -1,8 +1,9 @@
 <ui:FluentWindow x:Class="Pendulum.App.Views.RecurrenceWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:Pendulum.App.Resources"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-        Title="Repeat Schedule"
+        Title="{x:Static res:Strings.Recurrence_RepeatSchedule}"
         Width="600"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -14,77 +15,77 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="Repeat Schedule" ShowMaximize="False" ShowMinimize="False"/>
+        <ui:TitleBar Grid.Row="0" Title="{x:Static res:Strings.Recurrence_RepeatSchedule}" ShowMaximize="False" ShowMinimize="False"/>
 
         <StackPanel Grid.Row="1" Margin="28,4,28,28">
 
-            <TextBlock x:Name="StartText" Text="Start: 22 August 2026, 09:00" FontSize="12"
+            <TextBlock x:Name="StartText" Text="" FontSize="12"
                        Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,16"/>
 
             <ui:Card Margin="0,0,0,14">
                 <StackPanel Margin="4">
-                    <TextBlock Text="PATTERN" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{x:Static res:Strings.Recurrence_PATTERN}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                        <RadioButton x:Name="DailyRadio" Content="Daily" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
-                        <RadioButton x:Name="WeeklyRadio" Content="Weekly" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
-                        <RadioButton x:Name="MonthlyRadio" Content="Monthly" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
-                        <RadioButton x:Name="YearlyRadio" Content="Yearly" GroupName="Freq" Checked="Frequency_Changed"/>
+                        <RadioButton x:Name="DailyRadio" Content="{x:Static res:Strings.Recurrence_Daily}" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
+                        <RadioButton x:Name="WeeklyRadio" Content="{x:Static res:Strings.Recurrence_Weekly}" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
+                        <RadioButton x:Name="MonthlyRadio" Content="{x:Static res:Strings.Recurrence_Monthly}" GroupName="Freq" Margin="0,0,18,0" Checked="Frequency_Changed"/>
+                        <RadioButton x:Name="YearlyRadio" Content="{x:Static res:Strings.Recurrence_Yearly}" GroupName="Freq" Checked="Frequency_Changed"/>
                     </StackPanel>
 
                     <StackPanel x:Name="DailyPanel" Orientation="Horizontal">
-                        <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{x:Static res:Strings.Recurrence_Every}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ui:TextBox x:Name="DailyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
-                        <TextBlock Text="day(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                        <TextBlock Text="{x:Static res:Strings.Recurrence_DayS}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     </StackPanel>
 
                     <StackPanel x:Name="WeeklyPanel">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_Every}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ui:TextBox x:Name="WeeklyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
-                            <TextBlock Text="week(s) on:" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_WeekSOn}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                         <WrapPanel>
-                            <CheckBox x:Name="MonCheck" Content="Mon" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="TueCheck" Content="Tue" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="WedCheck" Content="Wed" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="ThuCheck" Content="Thu" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="FriCheck" Content="Fri" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="SatCheck" Content="Sat" Margin="0,0,14,0"/>
-                            <CheckBox x:Name="SunCheck" Content="Sun"/>
+                            <CheckBox x:Name="MonCheck" Content="{x:Static res:Strings.Recurrence_Mon}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="TueCheck" Content="{x:Static res:Strings.Recurrence_Tue}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="WedCheck" Content="{x:Static res:Strings.Recurrence_Wed}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="ThuCheck" Content="{x:Static res:Strings.Recurrence_Thu}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="FriCheck" Content="{x:Static res:Strings.Recurrence_Fri}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="SatCheck" Content="{x:Static res:Strings.Recurrence_Sat}" Margin="0,0,14,0"/>
+                            <CheckBox x:Name="SunCheck" Content="{x:Static res:Strings.Recurrence_Sun}"/>
                         </WrapPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="MonthlyPanel">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <RadioButton x:Name="MonthlyByDayRadio" Content="Day" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <RadioButton x:Name="MonthlyByDayRadio" Content="{x:Static res:Strings.Recurrence_Day}" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ui:TextBox x:Name="MonthlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <RadioButton x:Name="MonthlyByRelativeRadio" Content="The" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <RadioButton x:Name="MonthlyByRelativeRadio" Content="{x:Static res:Strings.Recurrence_The}" GroupName="MonthlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox x:Name="MonthlyWhichBox" Width="110" Margin="0,0,8,0"/>
                             <ComboBox x:Name="MonthlyKindBox" Width="140"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="of every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_OfEvery}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ui:TextBox x:Name="MonthlyIntervalBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
-                            <TextBlock Text="month(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_MonthS}" VerticalAlignment="Center" Margin="8,0,0,0"/>
                         </StackPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="YearlyPanel">
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <TextBlock Text="Every" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_Every}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ui:TextBox x:Name="YearlyIntervalBox" Width="50" TextAlignment="Center" Text="1" Margin="0,0,8,0" ClearButtonEnabled="False"/>
-                            <TextBlock Text="year(s) in" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="{x:Static res:Strings.Recurrence_YearSIn}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox x:Name="YearlyMonthBox" Width="140"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <RadioButton x:Name="YearlyByDayRadio" Content="On day" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <RadioButton x:Name="YearlyByDayRadio" Content="{x:Static res:Strings.Recurrence_OnDay}" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ui:TextBox x:Name="YearlyDayBox" Width="50" TextAlignment="Center" Text="1" ClearButtonEnabled="False"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
-                            <RadioButton x:Name="YearlyByRelativeRadio" Content="On the" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <RadioButton x:Name="YearlyByRelativeRadio" Content="{x:Static res:Strings.Recurrence_OnThe}" GroupName="YearlyDay" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <ComboBox x:Name="YearlyWhichBox" Width="110" Margin="0,0,8,0"/>
                             <ComboBox x:Name="YearlyKindBox" Width="140"/>
                         </StackPanel>
@@ -94,18 +95,18 @@
 
             <ui:Card Margin="0,0,0,20">
                 <StackPanel Margin="4">
-                    <TextBlock Text="RANGE OF RECURRENCE" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
+                    <TextBlock Text="{x:Static res:Strings.Recurrence_RANGEOFRECURRENCE}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,10"/>
 
-                    <RadioButton x:Name="EndNeverRadio" Content="No end date" GroupName="End" Margin="0,0,0,10"/>
+                    <RadioButton x:Name="EndNeverRadio" Content="{x:Static res:Strings.Recurrence_NoEndDate}" GroupName="End" Margin="0,0,0,10"/>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <RadioButton x:Name="EndAfterRadio" Content="End after" GroupName="End" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <RadioButton x:Name="EndAfterRadio" Content="{x:Static res:Strings.Recurrence_EndAfter}" GroupName="End" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ui:TextBox x:Name="EndAfterCountBox" Width="50" TextAlignment="Center" Text="10" Margin="0,0,8,0" ClearButtonEnabled="False"/>
-                        <TextBlock Text="occurrences" VerticalAlignment="Center"/>
+                        <TextBlock Text="{x:Static res:Strings.Recurrence_Occurrences}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="EndByDateRadio" Content="End by" GroupName="End" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <RadioButton x:Name="EndByDateRadio" Content="{x:Static res:Strings.Recurrence_EndBy}" GroupName="End" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <DatePicker x:Name="EndByDatePicker" Width="180"/>
                     </StackPanel>
                 </StackPanel>
@@ -118,9 +119,9 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <ui:Button Grid.Column="0" Content="Don't Repeat" Appearance="Secondary" Click="DontRepeatButton_Click"/>
-                <ui:Button Grid.Column="2" Content="Cancel" Appearance="Secondary" Margin="0,0,10,0" Click="CancelButton_Click"/>
-                <ui:Button Grid.Column="3" Content="OK" Appearance="Primary" Click="OkButton_Click"/>
+                <ui:Button Grid.Column="0" Content="{x:Static res:Strings.Recurrence_DontRepeat}" Appearance="Secondary" Click="DontRepeatButton_Click"/>
+                <ui:Button Grid.Column="2" Content="{x:Static res:Strings.Recurrence_Cancel}" Appearance="Secondary" Margin="0,0,10,0" Click="CancelButton_Click"/>
+                <ui:Button Grid.Column="3" Content="{x:Static res:Strings.Recurrence_OK}" Appearance="Primary" Click="OkButton_Click"/>
             </Grid>
         </StackPanel>
     </Grid>

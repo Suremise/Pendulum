@@ -116,6 +116,15 @@ dotnet test Pendulum.sln             # every test project in the solution
   - The app itself registers its hotkey with `RegisterHotKey` only: no keyboard or mouse hooks.
 - **Every change a user would notice** adds a plain-words line under `## [Unreleased]` in
   CHANGELOG.md.
+- **Every word the app shows comes from a resource**, never a literal in XAML or C#: the App's from
+  `Pendulum.App/Resources/Strings.resx` (XAML: `{x:Static res:Strings.Key}`; C#: `Strings.Key`,
+  with `string.Format` for placeholders), Core's from `Pendulum.Core/Resources/CoreStrings.resx`.
+  The build generates both classes, so a missing key fails it. Name a key `<View>_<What>`, and give
+  it a `<comment>` saying what each `{0}` is. Dates and times go through `DisplayFormat` (or
+  `DateTimeDisplayConverter` in XAML), never a format of their own. A literal that isn't shown to
+  users (a file name, a registry path, a resource key) marks its line `// not user-visible`.
+  `LocalizationTests` fails on a new literal, an unused or missing key, or a broken placeholder.
+  English only for now; Quick Reminder's phrases stay English.
 
 ## Commits and merging
 

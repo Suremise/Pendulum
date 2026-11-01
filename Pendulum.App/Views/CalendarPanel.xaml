@@ -1,13 +1,16 @@
 <UserControl x:Class="Pendulum.App.Views.CalendarPanel"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:vm="clr-namespace:Pendulum.App.ViewModels">
+             xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
+             xmlns:conv="clr-namespace:Pendulum.App.Converters">
     <UserControl.DataContext>
         <vm:CalendarViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
         <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
         <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
         <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
@@ -142,14 +145,14 @@
 
                         <ToggleButton x:Name="OverflowToggle" Style="{StaticResource OverflowChip}"
                                       Visibility="{Binding HasOverflow, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding OverflowCount, StringFormat='+{0} more'}"
+                            <TextBlock Text="{Binding OverflowCount, StringFormat={x:Static res:Strings.Calendar_MoreFormat}}"
                                        FontSize="10" FontWeight="SemiBold"/>
                         </ToggleButton>
                         <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                             <Border Style="{StaticResource OverflowPopupBorder}" MinWidth="160" MaxWidth="260">
                                 <StackPanel>
-                                    <TextBlock Text="{Binding Date, StringFormat='{}{0:ddd, dd MMM yyyy}'}" FontSize="11" FontWeight="Bold"
+                                    <TextBlock Text="{Binding Date, Converter={StaticResource DateTimeDisplay}, ConverterParameter=Date}" FontSize="11" FontWeight="Bold"
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>
                                     <ItemsControl ItemsSource="{Binding Reminders}">
                                         <ItemsControl.ItemTemplate>
@@ -185,12 +188,12 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Calendar" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="See your reminders laid out by day." FontSize="12"
+                <TextBlock Text="{x:Static res:Strings.Calendar_Calendar}" FontSize="22" FontWeight="SemiBold"/>
+                <TextBlock Text="{x:Static res:Strings.Calendar_SeeYourRemindersLaidOutByDay}" FontSize="12"
                            Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <ui:Button Content="Today" Appearance="Secondary" Margin="0,0,10,0" Command="{Binding TodayCommand}"/>
+                <ui:Button Content="{x:Static res:Strings.Calendar_Today}" Appearance="Secondary" Margin="0,0,10,0" Command="{Binding TodayCommand}"/>
                 <ui:Button Content="&#xE76B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Style="{StaticResource NavButton}"
                            Margin="0,0,6,0" Command="{Binding PreviousMonthCommand}"/>
                 <ComboBox ItemsSource="{Binding MonthNames}" SelectedIndex="{Binding SelectedMonthIndex}"

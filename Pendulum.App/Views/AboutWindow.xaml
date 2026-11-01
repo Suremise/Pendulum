@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:local="clr-namespace:Pendulum.App.Views"
-        Title="About Pendulum"
+        xmlns:res="clr-namespace:Pendulum.App.Resources"
+        Title="{x:Static res:Strings.About_Title}"
         Width="480"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -15,18 +16,18 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="About Pendulum" ShowMaximize="False" ShowMinimize="False"/>
+        <ui:TitleBar Grid.Row="0" Title="{x:Static res:Strings.About_Title}" ShowMaximize="False" ShowMinimize="False"/>
 
         <StackPanel Grid.Row="1" Margin="28,4,28,24">
 
             <!-- The icon and the name, then the tagline. -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                 <Image Source="pack://application:,,,/Resources/pendulum.ico" Width="56" Height="56" Margin="0,0,16,0"/>
-                <TextBlock Text="Pendulum" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                <TextBlock Text="{x:Static res:Strings.App_Name}" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center"/>
             </StackPanel>
 
             <TextBlock TextWrapping="Wrap" Margin="0,0,0,16" FontSize="13" Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                       Text="A timer and alarm utility that waits in the tray and pops up over whatever you're working in, with a sound or a spoken phrase."/>
+                       Text="{x:Static res:Strings.About_ATimerAndAlarmUtilityThatWaitsInTheTrayAndPopsUp}"/>
 
             <!-- The facts a bug report needs; Copy puts them on the clipboard. -->
             <ItemsControl x:Name="FactsList" Margin="0,0,0,16" Focusable="False">
@@ -45,21 +46,21 @@
             </ItemsControl>
 
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8">
-                <Run Text="Open source under the "/><Hyperlink Click="LicenseButton_Click">MIT License</Hyperlink><Run Text=". Includes "/><Hyperlink Click="ThirdPartyNoticesButton_Click">third-party software</Hyperlink><Run Text="."/>
+                <Run Text="{x:Static res:Strings.About_OpenSourceUnderThe}"/><Hyperlink Click="LicenseButton_Click"><Run Text="{x:Static res:Strings.About_MitLicense}"/></Hyperlink><Run Text="{x:Static res:Strings.About_Includes}"/><Hyperlink Click="ThirdPartyNoticesButton_Click"><Run Text="{x:Static res:Strings.About_ThirdPartySoftware}"/></Hyperlink><Run Text="."/>
             </TextBlock>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,8"
-                       Text="No telemetry. Pendulum goes online only to check for updates, and only when that's turned on in Settings."/>
+                       Text="{x:Static res:Strings.About_NoTelemetryPendulumGoesOnlineOnlyToCheckForUpdat}"/>
             <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Margin="0,0,0,20"
-                       Text="© 2026 Darren Marshall."/>
+                       Text="{x:Static res:Strings.About_2026DarrenMarshall}"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <ui:Button x:Name="CopyButton" Content="Copy" Margin="0,0,8,0" Click="CopyButton_Click"
-                           ToolTip="Copy the version information, for a bug report"/>
-                <ui:Button Content="Release notes" Margin="0,0,8,0" Click="ReleaseNotesButton_Click"
+                <ui:Button x:Name="CopyButton" Content="{x:Static res:Strings.About_Copy}" Margin="0,0,8,0" Click="CopyButton_Click"
+                           ToolTip="{x:Static res:Strings.About_CopyTheVersionInformationForABugReport}"/>
+                <ui:Button Content="{x:Static res:Strings.About_ReleaseNotes}" Margin="0,0,8,0" Click="ReleaseNotesButton_Click"
                            ToolTip="{x:Static local:AboutLinks.Releases}"/>
-                <ui:Button Content="Source code" Margin="0,0,8,0" Click="SourceCodeButton_Click"
+                <ui:Button Content="{x:Static res:Strings.About_SourceCode}" Margin="0,0,8,0" Click="SourceCodeButton_Click"
                            ToolTip="{x:Static local:AboutLinks.Repository}"/>
-                <ui:Button Content="OK" Appearance="Primary" IsDefault="True" IsCancel="True" Click="CloseButton_Click"/>
+                <ui:Button Content="{x:Static res:Strings.About_OK}" Appearance="Primary" IsDefault="True" IsCancel="True" Click="CloseButton_Click"/>
             </StackPanel>
         </StackPanel>
     </Grid>

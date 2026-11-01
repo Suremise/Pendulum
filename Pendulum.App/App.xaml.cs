@@ -7,6 +7,7 @@ using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using H.NotifyIcon;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
@@ -17,8 +18,8 @@ namespace Pendulum.App;
 
 public partial class App : Application
 {
-    private const string MutexName = "Pendulum.SingleInstance.Mutex";
-    private const string WakeEventName = "Pendulum.WakeExisting.Event";
+    private const string MutexName = "Pendulum.SingleInstance.Mutex";  // not user-visible: a system object's name
+    private const string WakeEventName = "Pendulum.WakeExisting.Event";  // not user-visible
 
     private Mutex? _singleInstanceMutex;
     private bool _ownsMutex;
@@ -42,8 +43,8 @@ public partial class App : Application
         {
             CrashLog.Write("DispatcherUnhandledException", args.Exception);
             MessageBox.Show(
-                $"Pendulum hit an unexpected error and logged the details to Data\\crash.log.\n\n{args.Exception.Message}",
-                "Pendulum", MessageBoxButton.OK, MessageBoxImage.Warning);
+                string.Format(Strings.App_UnexpectedError, args.Exception.Message),
+                Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Warning);
             args.Handled = true;
         };
         TaskScheduler.UnobservedTaskException += (_, args) =>
@@ -95,7 +96,7 @@ public partial class App : Application
 
             _trayIcon = new TaskbarIcon
             {
-                ToolTipText = "Pendulum",
+                ToolTipText = Strings.App_Name,
                 IconSource = iconImage,
                 ContextMenu = BuildTrayMenu(),
                 Visibility = Visibility.Visible
@@ -142,8 +143,8 @@ public partial class App : Application
         {
             CrashLog.Write("OnStartup", ex);
             MessageBox.Show(
-                $"Pendulum failed to start and logged the details to Data\\crash.log.\n\n{ex.Message}",
-                "Pendulum", MessageBoxButton.OK, MessageBoxImage.Error);
+                string.Format(Strings.App_FailedToStart, ex.Message),
+                Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown();
         }
     }
@@ -151,7 +152,7 @@ public partial class App : Application
     private void UpdateTrayTooltip()
     {
         if (_trayIcon is not null)
-            _trayIcon.ToolTipText = $"Pendulum - {ReminderStatus.GetNextReminderSummary()}";
+            _trayIcon.ToolTipText = string.Format(Strings.Tray_ToolTipWithStatus, ReminderStatus.GetNextReminderSummary());
     }
 
     private void ApplyHotkeySetting()
@@ -200,19 +201,19 @@ public partial class App : Application
             return;
 
         settings.HasShownTrayMinimizeHint = true;
-        _trayIcon?.ShowNotification("Pendulum", "Still running in the system tray. Click the tray icon to reopen, or right-click it to exit.");
+        _trayIcon?.ShowNotification(Strings.App_Name, Strings.Tray_StillRunning);
     }
 
     private void NotifyMissedReminders(List<string> missed)
     {
         var message = missed.Count switch
         {
-            1 => $"\"{missed[0]}\" was missed while Pendulum was closed.",
-            <= 3 => $"Missed while Pendulum was closed: {string.Join(", ", missed)}",
-            _ => $"{missed.Count} reminders were missed while Pendulum was closed."
+            1 => string.Format(Strings.Tray_MissedOne, missed[0]),
+            <= 3 => string.Format(Strings.Tray_MissedFew, string.Join(Strings.List_Separator, missed)),
+            _ => string.Format(Strings.Tray_MissedMany, missed.Count)
         };
 
-        _trayIcon?.ShowNotification("Pendulum", message);
+        _trayIcon?.ShowNotification(Strings.App_Name, message);
     }
 
     private static async Task CheckForUpdateAsync(MainWindow mainWindow)
@@ -238,7 +239,7 @@ public partial class App : Application
             var services = AppServices.Instance;
             AlertCoordinator.Fire(
                 trigger.Name,
-                trigger.TriggerAt.ToString("ddd, dd MMM yyyy  HH:mm"),
+                DisplayFormat.DateAndTime(trigger.TriggerAt),
                 trigger.SoundFileName,
                 trigger.Mode,
                 trigger.Phrase,
@@ -259,10 +260,10 @@ public partial class App : Application
 
     private ContextMenu BuildTrayMenu()
     {
-        var openItem = new MenuItem { Header = "Open Pendulum" };
+        var openItem = new MenuItem { Header = Strings.Tray_Open };
         openItem.Click += (_, __) => ShowMainWindow();
 
-        var exitItem = new MenuItem { Header = "Exit" };
+        var exitItem = new MenuItem { Header = Strings.Tray_Exit };
         exitItem.Click += (_, __) => ExitApplication();
 
         var menu = new ContextMenu();

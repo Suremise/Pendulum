@@ -2,6 +2,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
+using Pendulum.App.Resources;
 
 namespace Pendulum.App.Services;
 
@@ -12,7 +13,7 @@ public sealed record AboutFact(string Label, string Value);
 /// and Windows. The same facts go on the clipboard with About's Copy, for a bug report.
 public sealed class AboutFacts
 {
-    private const string Unknown = "Unknown";
+    private static string Unknown => Strings.About_Unknown;
 
     public required string Version { get; init; }
     public string? Built { get; init; }
@@ -21,17 +22,17 @@ public sealed class AboutFacts
 
     public IReadOnlyList<AboutFact> Rows =>
     [
-        new("Version", Version),
-        new("Built", Built ?? Unknown),
-        new(".NET", DotNet ?? Unknown),
-        new("Windows", Windows ?? Unknown),
+        new(Strings.About_Fact_Version, Version),
+        new(Strings.About_Fact_Built, Built ?? Unknown),
+        new(Strings.About_Fact_DotNet, DotNet ?? Unknown),
+        new(Strings.About_Fact_Windows, Windows ?? Unknown),
     ];
 
     /// "Pendulum 1.1.0", then the table's other rows, one a line.
     public string CopyText()
     {
-        var lines = new List<string> { $"Pendulum {Version}" };
-        lines.AddRange(Rows.Skip(1).Select(row => $"{row.Label}: {row.Value}"));
+        var lines = new List<string> { string.Format(Strings.About_CopyTitle, Version) };
+        lines.AddRange(Rows.Skip(1).Select(row => string.Format(Strings.About_CopyRow, row.Label, row.Value)));
         return string.Join("\r\n", lines) + "\r\n";
     }
 
@@ -53,7 +54,7 @@ public sealed class AboutFacts
     {
         try
         {
-            return File.GetLastWriteTime(assembly.Location).ToString("dd MMM yyyy, HH:mm");
+            return DisplayFormat.DateAndTime(File.GetLastWriteTime(assembly.Location));
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -70,7 +71,7 @@ public sealed class AboutFacts
         try
         {
             using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
-            var release = key?.GetValue("DisplayVersion") as string;
+            var release = key?.GetValue("DisplayVersion") as string;  // not user-visible: a registry value
             var revision = key?.GetValue("UBR") is int ubr ? ubr : (int?)null;
             return FormatWindows(Environment.OSVersion.Version.Build, release, revision);
         }
@@ -85,7 +86,7 @@ public sealed class AboutFacts
         var major = build >= 22000 ? "11" : "10";
         var buildText = revision is null ? build.ToString() : $"{build}.{revision}";
         return string.IsNullOrWhiteSpace(release)
-            ? $"Windows {major} (build {buildText})"
-            : $"Windows {major} {release} (build {buildText})";
+            ? string.Format(Strings.About_WindowsVersion, major, buildText)
+            : string.Format(Strings.About_WindowsVersionRelease, major, release, buildText);
     }
 }

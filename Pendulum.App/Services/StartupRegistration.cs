@@ -36,7 +36,7 @@ public static class StartupRegistration
     private sealed class RunValueStore : IStartupValueStore
     {
         private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-        private const string ValueName = "Pendulum";
+        private const string ValueName = "Pendulum";  // not user-visible: the Run key's value name
 
         public string? Read()
         {

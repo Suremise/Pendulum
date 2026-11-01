@@ -1,5 +1,8 @@
 using System.Globalization;
 using System.Windows;
+using Pendulum.App.Resources;
+using Pendulum.App.Services;
+using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Wpf.Ui.Controls;
 
@@ -10,19 +13,17 @@ public partial class RecurrenceWindow : FluentWindow
     private readonly DateTime _anchor;
 
     // The choices for "the [which] [kind]", in WeekOfMonth's and RelativeDay's order.
+    // The words are Core's, so the lists say what the repeat's description says.
     private static readonly (WeekOfMonth Value, string Text)[] WhichChoices =
-    {
-        (WeekOfMonth.First, "first"), (WeekOfMonth.Second, "second"), (WeekOfMonth.Third, "third"),
-        (WeekOfMonth.Fourth, "fourth"), (WeekOfMonth.Last, "last"),
-    };
+        new[] { WeekOfMonth.First, WeekOfMonth.Second, WeekOfMonth.Third, WeekOfMonth.Fourth, WeekOfMonth.Last }
+            .Select(w => (w, RecurrenceCalculator.WeekWord(w))).ToArray();
 
     private static readonly (RelativeDay Value, string Text)[] KindChoices =
-    {
-        (RelativeDay.Monday, "Monday"), (RelativeDay.Tuesday, "Tuesday"), (RelativeDay.Wednesday, "Wednesday"),
-        (RelativeDay.Thursday, "Thursday"), (RelativeDay.Friday, "Friday"), (RelativeDay.Saturday, "Saturday"),
-        (RelativeDay.Sunday, "Sunday"), (RelativeDay.Day, "day"), (RelativeDay.Weekday, "weekday"),
-        (RelativeDay.WeekendDay, "weekend day"),
-    };
+        new[]
+        {
+            RelativeDay.Monday, RelativeDay.Tuesday, RelativeDay.Wednesday, RelativeDay.Thursday, RelativeDay.Friday,
+            RelativeDay.Saturday, RelativeDay.Sunday, RelativeDay.Day, RelativeDay.Weekday, RelativeDay.WeekendDay,
+        }.Select(k => (k, RecurrenceCalculator.DayKindName(k, CultureInfo.CurrentCulture))).ToArray();
 
     /// The configured rule if the user clicked OK, or null if they clicked "Don't Repeat".
     /// Only meaningful when DialogResult == true.
@@ -33,7 +34,7 @@ public partial class RecurrenceWindow : FluentWindow
         InitializeComponent();
         _anchor = anchor;
 
-        StartText.Text = $"Start: {anchor:dd MMMM yyyy, HH:mm}";
+        StartText.Text = string.Format(Strings.Recurrence_Start, DisplayFormat.LongDateAndTime(anchor));
 
         foreach (var monthName in CultureInfo.CurrentCulture.DateTimeFormat.MonthNames)
         {

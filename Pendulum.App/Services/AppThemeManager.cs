@@ -14,12 +14,12 @@ namespace Pendulum.App.Services;
 internal static class AppThemeManager
 {
     /// The resource key of the brush links are drawn in (App.xaml's Hyperlink style).
-    public const string LinkBrushKey = "PendulumLinkBrush";
+    public const string LinkBrushKey = "PendulumLinkBrush";  // not user-visible: resource keys
 
     /// The accent itself (the selected tab, the panel's frame, today in the calendar, sort
     /// arrows), and a soft tint of it (the selected tab's background).
-    public const string AccentBrushKey = "PendulumAccentBrush";
-    public const string AccentSoftBrushKey = "PendulumAccentSoftBrush";
+    public const string AccentBrushKey = "PendulumAccentBrush";  // not user-visible
+    public const string AccentSoftBrushKey = "PendulumAccentSoftBrush";  // not user-visible
 
     /// The accent for one theme. WPF-UI 3 uses `Fill` for primary buttons, toggles and checked
     /// boxes, `Hover` for a primary button under the pointer and its other accent fills, and
@@ -83,7 +83,7 @@ internal static class AppThemeManager
         try
         {
             using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-            return key?.GetValue("AppsUseLightTheme") is int value && value == 0;
+            return key?.GetValue("AppsUseLightTheme") is int value && value == 0;  // not user-visible: a registry value
         }
         catch
         {

@@ -1,3 +1,5 @@
+using System.Globalization;
+using Pendulum.Core.Resources;
 using Pendulum.Core.Models;
 
 namespace Pendulum.Core.Engine;
@@ -168,41 +170,55 @@ public static class RecurrenceCalculator
     public static bool IsExhausted(RecurrenceRule rule) =>
         rule.EndType == RecurrenceEndType.AfterOccurrences && rule.OccurrencesSoFar >= rule.OccurrenceCount;
 
+    /// The rule in words ("Every 2 weeks on Mon, Fri, 6 times"), from CoreStrings, with month and
+    /// day names and the end date in the user's culture.
     public static string Describe(RecurrenceRule rule)
     {
+        var culture = CultureInfo.CurrentCulture;
+        string Month() => culture.DateTimeFormat.GetMonthName(Math.Clamp(rule.Month, 1, 12));
+
         string core = rule.Frequency switch
         {
-            RecurrenceFrequency.Daily => rule.Interval <= 1 ? "Daily" : $"Every {rule.Interval} days",
-            RecurrenceFrequency.Weekly => DescribeWeekly(rule),
-            RecurrenceFrequency.Monthly => (rule.Interval <= 1 ? "Monthly on " : $"Every {rule.Interval} months on ")
-                + (rule.MonthDayRule == MonthDayRule.RelativeDay ? DescribeRelativeDay(rule) : $"day {rule.DayOfMonth}"),
-            RecurrenceFrequency.Yearly => (rule.Interval <= 1 ? "Annually on " : $"Every {rule.Interval} years on ")
-                + (rule.MonthDayRule == MonthDayRule.RelativeDay
-                    ? $"{DescribeRelativeDay(rule)} of {new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM}"
-                    : $"{new DateTime(2000, Math.Clamp(rule.Month, 1, 12), 1):MMMM} {rule.DayOfMonth}"),
-            _ => "Does not repeat"
+            RecurrenceFrequency.Daily => rule.Interval <= 1
+                ? CoreStrings.Repeat_Daily
+                : string.Format(culture, CoreStrings.Repeat_EveryNDays, rule.Interval),
+            RecurrenceFrequency.Weekly => DescribeWeekly(rule, culture),
+            RecurrenceFrequency.Monthly when rule.MonthDayRule == MonthDayRule.RelativeDay => rule.Interval <= 1
+                ? string.Format(culture, CoreStrings.Repeat_MonthlyOnRelative, DescribeRelativeDay(rule, culture))
+                : string.Format(culture, CoreStrings.Repeat_EveryNMonthsOnRelative, rule.Interval, DescribeRelativeDay(rule, culture)),
+            RecurrenceFrequency.Monthly => rule.Interval <= 1
+                ? string.Format(culture, CoreStrings.Repeat_MonthlyOnDay, rule.DayOfMonth)
+                : string.Format(culture, CoreStrings.Repeat_EveryNMonthsOnDay, rule.Interval, rule.DayOfMonth),
+            RecurrenceFrequency.Yearly when rule.MonthDayRule == MonthDayRule.RelativeDay => rule.Interval <= 1
+                ? string.Format(culture, CoreStrings.Repeat_AnnuallyOnRelative, DescribeRelativeDay(rule, culture), Month())
+                : string.Format(culture, CoreStrings.Repeat_EveryNYearsOnRelative, rule.Interval, DescribeRelativeDay(rule, culture), Month()),
+            RecurrenceFrequency.Yearly => rule.Interval <= 1
+                ? string.Format(culture, CoreStrings.Repeat_AnnuallyOn, Month(), rule.DayOfMonth)
+                : string.Format(culture, CoreStrings.Repeat_EveryNYearsOn, rule.Interval, Month(), rule.DayOfMonth),
+            _ => CoreStrings.Repeat_DoesNotRepeat
         };
 
-        string end = rule.EndType switch
+        return rule.EndType switch
         {
-            RecurrenceEndType.AfterOccurrences => $", {rule.OccurrenceCount} times",
-            RecurrenceEndType.ByDate when rule.EndDate is { } d => $", until {d:dd MMM yyyy}",
-            _ => ""
+            RecurrenceEndType.AfterOccurrences => string.Format(culture, CoreStrings.Repeat_EndAfterTimes, core, rule.OccurrenceCount),
+            RecurrenceEndType.ByDate when rule.EndDate is { } d =>
+                string.Format(culture, CoreStrings.Repeat_EndUntil, core, d.ToString(CoreStrings.Format_EndDate, culture)),
+            _ => core
         };
-
-        return core + end;
     }
 
-    private static string DescribeWeekly(RecurrenceRule rule)
+    private static string DescribeWeekly(RecurrenceRule rule, CultureInfo culture)
     {
-        var prefix = rule.Interval <= 1 ? "Weekly" : $"Every {rule.Interval} weeks";
+        var prefix = rule.Interval <= 1
+            ? CoreStrings.Repeat_Weekly
+            : string.Format(culture, CoreStrings.Repeat_EveryNWeeks, rule.Interval);
         if (rule.DaysOfWeek.Count == 0)
             return prefix;
 
-        var days = string.Join(", ", rule.DaysOfWeek
+        var days = string.Join(CoreStrings.Repeat_DaySeparator, rule.DaysOfWeek
             .OrderBy(d => (int)d)
-            .Select(d => d.ToString()[..3]));
-        return $"{prefix} on {days}";
+            .Select(d => culture.DateTimeFormat.GetAbbreviatedDayName(d)));
+        return string.Format(culture, CoreStrings.Repeat_OnDays, prefix, days);
     }
 
     /// The day of <paramref name="month"/> a monthly or yearly rule lands on: its day number,
@@ -233,25 +249,29 @@ public static class RecurrenceCalculator
         _ => (int)day == (int)kind,
     };
 
-    private static string DescribeRelativeDay(RecurrenceRule rule)
+    /// "the last Friday", "the first weekday": the week from CoreStrings, a named day in the user's
+    /// culture.
+    private static string DescribeRelativeDay(RecurrenceRule rule, CultureInfo culture) =>
+        string.Format(culture, CoreStrings.Repeat_RelativeDay, WeekWord(rule.WeekOfMonth), DayKindName(rule.RelativeDay, culture));
+
+    /// "first" to "last", as the repeat window lists them and Describe says them.
+    public static string WeekWord(WeekOfMonth week) => week switch
     {
-        var which = rule.WeekOfMonth switch
-        {
-            WeekOfMonth.Second => "second",
-            WeekOfMonth.Third => "third",
-            WeekOfMonth.Fourth => "fourth",
-            WeekOfMonth.Last => "last",
-            _ => "first",
-        };
-        var kind = rule.RelativeDay switch
-        {
-            RelativeDay.Day => "day",
-            RelativeDay.Weekday => "weekday",
-            RelativeDay.WeekendDay => "weekend day",
-            var named => ((DayOfWeek)(int)named).ToString(),
-        };
-        return $"the {which} {kind}";
-    }
+        WeekOfMonth.Second => CoreStrings.Week_Second,
+        WeekOfMonth.Third => CoreStrings.Week_Third,
+        WeekOfMonth.Fourth => CoreStrings.Week_Fourth,
+        WeekOfMonth.Last => CoreStrings.Week_Last,
+        _ => CoreStrings.Week_First,
+    };
+
+    /// A day's name in the user's culture ("Friday"), or "day", "weekday", "weekend day".
+    public static string DayKindName(RelativeDay kind, CultureInfo culture) => kind switch
+    {
+        RelativeDay.Day => CoreStrings.DayKind_Day,
+        RelativeDay.Weekday => CoreStrings.DayKind_Weekday,
+        RelativeDay.WeekendDay => CoreStrings.DayKind_WeekendDay,
+        var named => culture.DateTimeFormat.GetDayName((DayOfWeek)(int)named),
+    };
 
     private static DateTime NextDaily(DateTime anchor, DateTime after, int interval)
     {

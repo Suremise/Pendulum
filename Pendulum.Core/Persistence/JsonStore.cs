@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Pendulum.Core.Resources;
 
 namespace Pendulum.Core.Persistence;
 
@@ -42,7 +43,7 @@ public static class JsonStore
         }
         catch (JsonException e)
         {
-            throw new InvalidDataException("The file isn't in Pendulum's format.", e);
+            throw new InvalidDataException(CoreStrings.File_NotPendulumFormat, e);
         }
     }
 

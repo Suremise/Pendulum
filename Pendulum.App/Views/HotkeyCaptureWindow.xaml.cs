@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Wpf.Ui.Controls;
 
@@ -35,7 +36,7 @@ public partial class HotkeyCaptureWindow : FluentWindow
         var modifiers = Keyboard.Modifiers;
         if (modifiers == ModifierKeys.None)
         {
-            CapturedText.Text = "Must include Ctrl, Alt, Shift, or Win — try again";
+            CapturedText.Text = Strings.Hotkey_NeedsModifier;
             SaveButtonControl.IsEnabled = false;
             return;
         }
