@@ -93,6 +93,12 @@ public partial class App : Application
             // fires reminders on, so their saves and the reminders list never run elsewhere.
             AppServices.Instance.Engine.Start();
 
+            // DateTime.Now keeps the time zone it first read until told otherwise: a laptop that
+            // changes zone (or a user who changes it) would otherwise ring reminders by the old one
+            // until Pendulum restarts.
+            Microsoft.Win32.SystemEvents.TimeChanged += OnSystemTimeChanged;
+            Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
+
             AppThemeManager.Apply(AppServices.Instance.Settings.Theme);
 
             var iconUri = new Uri("pack://application:,,,/Resources/tray.ico", UriKind.Absolute);
@@ -310,8 +316,20 @@ public partial class App : Application
         MainWindow?.Close();
     }
 
+    private static void OnSystemTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
+
+    private static void OnPowerModeChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == Microsoft.Win32.PowerModes.Resume)
+            TimeZoneInfo.ClearCachedData();
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
+        // SystemEvents' handlers are static: detach them, or they outlive the app's objects.
+        Microsoft.Win32.SystemEvents.TimeChanged -= OnSystemTimeChanged;
+        Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+
         if (_ownsMutex)
         {
             _trayTooltipTimer?.Stop();

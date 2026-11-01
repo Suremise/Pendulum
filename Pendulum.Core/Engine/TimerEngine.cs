@@ -13,6 +13,7 @@ public class TimerEngine : IDisposable
 {
     private readonly object _lock = new();
     private readonly Func<DateTime> _clock;
+    private readonly Func<DateTime> _utcClock;
     private readonly bool _polls;
     private System.Threading.Timer? _timer;
     private SynchronizationContext? _context;
@@ -22,15 +23,16 @@ public class TimerEngine : IDisposable
     public event Action<TriggerTimer>? TriggerFired;
     public event Action<Exception>? TickFailed;
 
-    public TimerEngine() : this(() => DateTime.Now, polls: true)
+    public TimerEngine() : this(() => DateTime.Now, polls: true, () => DateTime.UtcNow)
     {
     }
 
     /// For tests: the clock the engine reads instead of DateTime.Now, and whether Start begins
     /// polling on its own. Without polling, nothing is checked until <see cref="CheckDue"/>.
-    internal TimerEngine(Func<DateTime> clock, bool polls)
+    internal TimerEngine(Func<DateTime> clock, bool polls, Func<DateTime>? utcClock = null)
     {
         _clock = clock;
+        _utcClock = utcClock ?? (() => WallClock.ToUtc(clock(), TimeZoneInfo.Local));
         _polls = polls;
     }
 
@@ -71,7 +73,7 @@ public class TimerEngine : IDisposable
             SynchronizationContext? context;
             lock (_lock)
             {
-                if (!_started || !AnyDue(_clock()))
+                if (!_started || !AnyDue(_clock(), _utcClock()))
                     return;
                 context = _context;
             }
@@ -87,9 +89,12 @@ public class TimerEngine : IDisposable
         }
     }
 
-    private bool AnyDue(DateTime now) => _triggers.Any(t => IsDue(t, now));
+    private bool AnyDue(DateTime now, DateTime utcNow) => _triggers.Any(t => IsDue(t, now, utcNow));
 
-    private static bool IsDue(TriggerTimer t, DateTime now) => t.Enabled && !t.HasFired && t.TriggerAt <= now;
+    /// Due by the clock on the wall, or, for a span from now (a snooze, "in 20 min"), by the real
+    /// instant it ends, which the clocks going back or forward don't move.
+    private static bool IsDue(TriggerTimer t, DateTime now, DateTime utcNow) =>
+        t.Enabled && !t.HasFired && (t.DueUtc is { } dueUtc ? utcNow >= dueUtc : t.TriggerAt <= now);
 
     /// On Start's context: marks each reminder that is still due as fired, and raises TriggerFired
     /// for it. Each reminder is handled on its own, so a failure (a save that throws, a handler
@@ -102,8 +107,9 @@ public class TimerEngine : IDisposable
             lock (_lock)
             {
                 var now = _clock();
+                var utcNow = _utcClock();
                 // Checked again here: a poll posted earlier may already have fired them.
-                due = _triggers.Where(t => IsDue(t, now)).ToList();
+                due = _triggers.Where(t => IsDue(t, now, utcNow)).ToList();
             }
         }
         catch (Exception ex)

@@ -160,6 +160,10 @@ public static class RecurrenceCalculator
         if (trigger.Recurrence is not { Frequency: not RecurrenceFrequency.None } rule)
             return trigger.TriggerAt;
 
+        // A snooze saved since this was known: it says which occurrence it's of.
+        if (trigger.SnoozedOccurrence is { } snoozedFrom)
+            return snoozedFrom;
+
         var anchor = trigger.RecurrenceAnchor;
         var interval = Math.Max(1, rule.Interval);
         var lookBack = rule.Frequency switch

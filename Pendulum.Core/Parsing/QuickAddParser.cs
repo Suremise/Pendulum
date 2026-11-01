@@ -1,10 +1,13 @@
 using System.Text.RegularExpressions;
+using Pendulum.Core.Engine;
 
 namespace Pendulum.Core.Parsing;
 
 /// The parsed outcome of a quick-add phrase. <see cref="When"/> is null when no
 /// recognizable time expression was found in the input.
-public sealed record QuickAddResult(string Name, DateTime? When);
+/// <see cref="DueUtc"/> is set for a time given as a span from now ("in 20 min"): the real
+/// instant, for TriggerTimer.SetDue.
+public sealed record QuickAddResult(string Name, DateTime? When, DateTime? DueUtc = null);
 
 /// Rule-based (non-LLM) parser for short reminder phrases like "Call mom 3pm" or
 /// "Standup tomorrow 9am". Recognizes a small, explicit set of time expressions —
@@ -39,7 +42,9 @@ public static class QuickAddParser
     private static readonly Regex TodayWord = new(@"\btoday\b", RegexOptions.IgnoreCase);
     private static readonly Regex Word = new(@"\b[a-zA-Z]+\b");
 
-    public static QuickAddResult Parse(string input, DateTime now)
+    /// Reads <paramref name="input"/> as typed at <paramref name="now"/> (best DateTime.Now). A span
+    /// from now is real time in <paramref name="zone"/> (the machine's own, unless given).
+    public static QuickAddResult Parse(string input, DateTime now, TimeZoneInfo? zone = null)
     {
         if (string.IsNullOrWhiteSpace(input))
             return new QuickAddResult(string.Empty, null);
@@ -48,17 +53,20 @@ public static class QuickAddParser
         DateTime? when = null;
 
         var relativeMatch = RelativeMinutes.Match(text);
-        if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 1, out var inMinutes))
+        DateTime? dueUtc = null;
+        if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 1, zone, out var inMinutes, out var inMinutesUtc))
         {
             when = inMinutes;
+            dueUtc = inMinutesUtc;
             text = Remove(text, relativeMatch);
         }
         else
         {
             relativeMatch = RelativeHours.Match(text);
-            if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 60, out var inHours))
+            if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 60, zone, out var inHours, out var inHoursUtc))
             {
                 when = inHours;
+                dueUtc = inHoursUtc;
                 text = Remove(text, relativeMatch);
             }
         }
@@ -118,7 +126,9 @@ public static class QuickAddParser
             }
         }
 
-        return new QuickAddResult(CleanName(text), when);
+        // Every time is a wall-clock time, whatever kind of DateTime "now" was.
+        var wall = when is { } w ? DateTime.SpecifyKind(w, DateTimeKind.Unspecified) : (DateTime?)null;
+        return new QuickAddResult(CleanName(text), wall, dueUtc);
     }
 
     /// The first real time in the text: "at 9", "at 9:30pm", "14:30", "3pm". A number that isn't
@@ -182,17 +192,19 @@ public static class QuickAddParser
 
     /// "in 20 min", "in 2 hours": false for an amount too large to be a reminder time, so it
     /// stays part of the text rather than overflowing.
-    private static bool TryAddRelative(DateTime now, Match match, int minutesPerUnit, out DateTime when)
+    private static bool TryAddRelative(DateTime now, Match match, int minutesPerUnit, TimeZoneInfo? zone, out DateTime when, out DateTime dueUtc)
     {
         when = default;
+        dueUtc = default;
         if (!int.TryParse(match.Groups[1].Value, out var amount))
             return false;
 
+        // A day's margin, for the time zone's offset either side of the sum.
         var minutes = (double)amount * minutesPerUnit;
-        if (minutes > (DateTime.MaxValue - now).TotalMinutes)
+        if (minutes > (DateTime.MaxValue - now).TotalMinutes - 24 * 60)
             return false;
 
-        when = now.AddMinutes(minutes);
+        (when, dueUtc) = WallClock.AddRealTime(now, TimeSpan.FromMinutes(minutes), zone);
         return true;
     }
 

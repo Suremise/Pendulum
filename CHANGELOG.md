@@ -18,6 +18,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Snooze and Quick Reminder's "in 20 min" or "in 2 hours" are now real time
+  when the clocks go back or forward: a 10-minute snooze just before the clocks
+  go back rang after 70 minutes, and in spring one rang early. Changing the
+  PC's time zone (or a laptop changing it by itself) now takes effect at once,
+  not after restarting Pendulum, and reminder times are saved the same way
+  whichever way they were set.
 - Dismissing an alert late, after the PC slept for days, now counts the
   times that went by meanwhile, so a reminder set to "end after" a number of
   times ends when it should. And an alert's Dismiss or Snooze no longer undoes

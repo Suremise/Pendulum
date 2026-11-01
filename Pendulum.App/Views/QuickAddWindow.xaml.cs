@@ -140,6 +140,8 @@ public partial class QuickAddWindow : FluentWindow
             SoundFileName = AppServices.Instance.Settings.DefaultSoundFileName,
             Mode = AlertMode.SoundOnly
         };
+        // A span from now ("in 20 min") keeps its real instant, so it's right across a clock change.
+        trigger.SetDue(result.When.Value, result.DueUtc);
 
         AppServices.Instance.AddTrigger(trigger);
         DialogResult = true;
