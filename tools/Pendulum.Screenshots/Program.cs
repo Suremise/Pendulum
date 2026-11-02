@@ -37,19 +37,18 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // --views <folder>: every view, light and dark side by side (Views.cs). --mockups <folder>:
-        // the redesign's mock-ups (Mockups.cs). Otherwise the README's pictures. For the first two,
-        // each theme is drawn in a process of its own (--views-theme or --mockups-theme, then
-        // light or dark, then the folder): some of WPF-UI's styles keep the colours of the theme
-        // they first loaded in.
+        // --views <folder>: every view, light and dark side by side (Views.cs). Otherwise the
+        // README's pictures. For --views, each theme is drawn in a process of its own
+        // (--views-theme, then light or dark, then the folder): some of WPF-UI's styles keep the
+        // colours of the theme they first loaded in.
         var mode = "readme"; // not user-visible: the modes are the switches' own words
         bool? theme = null;
-        if (args.Length > 0 && args[0] is "--views" or "--mockups") // not user-visible
+        if (args.Length > 0 && args[0] is "--views") // not user-visible
         {
             mode = args[0][2..];
             args = args[1..];
         }
-        else if (args.Length > 1 && args[0] is "--views-theme" or "--mockups-theme") // not user-visible
+        else if (args.Length > 1 && args[0] is "--views-theme") // not user-visible
         {
             mode = args[0][2..^6];
             theme = args[1] == "dark"; // not user-visible
@@ -92,13 +91,6 @@ public static class Program
                 else
                     Views.Render(output);
             }
-            else if (mode == "mockups") // not user-visible
-            {
-                if (theme is { } dark)
-                    Mockups.RenderTheme(dark, output);
-                else
-                    Mockups.Render(output);
-            }
             else
             {
                 RenderMainWindow(output);
@@ -119,7 +111,7 @@ public static class Program
             if (foregroundAfter != foregroundBefore)
                 Console.Error.WriteLine($"Note: the foreground moved from {ProcessName(foregroundBefore)} to {ProcessName(foregroundAfter)} while rendering (not this tool)."); // not user-visible
 
-            Console.WriteLine($"{(mode == "readme" ? "Screenshots" : mode == "views" ? "Views" : "Mock-ups")} written to {output}"); // not user-visible
+            Console.WriteLine($"{(mode == "readme" ? "Screenshots" : "Views")} written to {output}"); // not user-visible
             return 0;
         }
         catch (Exception e)

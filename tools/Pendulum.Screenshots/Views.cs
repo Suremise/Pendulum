@@ -1,14 +1,21 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using Pendulum.App;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
+using Wpf.Ui.Controls;
 using static Pendulum.Screenshots.Program;
+using Image = System.Windows.Controls.Image;
+using TextBlock = System.Windows.Controls.TextBlock;
 using ThemeMode = Pendulum.Core.Models.ThemeMode;
 
 namespace Pendulum.Screenshots;
@@ -18,6 +25,9 @@ namespace Pendulum.Screenshots;
 /// the README's pictures, with the same invented reminders; nothing is shown or saved.
 internal static class Views
 {
+    /// Which theme the pictures being drawn are in (the frame round a window follows it).
+    private static bool _dark;
+
     private static readonly (string File, string Title, Func<FrameworkElement> Build)[] Shots =
     [
         ("01-reminders.png", "Reminders", () => MainWindowShot(tab: 0)),
@@ -51,7 +61,7 @@ internal static class Views
             }
 
             foreach (var shot in Shots)
-                Save(Mockups.SideBySide(shot.Title, Mockups.Load(Path.Combine(parts, "light", shot.File)), Mockups.Load(Path.Combine(parts, "dark", shot.File))),
+                Save(SideBySide(shot.Title, Load(Path.Combine(parts, "light", shot.File)), Load(Path.Combine(parts, "dark", shot.File))),
                     Path.Combine(output, shot.File));
         }
         finally
@@ -66,7 +76,7 @@ internal static class Views
     public static void RenderTheme(bool dark, string output)
     {
         Directory.CreateDirectory(output);
-        Mockups.Dark = dark;
+        _dark = dark;
 
         // A busy day, so the calendar shows "+N more".
         var busy = DateTime.Today.AddDays(3);
@@ -92,7 +102,7 @@ internal static class Views
     {
         var window = new MainWindow();
         var host = Detach(window, width, height);
-        Mockups.Inherit(host);
+        Inherit(host);
         window.MainTabControl.SelectedIndex = tab;
         Layout(host);
         // What the window does when it first shows: the list sizes its columns, the calendar
@@ -102,7 +112,7 @@ internal static class Views
         foreach (var calendar in Descendants(host).OfType<CalendarPanel>())
             (calendar.DataContext as CalendarViewModel)?.RefreshForDisplay();
         Layout(host);
-        return Mockups.Framed(host);
+        return Framed(host);
     }
 
     private static FrameworkElement Settings() => Window(new SettingsWindow());
@@ -158,8 +168,120 @@ internal static class Views
     private static FrameworkElement Window(Window window, double? height = null)
     {
         var host = Detach(window, window.Width, height ?? window.Height);
-        Mockups.Inherit(host);
+        Inherit(host);
         Layout(host);
-        return Mockups.Framed(host);
+        return Framed(host);
+    }
+
+    // --- Framing and sheets ------------------------------------------------------------------------
+
+    private static BitmapSource Load(string path)
+    {
+        using var file = File.OpenRead(path);
+        var frame = BitmapFrame.Create(file, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+        frame.Freeze();
+        return frame;
+    }
+
+    /// The text colour a window gives what's in it (its theme's), which content moved out of the
+    /// window would otherwise lose: the menu's words and the title bar's buttons inherit it.
+    private static void Inherit(FrameworkElement host)
+    {
+        host.SetResourceReference(TextElement.ForegroundProperty, "TextFillColorPrimaryBrush"); // not user-visible
+        foreach (var bar in Descendants(host).OfType<TitleBar>().Concat(LogicalTitleBars(host)))
+            bar.SetResourceReference(TitleBar.ButtonsForegroundProperty, "TextFillColorPrimaryBrush"); // not user-visible
+    }
+
+    private static IEnumerable<TitleBar> LogicalTitleBars(DependencyObject root) =>
+        LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>()
+            .SelectMany(c => (c is TitleBar t ? [t] : Enumerable.Empty<TitleBar>()).Concat(LogicalTitleBars(c)));
+
+    /// A window as it sits on the desktop: rounded corners, a hairline edge and a soft shadow.
+    private static FrameworkElement Framed(Border host)
+    {
+        // The title bar's buttons take their glyphs' colour as they load, before the content is
+        // in a theme: given the theme's text colour here.
+        foreach (var button in Descendants(host).OfType<TitleBarButton>())
+            button.SetValue(TitleBarButton.RenderButtonsForegroundProperty, Application.Current.Resources["TextFillColorPrimaryBrush"]); // not user-visible
+        Layout(host);
+        var (width, height) = (host.ActualWidth, host.ActualHeight);
+        host.Clip = new RectangleGeometry(new Rect(0, 0, width, height), 8, 8);
+        var shadow = new Border
+        {
+            Width = width,
+            Height = height,
+            CornerRadius = new CornerRadius(8),
+            Background = (Brush)Application.Current.Resources["ApplicationBackgroundBrush"], // not user-visible
+            Effect = new DropShadowEffect { BlurRadius = 28, ShadowDepth = 6, Direction = 270, Opacity = _dark ? 0.6 : 0.25 },
+        };
+        var edge = new Border
+        {
+            Width = width,
+            Height = height,
+            CornerRadius = new CornerRadius(8),
+            BorderThickness = new Thickness(1),
+            BorderBrush = Frozen(_dark ? "#FF454545" : "#33000000"), // not user-visible: the tool's own frame
+        };
+        var stack = new Grid { Margin = new Thickness(28, 20, 28, 36) };
+        stack.Children.Add(shadow);
+        stack.Children.Add(host);
+        stack.Children.Add(edge);
+        var frame = new Border { Child = stack, Background = Brushes.Transparent, UseLayoutRounding = true, Width = width + 56 };
+        TextOptions.SetTextFormattingMode(frame, TextFormattingMode.Ideal);
+        Layout(frame);
+        return frame;
+    }
+
+    /// The light and dark renderings side by side, each on a desktop of its theme, under a title.
+    private static BitmapSource SideBySide(string title, BitmapSource light, BitmapSource dark)
+    {
+        var grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var caption = new TextBlock
+        {
+            Text = title,
+            FontSize = 15,
+            FontWeight = FontWeights.SemiBold,
+            Foreground = Brushes.Black,
+            Margin = new Thickness(28, 16, 28, 4),
+            TextWrapping = TextWrapping.Wrap,
+        };
+        var head = new Border { Background = Frozen("#F3F3F3"), Child = caption }; // not user-visible: the tool's own sheet
+        Grid.SetColumnSpan(head, 2);
+        grid.Children.Add(head);
+        foreach (var (bitmap, col, back, label) in new[] { (light, 0, "#E4E6EA", "Light"), (dark, 1, "#141417", "Dark") }) // not user-visible
+        {
+            var side = new StackPanel { Background = Frozen(back) };
+            side.Children.Add(new TextBlock
+            {
+                Text = label,
+                FontSize = 12,
+                FontWeight = FontWeights.SemiBold,
+                Margin = new Thickness(28, 12, 0, 0),
+                Foreground = col == 0 ? Brushes.Black : Brushes.White,
+            });
+            side.Children.Add(new Image { Source = bitmap, Stretch = Stretch.None, Margin = new Thickness(0, 4, 0, 0) });
+            if (bitmap.PixelWidth < 900)
+                ((Image)side.Children[1]).Margin = new Thickness(28, 12, 28, 28);
+            Grid.SetRow(side, 1);
+            Grid.SetColumn(side, col);
+            grid.Children.Add(side);
+        }
+        var page = new Border { Child = grid, UseLayoutRounding = true };
+        TextOptions.SetTextFormattingMode(page, TextFormattingMode.Ideal);
+        page.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        page.Width = page.DesiredSize.Width;
+        Layout(page);
+        return Draw(page);
+    }
+
+    private static SolidColorBrush Frozen(string hex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)!);
+        brush.Freeze();
+        return brush;
     }
 }
