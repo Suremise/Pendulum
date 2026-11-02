@@ -249,7 +249,7 @@
 
         <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="8">
             <Grid>
-                <ListView ItemsSource="{Binding Source={StaticResource SortedTriggers}}" SelectedItem="{Binding SelectedTrigger}"
+                <ListView x:Name="RemindersList" ItemsSource="{Binding Source={StaticResource SortedTriggers}}" SelectedItem="{Binding SelectedTrigger}"
                           VerticalAlignment="Top"
                           BorderThickness="0" Background="Transparent"
                           Visibility="{Binding HasTriggers, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
@@ -268,7 +268,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="235">
+                            <GridViewColumn Width="215">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Name" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel>
@@ -338,7 +338,9 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="177">
+                            <!-- Widened in code, when needed, to the widest date and time the current
+                                 format can show (FitDateColumn): it never cuts off AM/PM. -->
+                            <GridViewColumn x:Name="DateColumn" Width="177">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="TriggerAt" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
@@ -381,7 +383,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="150">
+                            <GridViewColumn Width="135">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Mode" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>

@@ -232,6 +232,46 @@ public sealed class ReminderFilterPanelTests : IDisposable
         });
     }
 
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("en-GB")]
+    public void The_date_column_is_never_narrower_than_its_widest_date_and_time(string culture)
+    {
+        var settings = new AppSettings { Use24HourTime = false };
+
+        UiThread.Invoke(() =>
+        {
+            var before = System.Globalization.CultureInfo.CurrentCulture;
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo(culture);
+            try
+            {
+                var panel = Build(settings);
+                panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));   // as when the tab first shows
+                var list = (ListView)panel.FindName("RemindersList");
+                var column = (GridViewColumn)panel.FindName("DateColumn");
+                const double cellPaddingAndMargin = 6 + 6 + 5;
+
+                // 12-hour: the widest date and time, AM/PM and all, fits.
+                var widest = TriggersPanel.WidestDateText(list, use24Hour: false);
+                Assert.True(column.Width >= widest + cellPaddingAndMargin,
+                    $"the column is {column.Width} wide for a {widest}-wide date");
+
+                // Dragged narrower: the width comes back to what the dates need.
+                column.Width = 90;
+                Assert.Equal(panel.DateColumnMinWidth, column.Width);
+                Assert.True(column.Width >= widest + cellPaddingAndMargin);
+
+                // 24-hour: measured again for that format, and still fits.
+                settings.Use24HourTime = true;
+                Assert.True(column.Width >= TriggersPanel.WidestDateText(list, use24Hour: true) + cellPaddingAndMargin);
+            }
+            finally
+            {
+                System.Globalization.CultureInfo.CurrentCulture = before;
+            }
+        });
+    }
+
     private static TriggersPanel Build(AppSettings settings)
     {
         AppServices.Instance.UseSettingsForTests(settings);

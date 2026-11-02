@@ -32,6 +32,9 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   under Monthly or Yearly.
 
 ### Fixed
+- The Reminders list's date column no longer cuts off AM/PM: it's as wide as the
+  longest date and time it can show, in your format, and dragging it narrower stops
+  there.
 - The Reminders list's Select mode shows each checkbox whole: they were cut off
   at the list's left edge. Screen readers now name each one for its reminder.
 - Choosing a value in a column's filter in the Reminders list no longer re-sorts the

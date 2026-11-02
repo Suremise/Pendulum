@@ -1,7 +1,10 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
+using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
 using Pendulum.Core.Models;
 
@@ -30,7 +33,67 @@ public partial class TriggersPanel : UserControl
             EnableLiveSorting();
             SetupFiltering();
             ApplySort();
+            FitDateColumn();
+            DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn))
+                .AddValueChanged(DateColumn, (_, _) => KeepDateColumnWide());
+            AppServices.Instance.Settings.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(AppSettings.Use24HourTime))
+                    FitDateColumn();
+            };
         };
+    }
+
+    // ---- The date column: never narrower than its widest date and time ----
+
+    /// The width the XAML gives the date column, kept when the dates fit in it.
+    private const double DateColumnDefaultWidth = 177;
+
+    /// A cell's padding (6 each side), the date's own left margin (5) and room after it (8).
+    private const double DateCellChrome = 6 + 6 + 5 + 8;
+
+    private double _dateColumnAutoWidth = DateColumnDefaultWidth;
+
+    /// The narrowest the date column may be: its widest date and time in the current format.
+    internal double DateColumnMinWidth { get; private set; }
+
+    /// Sizes the date column for the widest date and time the current format can show (the
+    /// culture's day and month names, 12- or 24-hour), and widens it if the dates don't fit. A
+    /// width the user dragged wider is kept.
+    internal void FitDateColumn()
+    {
+        DateColumnMinWidth = Math.Ceiling(WidestDateText(RemindersList, AppServices.Instance.Settings.Use24HourTime) + DateCellChrome);
+        var auto = Math.Max(DateColumnDefaultWidth, DateColumnMinWidth);
+        var dragged = Math.Abs(DateColumn.Width - _dateColumnAutoWidth) > 0.5;
+        _dateColumnAutoWidth = auto;
+        DateColumn.Width = dragged ? Math.Max(DateColumn.Width, DateColumnMinWidth) : auto;
+    }
+
+    // A GridViewColumn has no MinWidth: a drag narrower than the dates is undone.
+    private void KeepDateColumnWide()
+    {
+        if (DateColumn.Width < DateColumnMinWidth)
+            DateColumn.Width = DateColumnMinWidth;
+    }
+
+    /// The widest date and time the list can show, in the list's own font: every day of a year
+    /// (so every day name with every month name, and two-digit days), at a two-digit hour in the
+    /// morning and the evening (AM and PM).
+    internal static double WidestDateText(Control list, bool use24Hour)
+    {
+        var typeface = new Typeface(list.FontFamily, list.FontStyle, list.FontWeight, list.FontStretch);
+        var pixelsPerDip = VisualTreeHelper.GetDpi(list).PixelsPerDip;
+        var widest = 0.0;
+        for (var day = new DateTime(2026, 1, 1); day.Year == 2026; day = day.AddDays(1))
+        {
+            foreach (var hour in new[] { 10, 22 })
+            {
+                var text = DisplayFormat.DateAndTime(day.AddHours(hour).AddMinutes(58), use24Hour);
+                var formatted = new FormattedText(text, CultureInfo.CurrentCulture, list.FlowDirection, typeface, list.FontSize, Brushes.Black, pixelsPerDip);
+                widest = Math.Max(widest, formatted.WidthIncludingTrailingWhitespace);
+            }
+        }
+        return widest;
     }
 
     private void EnableLiveSorting()
