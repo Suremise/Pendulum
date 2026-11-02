@@ -37,7 +37,21 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        var output = Path.GetFullPath(args.Length > 0 ? args[0] : Path.Combine(RepoRoot(), "docs", "screenshots"));
+        // --mockups <folder>: the redesign's mock-ups (Mockups.cs) instead of the README's pictures.
+        // Each theme is drawn in a process of its own (--mockups-theme light|dark <folder>): some
+        // of WPF-UI's styles keep the colours of the theme they first loaded in.
+        var mockups = args.Length > 0 && args[0] == "--mockups"; // not user-visible: a command-line switch
+        bool? mockupTheme = args.Length > 1 && args[0] == "--mockups-theme" ? args[1] == "dark" : null; // not user-visible
+        if (mockups)
+            args = args[1..];
+        else if (mockupTheme is not null)
+        {
+            mockups = true;
+            args = args[2..];
+        }
+        var output = Path.GetFullPath(args.Length > 0 ? args[0]
+            : mockups ? Path.Combine(Path.GetTempPath(), "pendulum-mockups") // not user-visible
+            : Path.Combine(RepoRoot(), "docs", "screenshots"));
         Directory.CreateDirectory(output);
 
         var temp = Path.Combine(Path.GetTempPath(), "pendulum-screenshots-" + Guid.NewGuid().ToString("N"));
@@ -56,14 +70,25 @@ public static class Program
             foreach (var sound in new[] { "alert.wav", "bell.wav", "chime.wav" })
                 File.WriteAllBytes(Path.Combine(AppPaths.SoundsDirectory, sound), []);
 
-            StartApplication();
+            StartApplication(mockupTheme == false ? ThemeMode.Light : ThemeMode.Dark);
             AppServices.Instance.UseSettingsForTests(InventedSettings());
             foreach (var reminder in InventedReminders(DateTime.Now))
                 AppServices.Instance.Triggers.Add(reminder);
 
-            RenderMainWindow(output);
-            RenderQuickReminder(output);
-            RenderAlert(output);
+            if (mockupTheme is { } dark)
+            {
+                Mockups.RenderTheme(dark, output);
+            }
+            else if (mockups)
+            {
+                Mockups.Render(output);
+            }
+            else
+            {
+                RenderMainWindow(output);
+                RenderQuickReminder(output);
+                RenderAlert(output);
+            }
 
             // Proof that nothing reached the screen: no window of ours ever got a handle, and the
             // foreground was never ours. (It may still change while this runs: the user is
@@ -77,7 +102,7 @@ public static class Program
             if (foregroundAfter != foregroundBefore)
                 Console.Error.WriteLine($"Note: the foreground moved from {ProcessName(foregroundBefore)} to {ProcessName(foregroundAfter)} while rendering (not this tool)."); // not user-visible
 
-            Console.WriteLine($"Screenshots written to {output}"); // not user-visible
+            Console.WriteLine($"{(mockups ? "Mock-ups" : "Screenshots")} written to {output}"); // not user-visible
             return 0;
         }
         catch (Exception e)
@@ -96,16 +121,19 @@ public static class Program
 
     // --- The application, as App.xaml and the dark theme set it up -----------------------------
 
-    private static void StartApplication()
+    private static void StartApplication(ThemeMode theme)
     {
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        app.Resources.MergedDictionaries.Add(new ThemesDictionary { Theme = Wpf.Ui.Appearance.ApplicationTheme.Dark });
+        app.Resources.MergedDictionaries.Add(new ThemesDictionary
+        {
+            Theme = theme == ThemeMode.Light ? Wpf.Ui.Appearance.ApplicationTheme.Light : Wpf.Ui.Appearance.ApplicationTheme.Dark,
+        });
         app.Resources.MergedDictionaries.Add(new ControlsDictionary());
         var linkStyle = new Style(typeof(Hyperlink));
         linkStyle.Setters.Add(new Setter(TextElement.ForegroundProperty, new DynamicResourceExtension(AppThemeManager.LinkBrushKey)));
         app.Resources.Add(typeof(Hyperlink), linkStyle);
 
-        AppThemeManager.Apply(ThemeMode.Dark);
+        AppThemeManager.Apply(theme);
     }
 
     // --- Invented data -------------------------------------------------------------------------
@@ -207,7 +235,7 @@ public static class Program
     // --- Laying out and drawing off screen -----------------------------------------------------
 
     /// Moves a window's content into a border of the window's size and background, never shown.
-    private static Border Detach(Window window, double width, double height, Brush? background = null, Thickness margin = default)
+    internal static Border Detach(Window window, double width, double height, Brush? background = null, Thickness margin = default)
     {
         var content = (UIElement)window.Content;
         window.Content = null;
@@ -232,7 +260,7 @@ public static class Program
         return host;
     }
 
-    private static void Layout(FrameworkElement element)
+    internal static void Layout(FrameworkElement element)
     {
         for (var pass = 0; pass < 3; pass++)
         {
@@ -246,13 +274,21 @@ public static class Program
         }
     }
 
-    private static void Save(FrameworkElement element, string path)
+    internal static void Save(FrameworkElement element, string path) => Save(Draw(element), path);
+
+    internal static BitmapSource Draw(FrameworkElement element)
     {
         var width = (int)Math.Ceiling(element.ActualWidth);
         var height = (int)Math.Ceiling(element.ActualHeight);
         var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
         bitmap.Render(element);
+        bitmap.Freeze();
+        return bitmap;
+    }
 
+    internal static void Save(BitmapSource bitmap, string path)
+    {
+        var (width, height) = (bitmap.PixelWidth, bitmap.PixelHeight);
         var encoder = new PngBitmapEncoder();
         encoder.Frames.Add(BitmapFrame.Create(bitmap));
         using var file = File.Create(path);
@@ -260,7 +296,7 @@ public static class Program
         Console.WriteLine($"  {Path.GetFileName(path)}  {width}x{height}"); // not user-visible
     }
 
-    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    internal static IEnumerable<DependencyObject> Descendants(DependencyObject root)
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
         {
