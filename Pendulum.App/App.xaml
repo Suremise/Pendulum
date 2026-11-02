@@ -21,6 +21,11 @@
             <SolidColorBrush x:Key="PendulumChipBrush" Color="#47F56A8F"/>
             <SolidColorBrush x:Key="PendulumChipStrokeBrush" Color="#73F56A8F"/>
             <SolidColorBrush x:Key="PendulumPopupBrush" Color="#2D2D2D"/>
+            <SolidColorBrush x:Key="PendulumBadgeFixedBrush" Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="PendulumBadgeDisabledBrush" Color="#33FFFFFF"/>
+            <SolidColorBrush x:Key="PendulumBadgeSoundOnlyBrush" Color="#597A8CA6"/>
+            <SolidColorBrush x:Key="PendulumBadgeSoundAndSpeechBrush" Color="#59C08A6E"/>
+            <SolidColorBrush x:Key="PendulumBadgeSpeechOnlyBrush" Color="#59A08A96"/>
             <SolidColorBrush x:Key="PendulumLinkBrush" Color="#FF8FB0"/>
             <Style TargetType="Hyperlink">
                 <Setter Property="Foreground" Value="{DynamicResource PendulumLinkBrush}"/>

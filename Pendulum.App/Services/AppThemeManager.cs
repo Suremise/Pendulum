@@ -32,6 +32,15 @@ internal static class AppThemeManager
     /// list): the panel's background, solid, so what's behind doesn't show through.
     public const string PopupBrushKey = "PendulumPopupBrush";  // not user-visible
 
+    /// The Reminders list's badges that aren't rose: Fixed and Disabled in neutral greys, the
+    /// alert types in muted tints (cool, warm and mauve) that sit with the rose. Upcoming takes
+    /// the chip brushes above and Scheduled a rose outline; Spent stays the theme's own grey.
+    public const string BadgeFixedBrushKey = "PendulumBadgeFixedBrush";  // not user-visible
+    public const string BadgeDisabledBrushKey = "PendulumBadgeDisabledBrush";  // not user-visible
+    public const string BadgeSoundOnlyBrushKey = "PendulumBadgeSoundOnlyBrush";  // not user-visible
+    public const string BadgeSoundAndSpeechBrushKey = "PendulumBadgeSoundAndSpeechBrush";  // not user-visible
+    public const string BadgeSpeechOnlyBrushKey = "PendulumBadgeSpeechOnlyBrush";  // not user-visible
+
     /// The accent for one theme. WPF-UI 3 uses `Fill` for primary buttons, toggles and checked
     /// boxes, `Hover` for a primary button under the pointer and its other accent fills, and
     /// `Text` for accent-coloured text; `System` is the selection highlight. On light, labels on
@@ -58,6 +67,16 @@ internal static class AppThemeManager
     // The calendar's background (ControlFillColorDefault over the window), made opaque.
     private const string PopupOnLight = "#FBFBFB";
     private const string PopupOnDark = "#2D2D2D";
+
+    /// The Reminders list's other badges, each a colour with its alpha (#AARRGGBB). The theme's
+    /// primary text on each, at the worst of the panel's backgrounds (light #EEEEEE to #FFFFFF,
+    /// dark #202020 to #3A3A3A), WCAG 2: light 10.7:1 or more, dark 6.2:1 or more.
+    private sealed record Badges(string Fixed, string Disabled, string SoundOnly, string SoundAndSpeech, string SpeechOnly);
+
+    private static readonly Badges BadgesOnLight = new(
+        Fixed: "#0F000000", Disabled: "#24000000", SoundOnly: "#385A6E8C", SoundAndSpeech: "#38B0704E", SpeechOnly: "#388A7080");
+    private static readonly Badges BadgesOnDark = new(
+        Fixed: "#1AFFFFFF", Disabled: "#33FFFFFF", SoundOnly: "#597A8CA6", SoundAndSpeech: "#59C08A6E", SpeechOnly: "#59A08A96");
 
     public static void Apply(ThemeMode mode)
     {
@@ -87,6 +106,13 @@ internal static class AppThemeManager
         SetBrush(ChipBrushKey, WithAlpha(accent.Fill, ChipAlpha));
         SetBrush(ChipStrokeBrushKey, WithAlpha(accent.Fill, ChipStrokeAlpha));
         SetBrush(PopupBrushKey, Parse(theme == ApplicationTheme.Dark ? PopupOnDark : PopupOnLight));
+
+        var badges = theme == ApplicationTheme.Dark ? BadgesOnDark : BadgesOnLight;
+        SetBrush(BadgeFixedBrushKey, Parse(badges.Fixed));
+        SetBrush(BadgeDisabledBrushKey, Parse(badges.Disabled));
+        SetBrush(BadgeSoundOnlyBrushKey, Parse(badges.SoundOnly));
+        SetBrush(BadgeSoundAndSpeechBrushKey, Parse(badges.SoundAndSpeech));
+        SetBrush(BadgeSpeechOnlyBrushKey, Parse(badges.SpeechOnly));
     }
 
     private static Color WithAlpha(string hex, byte alpha)

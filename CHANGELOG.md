@@ -127,6 +127,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- The Reminders list's badges fit the app's rose colour: Upcoming is rose and
+  Scheduled a rose outline, Fixed and Disabled are greys, and the alert types
+  muted tints. The "Filters" button turns rose while filters are on, and the
+  column filters' lists follow the theme, readable in the light theme too.
 - The calendar's reminder chips and "+N more" are now rose, to match the app's
   colour, in light and dark, instead of green and purple. The "+N more" list
   follows the theme too, rather than staying dark in the light theme.

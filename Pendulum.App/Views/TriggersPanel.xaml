@@ -20,20 +20,10 @@
         <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
         <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
         <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
-        <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
-        <SolidColorBrush x:Key="FixedBadgeBrush" Color="#333B82F6"/>
-        <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
-        <SolidColorBrush x:Key="DisabledBadgeBrush" Color="#33F59E0B"/>
-        <SolidColorBrush x:Key="FilterActiveBrush" Color="#4048A0FA"/>
-        <SolidColorBrush x:Key="SoundOnlyBadgeBrush" Color="#332AA198"/>
-        <SolidColorBrush x:Key="SoundSpeechBadgeBrush" Color="#33F0A020"/>
-        <SolidColorBrush x:Key="SpeechOnlyBadgeBrush" Color="#33E0529A"/>
         <SolidColorBrush x:Key="SpentTextBrush" Color="#D9534F"/>
-        <!-- ControlFillColorDefaultBrush (the panel's own background) is intentionally
-             slightly translucent, which lets row content bleed through when it's reused
-             inside an AllowsTransparency popup. This is that same colour forced fully
-             opaque so the filter dropdowns render solid. -->
-        <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
+        <!-- The badges' colours fit the rose theme (AppThemeManager sets each per theme): Upcoming
+             the calendar's rose chip, Scheduled a rose outline, Fixed and Disabled neutral greys,
+             the alert types muted tints. Each is told apart by its words. -->
         <Style x:Key="NameText" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
             <Style.Triggers>
@@ -64,13 +54,13 @@
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Mode}" Value="SoundOnly">
-                    <Setter Property="Background" Value="{StaticResource SoundOnlyBadgeBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundOnlyBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Mode}" Value="SoundAndSpeech">
-                    <Setter Property="Background" Value="{StaticResource SoundSpeechBadgeBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundAndSpeechBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Mode}" Value="SpeechOnly">
-                    <Setter Property="Background" Value="{StaticResource SpeechOnlyBadgeBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSpeechOnlyBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -123,7 +113,7 @@
             </Setter>
         </Style>
         <Style x:Key="ColumnFilterPopupBorder" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource ColumnFilterPopupOpaqueBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PendulumPopupBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
@@ -202,7 +192,7 @@
             <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding HasActiveFilters}" Value="True">
-                    <Setter Property="Background" Value="{StaticResource FilterActiveBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -294,12 +284,12 @@
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.TypeFixed}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource FixedBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeFixedBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.TypeScheduled}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource ScheduledBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource PendulumAccentBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
@@ -312,12 +302,12 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource FixedBadgeBrush}"
+                                            <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeFixedBrush}"
                                                     Visibility="{Binding Recurrence, Converter={StaticResource FixedVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource ScheduledBadgeBrush}"
+                                            <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource PendulumAccentBrush}"
                                                     Visibility="{Binding Recurrence, Converter={StaticResource ScheduledVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
@@ -385,17 +375,17 @@
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.ModeSoundOnly}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundOnlyBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeSoundOnlyBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SoundOnly}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.ModeSoundAndSpeech}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SoundSpeechBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeSoundAndSpeechBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SoundSpeech}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.ModeSpeechOnly}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource SpeechOnlyBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeSpeechOnlyBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_SpeechOnly}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
@@ -446,7 +436,7 @@
                                             <Border Style="{StaticResource ColumnFilterPopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.StatusUpcoming}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumChipBrush}" BorderBrush="{DynamicResource PendulumChipStrokeBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Upcoming}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
@@ -456,7 +446,7 @@
                                                         </Border>
                                                     </CheckBox>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.StatusDisabled}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="{StaticResource DisabledBadgeBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeDisabledBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Disabled}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
@@ -474,7 +464,7 @@
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Spent}" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource UpcomingBadgeBrush}">
+                                            <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumChipBrush}" BorderBrush="{DynamicResource PendulumChipStrokeBrush}">
                                                 <Border.Visibility>
                                                     <MultiBinding Converter="{StaticResource ReminderStatusVis}">
                                                         <Binding Path="Enabled"/>
@@ -484,7 +474,7 @@
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Upcoming}" Style="{StaticResource TagBadgeText}"
                                                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="{StaticResource DisabledBadgeBrush}">
+                                            <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeDisabledBrush}">
                                                 <Border.Visibility>
                                                     <MultiBinding Converter="{StaticResource ReminderStatusVis}" ConverterParameter="Disabled">
                                                         <Binding Path="Enabled"/>
