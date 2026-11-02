@@ -123,6 +123,9 @@ and this project follows [Semantic Versioning](https://semver.org/).
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- The calendar's reminder chips and "+N more" are now rose, to match the app's
+  colour, in light and dark, instead of green and purple. The "+N more" list
+  follows the theme too, rather than staying dark in the light theme.
 - With several alerts open, only the newest makes a sound; the others stay on
   screen, marked as waiting. Dismiss or snooze it and the next newest rings,
   saying its phrase once. A "Dismiss all" button appears when more than one

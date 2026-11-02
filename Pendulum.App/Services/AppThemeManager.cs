@@ -21,6 +21,17 @@ internal static class AppThemeManager
     public const string AccentBrushKey = "PendulumAccentBrush";  // not user-visible
     public const string AccentSoftBrushKey = "PendulumAccentSoftBrush";  // not user-visible
 
+    /// Accent-coloured text (the calendar's "+N more").
+    public const string AccentTextBrushKey = "PendulumAccentTextBrush";  // not user-visible
+
+    /// The calendar's reminder chips: a rose tint of the accent and a stronger rose edge.
+    public const string ChipBrushKey = "PendulumChipBrush";  // not user-visible
+    public const string ChipStrokeBrushKey = "PendulumChipStrokeBrush";  // not user-visible
+
+    /// An opaque surface for popups that hold the panel's own content (the calendar's "+N more"
+    /// list): the panel's background, solid, so what's behind doesn't show through.
+    public const string PopupBrushKey = "PendulumPopupBrush";  // not user-visible
+
     /// The accent for one theme. WPF-UI 3 uses `Fill` for primary buttons, toggles and checked
     /// boxes, `Hover` for a primary button under the pointer and its other accent fills, and
     /// `Text` for accent-coloured text; `System` is the selection highlight. On light, labels on
@@ -35,6 +46,18 @@ internal static class AppThemeManager
     //        Text and Link 6.0:1 or more.
     private static readonly Accent OnLight = new(System: "#D23A66", Fill: "#C7305E", Hover: "#A3234B", Text: "#A3234B", Link: "#A3234B");
     private static readonly Accent OnDark = new(System: "#F0567F", Fill: "#F56A8F", Hover: "#FF8FB0", Text: "#FF8FB0", Link: "#FF8FB0");
+
+    // The calendar's chips: the accent's fill at 28% (its edge at 45%) over the calendar's
+    // background. Measured in the rendered calendar, WCAG 2: the theme's primary text on a chip,
+    // light 11.1:1 and dark 7.9:1; "+N more" in the accent's text colour on the calendar, light
+    // 7.2:1 and dark 5.4:1. Open, "+N more" takes the chip's tint and the chip's text (rose text
+    // on the tint would be 3.7:1 in dark).
+    private const byte ChipAlpha = 0x47;
+    private const byte ChipStrokeAlpha = 0x73;
+
+    // The calendar's background (ControlFillColorDefault over the window), made opaque.
+    private const string PopupOnLight = "#FBFBFB";
+    private const string PopupOnDark = "#2D2D2D";
 
     public static void Apply(ThemeMode mode)
     {
@@ -59,9 +82,18 @@ internal static class AppThemeManager
 
         SetBrush(LinkBrushKey, Parse(accent.Link));
         SetBrush(AccentBrushKey, Parse(accent.Fill));
-        var soft = Parse(accent.Fill);
-        soft.A = 0x29;
-        SetBrush(AccentSoftBrushKey, soft);
+        SetBrush(AccentSoftBrushKey, WithAlpha(accent.Fill, 0x29));
+        SetBrush(AccentTextBrushKey, Parse(accent.Text));
+        SetBrush(ChipBrushKey, WithAlpha(accent.Fill, ChipAlpha));
+        SetBrush(ChipStrokeBrushKey, WithAlpha(accent.Fill, ChipStrokeAlpha));
+        SetBrush(PopupBrushKey, Parse(theme == ApplicationTheme.Dark ? PopupOnDark : PopupOnLight));
+    }
+
+    private static Color WithAlpha(string hex, byte alpha)
+    {
+        var color = Parse(hex);
+        color.A = alpha;
+        return color;
     }
 
     // WPF-UI's order: the system accent, then primary (fills), secondary (hover and the other

@@ -14,9 +14,13 @@
             <!-- Pendulum's own accent brushes: AppThemeManager sets each per theme. These are the
                  dark theme's, until it runs. The accent marks the selected tab and the panel's
                  frame, today in the calendar and the sort arrows; links take their own shade, readable
-                 on light and dark alike. -->
+                 on light and dark alike. The calendar's chips are tints of it. -->
             <SolidColorBrush x:Key="PendulumAccentBrush" Color="#F56A8F"/>
             <SolidColorBrush x:Key="PendulumAccentSoftBrush" Color="#29F56A8F"/>
+            <SolidColorBrush x:Key="PendulumAccentTextBrush" Color="#FF8FB0"/>
+            <SolidColorBrush x:Key="PendulumChipBrush" Color="#47F56A8F"/>
+            <SolidColorBrush x:Key="PendulumChipStrokeBrush" Color="#73F56A8F"/>
+            <SolidColorBrush x:Key="PendulumPopupBrush" Color="#2D2D2D"/>
             <SolidColorBrush x:Key="PendulumLinkBrush" Color="#FF8FB0"/>
             <Style TargetType="Hyperlink">
                 <Setter Property="Foreground" Value="{DynamicResource PendulumLinkBrush}"/>

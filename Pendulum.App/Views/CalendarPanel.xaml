@@ -11,20 +11,20 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
-        <SolidColorBrush x:Key="UpcomingBadgeBrush" Color="#3322C55E"/>
-        <SolidColorBrush x:Key="ScheduledBadgeBrush" Color="#337C6AE0"/>
-        <SolidColorBrush x:Key="ColumnFilterPopupOpaqueBrush" Color="#FF2D2D2D"/>
 
+        <!-- A reminder chip: a rose tint of the accent (AppThemeManager sets it per theme), or
+             neutral once it has fired. -->
         <Style x:Key="ReminderPillBadge" TargetType="Border">
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="5,0,5,1"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PendulumChipStrokeBrush}"/>
             <Setter Property="Margin" Value="0,0,0,2"/>
-            <Setter Property="Background" Value="{StaticResource UpcomingBadgeBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding HasFired}" Value="True">
                     <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -56,25 +56,36 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- "+N more": secondary to the chips, a rose outline with rose text; while its list is
+             open, filled with the chips' tint and the text the chips' own (rose text on the tint
+             would fall below 4.5:1 in the dark theme). -->
         <Style x:Key="OverflowChip" TargetType="ToggleButton">
             <Setter Property="Padding" Value="5,0,5,1"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Background" Value="{StaticResource ScheduledBadgeBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PendulumAccentBrush}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PendulumAccentTextBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
                             <ContentPresenter/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
         <Style x:Key="OverflowPopupBorder" TargetType="Border">
-            <Setter Property="Background" Value="{StaticResource ColumnFilterPopupOpaqueBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource PendulumPopupBrush}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
