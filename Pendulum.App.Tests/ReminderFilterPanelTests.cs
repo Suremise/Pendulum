@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Automation.Peers;
@@ -105,6 +106,63 @@ public sealed class ReminderFilterPanelTests : IDisposable
 
             Assert.True(settings.ReminderFilterRowVisible);
             Assert.Equal(Visibility.Visible, typeToggle.Visibility);
+        });
+    }
+
+    [Fact]
+    public void Using_a_column_filter_never_changes_the_sort_but_clicking_the_header_does()
+    {
+        var settings = new AppSettings { ReminderFilterRowVisible = true };
+
+        UiThread.Invoke(() =>
+        {
+            var panel = Build(settings);
+            // Sorting is set up when the panel loads, which a panel never shown doesn't: by hand.
+            panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            var view = ((CollectionViewSource)panel.FindResource("SortedTriggers")).View;
+            var arrow = (TextBlock)panel.FindName("TypeSortArrow");
+            var sortBefore = view.SortDescriptions.Single();
+            Assert.Equal(nameof(TriggerTimer.TriggerAt), sortBefore.PropertyName);
+            Assert.Equal(string.Empty, arrow.Text);
+
+            // The Type column's filter: its dropdown button and a box in its popup. A mouse click
+            // on either raises Click, which bubbles to the column header; it's raised here as the
+            // click would (the popup itself is never opened: it would be a window).
+            var dropdown = (ToggleButton)panel.FindName("TypeFilterToggle");
+            dropdown.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, dropdown));
+            var box = (CheckBox)FilterBindings(panel).Single(b => b.Path == "Filter.TypeScheduled").Target;
+            ((IToggleProvider)UIElementAutomationPeer.CreatePeerForElement(box).GetPattern(PatternInterface.Toggle)).Toggle();
+            box.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, box));
+            box.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent, box));  // and unticked
+
+            Assert.True(settings.ReminderFilterTypeScheduled);
+            Assert.Equal(sortBefore, view.SortDescriptions.Single());
+            Assert.Equal(string.Empty, arrow.Text);
+
+            // The header itself still sorts, clicked through UI Automation.
+            var header = Elements(panel).OfType<GridViewColumnHeader>().Single(h => (h.Tag as string) == nameof(TriggerTimer.IsScheduled));
+            ((IInvokeProvider)UIElementAutomationPeer.CreatePeerForElement(header).GetPattern(PatternInterface.Invoke)).Invoke();
+
+            Assert.Equal(new SortDescription(nameof(TriggerTimer.IsScheduled), ListSortDirection.Ascending), view.SortDescriptions.Single());
+            Assert.Equal("▲", arrow.Text);
+        });
+    }
+
+    [Fact]
+    public void Each_filter_dropdown_stays_reachable_and_named_for_keyboard_and_screen_readers()
+    {
+        var settings = new AppSettings { ReminderFilterRowVisible = true };
+
+        UiThread.Invoke(() =>
+        {
+            var panel = Build(settings);
+            foreach (var name in new[] { "TypeFilterToggle", "DateFilterToggle", "ModeFilterToggle", "StatusFilterToggle" })
+            {
+                var dropdown = (ToggleButton)panel.FindName(name);
+                Assert.True(dropdown.Focusable, name);
+                Assert.True(System.Windows.Input.KeyboardNavigation.GetIsTabStop(dropdown), name);
+                Assert.False(string.IsNullOrWhiteSpace(UIElementAutomationPeer.CreatePeerForElement(dropdown).GetName()), name);
+            }
         });
     }
 

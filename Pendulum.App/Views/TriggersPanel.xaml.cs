@@ -66,6 +66,12 @@ public partial class TriggersPanel : UserControl
         if (sender is not GridViewColumnHeader { Tag: string propertyName })
             return;
 
+        // Only the header's own click sorts. The filter in the header is made of buttons too (the
+        // dropdown's toggle, the checkboxes in its popup, whose events route through the popup to
+        // the header), and their Click bubbles up here: choosing a filter must not re-sort.
+        if (!ReferenceEquals(e.OriginalSource, sender))
+            return;
+
         _sortDirection = _sortProperty == propertyName && _sortDirection == ListSortDirection.Ascending
             ? ListSortDirection.Descending
             : ListSortDirection.Ascending;

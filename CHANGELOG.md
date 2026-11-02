@@ -18,6 +18,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
   under Monthly or Yearly.
 
 ### Fixed
+- Choosing a value in a column's filter in the Reminders list no longer re-sorts the
+  list by that column. Clicking the column's heading still sorts it.
 - Quick Reminder: "today" with a time that has already gone ("report today
   9am" typed at 10:00) now says the time has passed, instead of adding a
   reminder that goes off at once. "today" with no time means the next whole
