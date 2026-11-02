@@ -109,8 +109,7 @@ public sealed class UserFileShapeTests : IDisposable
     }
 
     [Theory]
-    [InlineData("v1.0.0")]
-    [InlineData("v1.1.0")]
+    [MemberData(nameof(ReleaseFixtures.All), MemberType = typeof(ReleaseFixtures))]
     public void Every_release_fixture_still_passes(string release)
     {
         var fixtures = Path.Combine(AppContext.BaseDirectory, "Fixtures", release);
@@ -119,8 +118,8 @@ public sealed class UserFileShapeTests : IDisposable
         File.Copy(Path.Combine(fixtures, "triggers.json"), triggers);
         File.Copy(Path.Combine(fixtures, "backup.json"), backup);
 
-        Assert.Equal(6, new TriggerRepository().LoadFrom(triggers).Count);
-        Assert.Equal(6, BackupRepository.Load(backup)!.Triggers.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), new TriggerRepository().LoadFrom(triggers).Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), BackupRepository.Load(backup)!.Triggers.Count);
     }
 
     private string Write(string name, string content)

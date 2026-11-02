@@ -97,8 +97,7 @@ public sealed class IncomingRemindersTests : IDisposable
     }
 
     [Theory]
-    [InlineData("v1.0.0")]
-    [InlineData("v1.1.0")]
+    [MemberData(nameof(ReleaseFixtures.All), MemberType = typeof(ReleaseFixtures))]
     public void Restoring_a_months_old_backup_rings_nothing_and_keeps_every_reminder(string release)
     {
         var path = _temp.File("backup.json");
@@ -108,14 +107,13 @@ public sealed class IncomingRemindersTests : IDisposable
         var (caughtUp, fired) = Bring(backup.Triggers);
 
         Assert.Empty(fired);
-        Assert.Equal(6, backup.Triggers.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), backup.Triggers.Count);
         Assert.Contains(caughtUp, t => t.Name == "Call the dentist");
         Assert.All(backup.Triggers.Where(t => t.Enabled && !t.HasFired), t => Assert.True(t.TriggerAt > Now));
     }
 
     [Theory]
-    [InlineData("v1.0.0")]
-    [InlineData("v1.1.0")]
+    [MemberData(nameof(ReleaseFixtures.All), MemberType = typeof(ReleaseFixtures))]
     public void Importing_an_old_export_rings_nothing(string release)
     {
         var path = _temp.File("triggers.json");
@@ -125,7 +123,7 @@ public sealed class IncomingRemindersTests : IDisposable
         var (_, fired) = Bring(imported);
 
         Assert.Empty(fired);
-        Assert.Equal(6, imported.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), imported.Count);
     }
 
     [Fact]

@@ -534,9 +534,9 @@ public sealed class PersistenceTests : IDisposable
         Assert.Equal(9, backup.Settings!.SnoozeMinutes);
     }
 
-    // ---- Upgrading: Data folders as 1.0.0 and 1.1.0 wrote them ----
+    // ---- Upgrading: Data folders as each release wrote them ----
 
-    public static TheoryData<string> Releases => new() { "v1.0.0", "v1.1.0" };
+    public static TheoryData<string> Releases => ReleaseFixtures.All;
 
     private static string Fixture(string release, string file) =>
         Path.Combine(AppContext.BaseDirectory, "Fixtures", release, file);
@@ -595,6 +595,27 @@ public sealed class PersistenceTests : IDisposable
         Assert.True(s.QuickAddAutoListen);
     }
 
+    [Fact]
+    public void Reminders_from_1_2_0_keep_what_it_added_a_span_a_snooze_and_a_relative_day()
+    {
+        var loaded = new TriggerRepository().LoadFrom(Copy("v1.2.0", "triggers.json"));
+
+        var dentist = loaded.Single(t => t.Name == "Call the dentist");
+        Assert.Equal(new DateTime(2026, 9, 3, 14, 0, 0, DateTimeKind.Utc), dentist.DueUtc);
+        Assert.Equal(new DateTime(2026, 9, 3, 15, 0, 0), dentist.TriggerAt);
+
+        var standUp = loaded.Single(t => t.Name == "Stand-up");
+        Assert.Equal(new DateTime(2026, 8, 26, 9, 10, 0), standUp.TriggerAt);
+        Assert.Equal(new DateTime(2026, 8, 26, 9, 0, 0), standUp.SnoozedOccurrence);
+        Assert.Equal(new DateTime(2026, 8, 26, 8, 10, 0, DateTimeKind.Utc), standUp.DueUtc);
+
+        var bookClub = loaded.Single(t => t.Name == "Book club").Recurrence!;
+        Assert.Equal(RecurrenceFrequency.Monthly, bookClub.Frequency);
+        Assert.Equal(MonthDayRule.RelativeDay, bookClub.MonthDayRule);
+        Assert.Equal(WeekOfMonth.Last, bookClub.WeekOfMonth);
+        Assert.Equal(RelativeDay.Friday, bookClub.RelativeDay);
+    }
+
     [Theory]
     [MemberData(nameof(Releases))]
     public void Reminders_from_a_release_load_with_every_reminder_and_value_kept(string release)
@@ -604,7 +625,7 @@ public sealed class PersistenceTests : IDisposable
 
         var loaded = new TriggerRepository().LoadFrom(path);
 
-        Assert.Equal(6, loaded.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), loaded.Count);
         Assert.Equal(original.Count, loaded.Count);
         var reloaded = JsonNode.Parse(JsonSerializer.Serialize(loaded))!.AsArray();
         for (var i = 0; i < original.Count; i++)
@@ -628,7 +649,7 @@ public sealed class PersistenceTests : IDisposable
 
         var backup = BackupRepository.Load(path)!;
 
-        Assert.Equal(6, backup.Triggers.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), backup.Triggers.Count);
         Assert.Equal(10, backup.Settings!.SnoozeMinutes);
         var original = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         var reloaded = JsonNode.Parse(JsonSerializer.Serialize(backup))!.AsObject();
@@ -648,7 +669,7 @@ public sealed class PersistenceTests : IDisposable
 
         var missed = Engine.TriggerReconciler.CatchUpMissed(reminders, new DateTime(2026, 11, 1, 12, 0, 0));
 
-        Assert.Equal(6, reminders.Count);
+        Assert.Equal(ReleaseFixtures.Reminders(release), reminders.Count);
         Assert.Contains("Call the dentist", missed);
         Assert.True(reminders.Single(t => t.Name == "Call the dentist").HasFired);
         var standUp = reminders.Single(t => t.Name == "Stand-up");

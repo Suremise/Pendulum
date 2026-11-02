@@ -7,6 +7,18 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-02
+
+A rose look to match the new icon, a portable zip, alerts that stay on screen and take turns, and
+many fixes to repeating reminders, Quick Reminder and saving.
+
+**Not signed yet:** Windows SmartScreen may warn the first time you run the installer or the exe
+("Windows protected your PC"). Check the download against the release's `SHA256SUMS.txt` first
+(`sha256sum -c SHA256SUMS.txt --ignore-missing`, or compare `Get-FileHash <file>` with it), and
+if it matches, choose **More info**, then **Run anyway**.
+
+Installing it over 1.1.0 keeps your reminders, settings and downloaded voices and speech models.
+
 ### Added
 - The tray icon's tooltip shows the Quick Reminder shortcut ("Quick Reminder:
   Ctrl+Alt+R") under the next reminder, while the shortcut is on.
@@ -225,6 +237,7 @@ Initial public release.
   mark spent otherwise) instead of getting stuck.
 - Self-contained, no-admin Windows installer.
 
-[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Suremise/Pendulum/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Suremise/Pendulum/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Suremise/Pendulum/releases/tag/v1.0.0
