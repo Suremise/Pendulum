@@ -159,7 +159,12 @@ pwsh scripts/screenshots.ps1                         # the README's pictures, in
 - **Each piece of work lands on master as one squashed commit**, never a merge commit. Its message
   is for the public: a short summary line, then what changed and why. No card or issue numbers
   (GitHub links `#n` to the repository's issues), no people's names, no review rounds and no
-  wording about the tools or agents that made it. The round-by-round commits stay on your branch.
+  wording in the message's text about the tools or agents that made it. The round-by-round commits
+  stay on your branch.
+- **The `Co-Authored-By:` trailer stays on every commit** (for example
+  `Co-Authored-By: Claude <noreply@anthropic.com>`). It's honest attribution in GitHub's standard
+  form, not wording in the message, so the rule above doesn't cover it. Never strip it, and never
+  rebuild or reword commits to remove it, before a push or at any other time.
 - **Never push, tag, publish a release or add a remote without the maintainer's go-ahead at the
   time.** Pushed history is never rewritten.
 
