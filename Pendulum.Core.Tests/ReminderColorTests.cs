@@ -35,7 +35,10 @@ public sealed class ReminderColorTests : IDisposable
         Assert.Equal(ReleaseFixtures.Reminders(release), first.Count);
         Assert.All(first, r => Assert.True(ReminderColors.IsKnown(r.Color), $"{r.Name}: {r.Color}"));
         Assert.Equal(first.Select(r => r.Color), second.Select(r => r.Color));
-        Assert.All(first, r => Assert.Equal(ReminderColors.Stable(r.Id), r.Color));
+        // The colour the file saved (1.2.0 saves one), or for none, the one worked out from its Id.
+        var saved = JsonNode.Parse(before)!.AsArray()
+            .Select(n => (string?)n!["Color"]).ToList();
+        Assert.All(first.Select((r, i) => (r, saved[i])), x => Assert.Equal(x.Item2 ?? ReminderColors.Stable(x.r.Id), x.r.Color));
         // Loading writes nothing: the colour is saved with the next save, not on its own.
         Assert.Equal(before, File.ReadAllBytes(path));
     }

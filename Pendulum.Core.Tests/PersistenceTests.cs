@@ -596,7 +596,7 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public void Reminders_from_1_2_0_keep_what_it_added_a_span_a_snooze_and_a_relative_day()
+    public void Reminders_from_1_2_0_keep_what_it_added_a_span_a_snooze_a_relative_day_and_a_colour()
     {
         var loaded = new TriggerRepository().LoadFrom(Copy("v1.2.0", "triggers.json"));
 
@@ -608,6 +608,9 @@ public sealed class PersistenceTests : IDisposable
         Assert.Equal(new DateTime(2026, 8, 26, 9, 10, 0), standUp.TriggerAt);
         Assert.Equal(new DateTime(2026, 8, 26, 9, 0, 0), standUp.SnoozedOccurrence);
         Assert.Equal(new DateTime(2026, 8, 26, 8, 10, 0, DateTimeKind.Utc), standUp.DueUtc);
+
+        Assert.Equal("plum", loaded.Single(t => t.Name == "Book club").Color);   // chosen in its window
+        Assert.All(loaded.Where(t => t.Name != "Book club"), t => Assert.Equal(ReminderColors.Stable(t.Id), t.Color));
 
         var bookClub = loaded.Single(t => t.Name == "Book club").Recurrence!;
         Assert.Equal(RecurrenceFrequency.Monthly, bookClub.Frequency);

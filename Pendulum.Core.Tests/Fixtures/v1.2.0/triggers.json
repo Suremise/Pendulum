@@ -12,7 +12,8 @@
     "Volume": 100,
     "HasFired": false,
     "RecurrenceAnchor": "2026-09-03T15:00:00",
-    "Recurrence": null
+    "Recurrence": null,
+    "Color": "teal"
   },
   {
     "Id": "22222222-2222-2222-2222-222222222222",
@@ -27,7 +28,8 @@
     "Volume": 60,
     "HasFired": true,
     "RecurrenceAnchor": "2026-08-20T09:30:00",
-    "Recurrence": null
+    "Recurrence": null,
+    "Color": "teal"
   },
   {
     "Id": "33333333-3333-3333-3333-333333333333",
@@ -59,7 +61,8 @@
       "OccurrenceCount": 10,
       "EndDate": null,
       "OccurrencesSoFar": 10
-    }
+    },
+    "Color": "teal"
   },
   {
     "Id": "44444444-4444-4444-4444-444444444444",
@@ -87,7 +90,8 @@
       "OccurrenceCount": 10,
       "EndDate": "2027-01-31T00:00:00",
       "OccurrencesSoFar": 7
-    }
+    },
+    "Color": "teal"
   },
   {
     "Id": "55555555-5555-5555-5555-555555555555",
@@ -115,7 +119,8 @@
       "OccurrenceCount": 10,
       "EndDate": null,
       "OccurrencesSoFar": 2
-    }
+    },
+    "Color": "teal"
   },
   {
     "Id": "66666666-6666-6666-6666-666666666666",
@@ -143,7 +148,8 @@
       "OccurrenceCount": 14,
       "EndDate": null,
       "OccurrencesSoFar": 6
-    }
+    },
+    "Color": "teal"
   },
   {
     "Id": "77777777-7777-7777-7777-777777777777",
@@ -171,6 +177,7 @@
       "OccurrenceCount": 10,
       "EndDate": null,
       "OccurrencesSoFar": 0
-    }
+    },
+    "Color": "plum"
   }
 ]

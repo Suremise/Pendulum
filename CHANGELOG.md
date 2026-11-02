@@ -9,8 +9,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [1.2.0] - 2026-11-02
 
-A rose look to match the new icon, a portable zip, alerts that stay on screen and take turns, and
-many fixes to repeating reminders, Quick Reminder and saving.
+A cleaner, more Windows-like Pendulum (a menu bar, a window that resizes and remembers where it
+was, a Reminders list that fills it, a calm palette with each reminder in its own colour), a
+portable zip, alerts that stay on screen and take turns, and many fixes to repeating reminders,
+Quick Reminder and saving.
 
 **Not signed yet:** Windows SmartScreen may warn the first time you run the installer or the exe
 ("Windows protected your PC"). Check the download against the release's `SHA256SUMS.txt` first
@@ -161,17 +163,13 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   right edge.
 - A spent reminder looks finished at a glance in the Reminders list: a tick in a
   circle before its name, all its text greyed and its row a shade quieter.
-- In the Reminders list, the on/off button is rose with a tick when a reminder is
-  on and grey when it's off, instead of green and red, and screen readers name
-  it. A spent reminder is greyed out instead of drawn in a red that was hard to
-  read.
-- The Reminders list's badges fit the app's rose colour: Upcoming is rose and
-  Scheduled a rose outline, Fixed and Disabled are greys, and the alert types
-  muted tints. The "Filters" button turns rose while filters are on, and the
-  column filters' lists follow the theme, readable in the light theme too.
-- The calendar's reminder chips and "+N more" are now rose, to match the app's
-  colour, in light and dark, instead of green and purple. The "+N more" list
-  follows the theme too, rather than staying dark in the light theme.
+- In the Reminders list, the on/off button shows a tick when a reminder is on and
+  none when it's off, instead of being green or red, so on and off differ by more
+  than colour, and screen readers name it. A spent reminder is greyed out instead
+  of drawn in a red that was hard to read.
+- The column filters' lists in the Reminders list, and the calendar's "+N more"
+  list, follow the theme: they no longer stay dark, and hard to read, in the light
+  theme.
 - With several alerts open, only the newest makes a sound; the others stay on
   screen, marked as waiting. Dismiss or snooze it and the next newest rings,
   saying its phrase once. A "Dismiss all" button appears when more than one
@@ -223,10 +221,10 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   .NET 8, whose support ends in November 2026. The installer still includes
   everything it needs: there's nothing extra to install, and your reminders and
   settings carry over.
-- The update check is now off for new installs: Pendulum goes online only if you
-  turn on Settings > General > "Check for updates on startup". If you already
-  had it on, it stays on. The README's new Privacy section says exactly what
-  the check sends.
+- The update check at startup is now off for new installs: Pendulum checks only
+  if you turn on Tools > Settings… > General > "Check for updates on startup", or
+  when you choose Help > Check for updates…. If you already had the setting on,
+  it stays on. The README's new Privacy section says exactly what the check sends.
 - New icon, in the style of the other Tools apps: the same clock face and
   swinging pendulum, now on a rose circle, with a bolder version for the tray
   and small sizes so it reads on light and dark taskbars.

@@ -10,4 +10,6 @@ A later release's files join them the same way: build that release's `Pendulum.C
 same sample data with it, and add a folder (and its name to `ReleaseFixtures`). `v1.2.0/` is
 v1.1.0's sample read and saved by 1.2.0, plus what 1.2.0 added to the format: a reminder set as a
 span ("Call the dentist", its `DueUtc`), a snoozed repeating one ("Stand-up", its
-`SnoozedOccurrence`) and a seventh, "Book club", monthly on the last Friday.
+`SnoozedOccurrence`) and a seventh, "Book club", monthly on the last Friday, with a colour chosen
+for it ("plum"). The others have the colour 1.2.0 gives a reminder saved without one, worked out
+from its Id as it loads and written with the next save (these made-up Ids all give "teal").
