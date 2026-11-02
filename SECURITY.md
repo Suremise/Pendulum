@@ -39,7 +39,8 @@ Reports in these areas matter most:
 - **The update check** (`Pendulum.Core/Services/UpdateCheckService.cs`): one request to GitHub's
   releases API when Pendulum starts (a successful answer is cached for a day; a failed one is
   retried at the next start), and only if the user has turned on "Check for updates on
-  startup" (off for new installs). It never
+  startup" (off for new installs); and the same request when the user chooses Help > Check for
+  updates…. It never
   downloads or installs anything, and the link it shows always goes to the release's page on
   GitHub. A reply that gets Pendulum to open anything else, or to fetch or run a file, is a
   vulnerability.
@@ -53,6 +54,6 @@ Reports in these areas matter most:
   keyboard or mouse otherwise. Anything that reads keystrokes beyond that hotkey is a
   vulnerability.
 
-Pendulum makes no network connections beyond the update check, which is off unless you turn it
-on. The links in Settings open the
+Pendulum makes no network connections beyond the update check, which runs at startup only if
+you turn it on, and when you choose Help > Check for updates…. The links in Settings open the
 Whisper and Piper download pages in your browser; Pendulum itself downloads nothing.

@@ -179,17 +179,24 @@ internal static class Mockups
         // Standard window controls: minimise, maximise, close.
         root.Children.OfType<TitleBar>().First().ShowMaximize = true;
 
-        // A menu bar under the title bar.
-        root.RowDefinitions.Insert(1, new RowDefinition { Height = GridLength.Auto });
-        foreach (UIElement child in root.Children)
-            if (Grid.GetRow(child) >= 1)
-                Grid.SetRow(child, Grid.GetRow(child) + 1);
-        var (menu, file) = MenuBar();
-        Grid.SetRow(menu, 1);
-        root.Children.Add(menu);
+        // A menu bar under the title bar: the window's own, now that it has one.
+        MenuItem file;
+        if (window.FindName("MainMenu") is Menu real)
+            file = real.Items.OfType<MenuItem>().First();
+        else
+        {
+            root.RowDefinitions.Insert(1, new RowDefinition { Height = GridLength.Auto });
+            foreach (UIElement child in root.Children)
+                if (Grid.GetRow(child) >= 1)
+                    Grid.SetRow(child, Grid.GetRow(child) + 1);
+            (var menu, file) = MenuBar();
+            Grid.SetRow(menu, 1);
+            root.Children.Add(menu);
+        }
 
-        // Two tabs: Settings moves to Tools > Settings…
-        tabs.Items.RemoveAt(2);
+        // Two tabs: Settings moves to Tools > Settings… (the window has only two now).
+        if (tabs.Items.Count > 2)
+            tabs.Items.RemoveAt(2);
         tabs.SelectedIndex = tab;
         tabs.Margin = new Thickness(28, 6, 28, 20);
 

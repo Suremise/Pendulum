@@ -57,6 +57,48 @@ public class UpdateCheckServiceTests
         Assert.False(UpdateCheckService.IsNewer("1.9.0", new Version(1, 10, 0)));
     }
 
+    // ---- Help > Check for updates…: asked now, whatever the cache ----
+
+    private static Task<UpdateCheckResult> CheckNow(AppSettings settings, FakeHandler handler) =>
+        UpdateCheckService.CheckNowAsync(settings, Running, new HttpClient(handler), Now, CancellationToken.None);
+
+    [Fact]
+    public async Task Checking_now_asks_GitHub_even_within_a_day_and_names_a_newer_version()
+    {
+        var handler = FakeHandler.Replying(HttpStatusCode.OK, """{ "tag_name": "v1.3.0" }""");
+        var settings = new AppSettings { LastUpdateCheckUtc = Now.AddHours(-1), LastKnownLatestVersion = "1.1.0" };
+
+        var result = await CheckNow(settings, handler);
+
+        Assert.Equal(new UpdateCheckResult(UpdateCheckOutcome.Newer, "1.3.0"), result);
+        Assert.Single(handler.Requests);
+        Assert.Equal("1.3.0", settings.LastKnownLatestVersion);
+        Assert.Equal(Now, settings.LastUpdateCheckUtc);
+    }
+
+    [Fact]
+    public async Task Checking_now_with_the_latest_running_says_so()
+    {
+        var result = await CheckNow(new AppSettings(), FakeHandler.Replying(HttpStatusCode.OK, """{ "tag_name": "v1.1.0" }"""));
+
+        Assert.Equal(new UpdateCheckResult(UpdateCheckOutcome.UpToDate, "1.1.0"), result);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.InternalServerError, """{ "tag_name": "v9.0.0" }""")]
+    [InlineData(HttpStatusCode.OK, "not json")]
+    [InlineData(HttpStatusCode.OK, """{ "name": "no tag" }""")]
+    public async Task Checking_now_when_GitHub_doesnt_answer_says_so_and_keeps_the_last_answer(HttpStatusCode status, string body)
+    {
+        var settings = new AppSettings { LastUpdateCheckUtc = Now.AddDays(-3), LastKnownLatestVersion = "1.1.0" };
+
+        var result = await CheckNow(settings, FakeHandler.Replying(status, body));
+
+        Assert.Equal(UpdateCheckOutcome.Unreachable, result.Outcome);
+        Assert.Equal(Now.AddDays(-3), settings.LastUpdateCheckUtc);
+        Assert.Equal("1.1.0", settings.LastKnownLatestVersion);
+    }
+
     [Fact]
     public async Task A_newer_release_is_reported_and_remembered()
     {

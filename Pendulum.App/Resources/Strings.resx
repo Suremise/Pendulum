@@ -132,7 +132,24 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Hotkey_TakenKeptPrevious" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder keeps {1}. Choose a different shortcut to change it.</value><comment>{0}: the shortcut chosen, e.g. Ctrl+Shift+R. {1}: the one kept.</comment></data>
   <data name="Hotkey_TakenNone" xml:space="preserve"><value>{0} is already used by another app or by Windows, so Quick Reminder has no shortcut for now. Choose a different one in Settings, or close that app and then turn the Quick Reminder shortcut off and on again in Settings.</value><comment>{0}: the shortcut, e.g. Ctrl+Shift+R.</comment></data>
   <data name="List_Separator" xml:space="preserve"><value>, </value><comment>Between names in a list.</comment></data>
-  <data name="Main_About" xml:space="preserve"><value>About</value><comment>MainWindow.xaml, Text</comment></data>
+  <data name="Menu_File" xml:space="preserve"><value>_File</value><comment>MainWindow.xaml, the menu bar. The letter after _ is its access key (Alt+F).</comment></data>
+  <data name="Menu_NewReminder" xml:space="preserve"><value>_New reminder…</value><comment>MainWindow.xaml, File menu.</comment></data>
+  <data name="Menu_NewReminderShortcut" xml:space="preserve"><value>Ctrl+N</value><comment>MainWindow.xaml, File menu: the shortcut shown beside New reminder.</comment></data>
+  <data name="Menu_Import" xml:space="preserve"><value>_Import…</value><comment>MainWindow.xaml, File menu: imports reminders from a file.</comment></data>
+  <data name="Menu_Export" xml:space="preserve"><value>_Export…</value><comment>MainWindow.xaml, File menu: exports the reminders ticked in Select mode, or all of them.</comment></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>E_xit</value><comment>MainWindow.xaml, File menu: quits Pendulum (not to the tray).</comment></data>
+  <data name="Menu_View" xml:space="preserve"><value>_View</value><comment>MainWindow.xaml, the menu bar.</comment></data>
+  <data name="Menu_Reminders" xml:space="preserve"><value>_Reminders</value><comment>MainWindow.xaml, View menu: shows the Reminders tab.</comment></data>
+  <data name="Menu_Calendar" xml:space="preserve"><value>_Calendar</value><comment>MainWindow.xaml, View menu: shows the Calendar tab.</comment></data>
+  <data name="Menu_Tools" xml:space="preserve"><value>_Tools</value><comment>MainWindow.xaml, the menu bar.</comment></data>
+  <data name="Menu_Settings" xml:space="preserve"><value>_Settings…</value><comment>MainWindow.xaml, Tools menu: opens the Settings window.</comment></data>
+  <data name="Menu_SettingsShortcut" xml:space="preserve"><value>Ctrl+,</value><comment>MainWindow.xaml, Tools menu: the shortcut shown beside Settings.</comment></data>
+  <data name="Menu_Help" xml:space="preserve"><value>_Help</value><comment>MainWindow.xaml, the menu bar.</comment></data>
+  <data name="Menu_CheckForUpdates" xml:space="preserve"><value>_Check for updates…</value><comment>MainWindow.xaml, Help menu: asks GitHub now whether a newer version exists.</comment></data>
+  <data name="Menu_About" xml:space="preserve"><value>_About Pendulum</value><comment>MainWindow.xaml, Help menu: opens the About window.</comment></data>
+  <data name="Update_UpToDate" xml:space="preserve"><value>Pendulum {0} is the latest version.</value><comment>Help > Check for updates…: {0}: the running version.</comment></data>
+  <data name="Update_Available" xml:space="preserve"><value>Pendulum {0} is available (you have {1}). Open its page on GitHub to download it?</value><comment>Help > Check for updates…, Yes/No: {0}: the newer version; {1}: the running version.</comment></data>
+  <data name="Update_Unreachable" xml:space="preserve"><value>Pendulum couldn't reach GitHub to check for updates. Check your internet connection and try again.</value><comment>Help > Check for updates…, when GitHub doesn't answer.</comment></data>
   <data name="Main_Calendar" xml:space="preserve"><value>Calendar</value><comment>MainWindow.xaml, Header</comment></data>
   <data name="Main_Reminders" xml:space="preserve"><value>Reminders</value><comment>MainWindow.xaml, Header</comment></data>
   <data name="Main_Settings" xml:space="preserve"><value>Settings</value><comment>MainWindow.xaml, Header</comment></data>

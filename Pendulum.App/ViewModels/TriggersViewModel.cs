@@ -248,6 +248,24 @@ public partial class TriggersViewModel : ObservableObject
         if (selected.Count == 0)
             return;
 
+        ExportReminders(selected);
+    }
+
+    /// File > Export…: the reminders ticked in Select mode, or every reminder when none is.
+    [RelayCommand]
+    private void Export()
+    {
+        var chosen = Triggers.Where(t => t.IsSelectedForBulk).ToList();
+        if (chosen.Count == 0)
+            chosen = Triggers.ToList();
+        if (chosen.Count == 0)
+            return;
+
+        ExportReminders(chosen);
+    }
+
+    private void ExportReminders(List<TriggerTimer> selected)
+    {
         var dialog = new SaveFileDialog
         {
             Filter = Strings.Dialog_RemindersFilter,

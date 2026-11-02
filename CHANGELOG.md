@@ -20,6 +20,11 @@ if it matches, choose **More info**, then **Run anyway**.
 Installing it over 1.1.0 keeps your reminders, settings and downloaded voices and speech models.
 
 ### Added
+- A menu bar: File (New reminder… Ctrl+N, Import…, Export…, Exit), View (Reminders,
+  Calendar), Tools (Settings… Ctrl+,) and Help (Check for updates…, About Pendulum).
+  Settings open in a window of their own, so the main window has just the Reminders
+  and Calendar tabs, and About moves from the status bar to the Help menu. Check for
+  updates… asks GitHub there and then, and says what it found.
 - The main window behaves like any Windows window: minimise, maximise and close in
   the title bar, double-click it to maximise or restore, Windows 11's snap layouts,
   Win+arrow keys and resizing from its edges. It opens where you last left it, at

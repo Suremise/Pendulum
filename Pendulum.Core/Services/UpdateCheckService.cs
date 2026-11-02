@@ -5,10 +5,21 @@ using Pendulum.Core.Models;
 
 namespace Pendulum.Core.Services;
 
-/// Checks GitHub Releases for a version newer than the one currently running. This is the
-/// only outbound network call Pendulum ever makes without the user explicitly asking for it
-/// (Whisper/Piper downloads are user-initiated from Settings) — a single GET request, cached
-/// for a day, that fails silently so it can never block startup or surprise someone offline.
+/// What Help > Check for updates… found: a newer version (named), the running one is the
+/// latest, or GitHub couldn't be reached.
+public enum UpdateCheckOutcome
+{
+    Newer,
+    UpToDate,
+    Unreachable,
+}
+
+public readonly record struct UpdateCheckResult(UpdateCheckOutcome Outcome, string? Version);
+
+/// Checks GitHub Releases for a version newer than the one currently running: Pendulum's only
+/// request of its own. At startup, only when "Check for updates on startup" is on: a single GET
+/// request, cached for a day, that fails silently so it can never block startup or surprise
+/// someone offline. And when the user chooses Help > Check for updates…: the same request, then.
 public static class UpdateCheckService
 {
     private const string LatestReleaseApiUrl = "https://api.github.com/repos/Suremise/Pendulum/releases/latest";
@@ -43,13 +54,33 @@ public static class UpdateCheckService
         return IsNewer(settings.LastKnownLatestVersion, currentVersion) ? settings.LastKnownLatestVersion : null;
     }
 
-    private static async Task RefreshLatestVersionAsync(AppSettings settings, HttpClient http, DateTime utcNow, CancellationToken cancellationToken)
+    /// Help > Check for updates…: asks GitHub now, whatever the startup setting and however
+    /// recent the last answer, and says what it found. A successful answer is kept, as the
+    /// startup check keeps it.
+    public static Task<UpdateCheckResult> CheckNowAsync(AppSettings settings, Version currentVersion, CancellationToken cancellationToken) =>
+        CheckNowAsync(settings, currentVersion, Http, DateTime.UtcNow, cancellationToken);
+
+    /// For tests: the same, through the given client at the given time.
+    internal static async Task<UpdateCheckResult> CheckNowAsync(
+        AppSettings settings, Version currentVersion, HttpClient http, DateTime utcNow, CancellationToken cancellationToken)
+    {
+        if (!await RefreshLatestVersionAsync(settings, http, utcNow, cancellationToken))
+            return new UpdateCheckResult(UpdateCheckOutcome.Unreachable, null);
+
+        var latest = settings.LastKnownLatestVersion;
+        return IsNewer(latest, currentVersion)
+            ? new UpdateCheckResult(UpdateCheckOutcome.Newer, latest)
+            : new UpdateCheckResult(UpdateCheckOutcome.UpToDate, latest);
+    }
+
+    /// Asks GitHub for the latest release and keeps its version: true when it answered.
+    private static async Task<bool> RefreshLatestVersionAsync(AppSettings settings, HttpClient http, DateTime utcNow, CancellationToken cancellationToken)
     {
         try
         {
             using var response = await http.GetAsync(LatestReleaseApiUrl, cancellationToken);
             if (!response.IsSuccessStatusCode)
-                return;
+                return false;
 
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
@@ -58,12 +89,15 @@ public static class UpdateCheckService
             {
                 settings.LastKnownLatestVersion = tag.TrimStart('v', 'V');
                 settings.LastUpdateCheckUtc = utcNow;
+                return true;
             }
+            return false;
         }
         catch
         {
             // Offline, GitHub unreachable, unexpected response shape — this is a background
             // nicety, never something to surface as an error.
+            return false;
         }
     }
 

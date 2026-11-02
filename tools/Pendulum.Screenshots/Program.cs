@@ -86,6 +86,7 @@ public static class Program
             else
             {
                 RenderMainWindow(output);
+                RenderSettings(output);
                 RenderQuickReminder(output);
                 RenderAlert(output);
             }
@@ -199,7 +200,7 @@ public static class Program
         var host = Detach(window, window.Width, window.Height);
 
         var tabs = window.MainTabControl;
-        (string File, int Tab)[] shots = [("reminders.png", 0), ("calendar.png", 1), ("settings.png", 2)];
+        (string File, int Tab)[] shots = [("reminders.png", 0), ("calendar.png", 1)];
         foreach (var (file, tab) in shots)
         {
             tabs.SelectedIndex = tab;
@@ -210,6 +211,15 @@ public static class Program
             Layout(host);
             Save(host, Path.Combine(output, file));
         }
+    }
+
+    /// Tools > Settings…: the Settings window, at its own size.
+    private static void RenderSettings(string output)
+    {
+        var window = new SettingsWindow();
+        var host = Detach(window, window.Width, window.Height);
+        Layout(host);
+        Save(host, Path.Combine(output, "settings.png"));
     }
 
     private static void RenderQuickReminder(string output)
@@ -245,6 +255,10 @@ public static class Program
         var inner = new Border { Child = content, Background = fill == Brushes.Transparent ? null : fill };
         // Resources the window held (its styles) stay reachable from the content.
         inner.Resources.MergedDictionaries.Add(window.Resources);
+        // What the window passed down to its content: the theme's text colour (the menu bar, the
+        // headings). Without it, text that takes its colour from the window draws black on the
+        // dark theme.
+        inner.SetResourceReference(TextElement.ForegroundProperty, "TextFillColorPrimaryBrush"); // not user-visible: a resource key
         var host = new Border
         {
             Child = inner,
@@ -274,7 +288,16 @@ public static class Program
         }
     }
 
-    internal static void Save(FrameworkElement element, string path) => Save(Draw(element), path);
+    internal static void Save(FrameworkElement element, string path)
+    {
+        // A title bar's buttons take their colour from events a window never shown doesn't get:
+        // here, the theme's text colour, as the app's title bars draw them.
+        var ink = Application.Current.Resources["TextFillColorPrimaryBrush"]; // not user-visible: a resource key
+        foreach (var button in Descendants(element).OfType<Wpf.Ui.Controls.TitleBarButton>())
+            button.SetValue(Wpf.Ui.Controls.TitleBarButton.RenderButtonsForegroundProperty, ink);
+        Layout(element);
+        Save(Draw(element), path);
+    }
 
     internal static BitmapSource Draw(FrameworkElement element)
     {

@@ -127,7 +127,8 @@ pwsh scripts/screenshots.ps1                         # the README's pictures, in
   Settings that open the Whisper and Piper download pages in the user's browser. The update check
   is off unless the user turns on Settings > General, "Check for updates on startup" (settings
   files from before that default keep it on). It sends one GitHub request at startup; a
-  successful answer is cached a day, and a failure is retried at the next start. It notifies and
+  successful answer is cached a day, and a failure is retried at the next start. Help > Check
+  for updates… sends the same request when the user chooses it (`CheckNowAsync`). It notifies and
   links to the release: it never downloads or installs. No telemetry, no other requests, and
   tests make none.
 - **No global keyboard or mouse input, ever**, in tests, probes or scripts: no SendKeys,
