@@ -159,8 +159,8 @@ Fernandes 2009 at full strength; about 10 or more reads as clearly different sid
 | Protanopia | Violet and Plum, 9.9 | Olive and Sage, 9.6 |
 | Tritanopia | Sage and Blue, 9.2 | Teal and Blue, 9.6 |
 
-**What takes which:** Upcoming (the badge, and the calendar's chips until each reminder has its
-own colour) in teal; the on/off toggle, when on, in teal with the theme's text-on-accent tick;
+**What takes which:** each reminder its own colour (its chips on the calendar, a tint with a bar
+of its shade, and a dot by its name in the Reminders list); the Upcoming badge in teal; the on/off toggle, when on, in teal with the theme's text-on-accent tick;
 the Filters button and its dot, while filters are on, in teal; Sound only in blue, Sound and speech
 in ochre, Speech only in plum, each as a tint with the theme's text. Fixed, Scheduled, Disabled and
 Spent stay neutral greys. Error messages are Windows' own critical red (`#C42B1C` light, `#FF99A4`
@@ -174,21 +174,25 @@ they mean (`PendulumChipBrush`, `PendulumToggleOnBrush`, `PendulumBadgeSoundOnly
 The light teal and blue were darkened a little from the first proposal (`#2A9898` and `#537AA2`),
 so that teal keeps 3:1 on the lightest surface too.
 
-### How a reminder's colour is chosen and saved (planned)
+### How a reminder's colour is chosen and saved
+
+`Pendulum.Core/Models/ReminderColors.cs` decides; `ReminderColorTests` checks it against every
+release's saved reminders.
 
 - **Saved by name, not by value:** a new optional property on the reminder in `triggers.json`,
   `"Color": "teal"` (one of the eight token names). The name, not a hex value, so the theme picks
   the shade, and a later change to a shade changes every reminder of that colour.
-- **Chosen automatically** when a reminder is made (with Add reminder, Quick Reminder, or an
-  import of reminders that have none): the colour fewest reminders have, ties going in the order
+- **Chosen automatically** when a reminder is made (with Add reminder or Quick Reminder): the
+  colour fewest reminders have, ties going in the order
   teal, terracotta, blue, ochre, violet, sage, plum, olive (each next to colours far from it, so
   reminders made together are told apart).
 - **Changeable in the reminder's editor**, a row of the eight swatches under the name; the chosen
   one is ringed and named.
-- **Reminders saved by earlier versions load unchanged.** They have no `Color`, and nothing is
-  written for them until they're edited: until then each shows a colour worked out from its `Id`
-  (the same one every time, on every PC), so the calendar never reshuffles. Saving one from the
-  editor writes the colour it shows. A name this version doesn't know (from a later version) is
-  shown as the worked-out colour and kept as it is when saved, so going back and forth between
+- **Reminders saved by earlier versions load unchanged.** They have no `Color`: as each loads it
+  gets a colour worked out from its `Id` (the same one every time, on every PC), so the calendar
+  never reshuffles. Loading writes nothing; the colour is saved with the next save for any other
+  reason. Imported reminders and restored backups without one get theirs the same way. A name
+  this version doesn't know (from a later version) is shown as the worked-out colour and kept as
+  it is when saved, unless a colour is chosen in the editor, so going back and forth between
   versions loses nothing. Earlier versions ignore the property (one that saves the reminder drops
   it, and the colour is worked out from the `Id` again).

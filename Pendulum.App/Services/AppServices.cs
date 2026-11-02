@@ -186,6 +186,8 @@ public sealed class AppServices
 
     public void AddTrigger(TriggerTimer t)
     {
+        // A new reminder without a colour takes the one fewest reminders have.
+        t.Color ??= ReminderColors.ForNew(Triggers);
         WireItem(t);
         Triggers.Add(t);
         RefreshTriggers();

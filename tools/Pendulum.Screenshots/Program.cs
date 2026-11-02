@@ -78,8 +78,12 @@ public static class Program
 
             StartApplication(theme == false ? ThemeMode.Light : ThemeMode.Dark);
             AppServices.Instance.UseSettingsForTests(InventedSettings());
+            // Each with the colour the app gives a new reminder, in the order they were made.
             foreach (var reminder in InventedReminders(DateTime.Now))
+            {
+                reminder.Color = ReminderColors.ForNew(AppServices.Instance.Triggers);
                 AppServices.Instance.Triggers.Add(reminder);
+            }
 
             if (mode == "views") // not user-visible
             {

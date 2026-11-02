@@ -712,9 +712,9 @@ public sealed class PersistenceTests : IDisposable
 
     private static List<TriggerTimer> SampleReminders() => new()
     {
-        new() { Name = "One-off", TriggerAt = new DateTime(2026, 6, 3, 15, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 3, 15, 0, 0), Mode = AlertMode.SoundOnly, SoundFileName = "chime.wav", Volume = 80 },
-        new() { Name = "Weekly", TriggerAt = new DateTime(2026, 6, 5, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 1, 9, 0, 0), Mode = AlertMode.SpeechOnly, Phrase = "hello",
+        new() { Name = "One-off", TriggerAt = new DateTime(2026, 6, 3, 15, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 3, 15, 0, 0), Mode = AlertMode.SoundOnly, SoundFileName = "chime.wav", Volume = 80, Color = "teal" },
+        new() { Name = "Weekly", TriggerAt = new DateTime(2026, 6, 5, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 6, 1, 9, 0, 0), Mode = AlertMode.SpeechOnly, Phrase = "hello", Color = "plum",
             Recurrence = new RecurrenceRule { Frequency = RecurrenceFrequency.Weekly, DaysOfWeek = new() { DayOfWeek.Monday, DayOfWeek.Friday }, EndType = RecurrenceEndType.AfterOccurrences, OccurrenceCount = 8, OccurrencesSoFar = 3 } },
-        new() { Name = "Spent", TriggerAt = new DateTime(2026, 5, 1, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 5, 1, 9, 0, 0), HasFired = true, Enabled = false },
+        new() { Name = "Spent", TriggerAt = new DateTime(2026, 5, 1, 9, 0, 0), RecurrenceAnchor = new DateTime(2026, 5, 1, 9, 0, 0), HasFired = true, Enabled = false, Color = "ochre" },
     };
 }

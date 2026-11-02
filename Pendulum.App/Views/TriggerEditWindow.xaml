@@ -3,12 +3,48 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:Pendulum.App.Resources"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        xmlns:services="clr-namespace:Pendulum.App.Services"
         Title="{x:Static res:Strings.Edit_Reminder}"
         Width="650"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ExtendsContentIntoTitleBar="True">
+    <Window.Resources>
+        <!-- A colour swatch: a disc in the colour's shade (3:1 or more on the window), ringed in the
+             theme's text colour when chosen, in its strong edge under the pointer, and dashed when
+             it has the keyboard focus. The swatches are radio buttons, so the arrow keys move
+             between them and a screen reader reads each one's name. -->
+        <Style x:Key="ColourSwatch" TargetType="RadioButton">
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Background="Transparent">
+                            <Ellipse x:Name="Ring" Stroke="Transparent" StrokeThickness="2"/>
+                            <Ellipse Margin="5" services:PaletteBrush.Fill="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Ring" Property="Stroke" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                <Setter TargetName="Ring" Property="StrokeDashArray" Value="2 1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -19,7 +55,16 @@
 
         <StackPanel Grid.Row="1" Margin="28,4,28,28">
 
-            <ui:TextBox x:Name="NameBox" PlaceholderText="{x:Static res:Strings.Edit_ReminderName}" FontSize="18" Margin="0,0,0,20" ClearButtonEnabled="False"/>
+            <ui:TextBox x:Name="NameBox" PlaceholderText="{x:Static res:Strings.Edit_ReminderName}" FontSize="18" Margin="0,0,0,14" ClearButtonEnabled="False"/>
+
+            <!-- Its colour, on the calendar and by its name in the Reminders list. -->
+            <TextBlock x:Name="ColourLabel" Text="{x:Static res:Strings.Edit_Colour}" FontSize="12"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                <StackPanel x:Name="ColourChoices" Orientation="Horizontal"
+                            AutomationProperties.LabeledBy="{Binding ElementName=ColourLabel}"/>
+                <TextBlock x:Name="ColourNameText" FontSize="13" VerticalAlignment="Center" Margin="6,0,0,0"/>
+            </StackPanel>
 
             <ui:Card Margin="0,0,0,14">
                 <StackPanel Margin="4">

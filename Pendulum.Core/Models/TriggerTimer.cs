@@ -46,6 +46,15 @@ public partial class TriggerTimer : ObservableObject, IJsonOnDeserializing, IJso
     /// Null means this is a one-shot reminder with no repeat schedule.
     [ObservableProperty] private RecurrenceRule? recurrence;
 
+    /// Its colour, by the palette's name ("teal"): see <see cref="ReminderColors"/>. Optional:
+    /// one saved without it gets a colour from its Id as it loads, and a name this version doesn't
+    /// know is kept as it is.
+    [ObservableProperty] private string? color;
+
+    /// UI-only: the colour it shows (<see cref="ReminderColors.Effective"/>). Never persisted.
+    [JsonIgnore]
+    public string DisplayColor => ReminderColors.Effective(this);
+
     /// UI-only: whether this row is checked in the Reminders list's bulk-select mode.
     /// Never persisted.
     [ObservableProperty]
@@ -96,9 +105,17 @@ public partial class TriggerTimer : ObservableObject, IJsonOnDeserializing, IJso
 
     void IJsonOnDeserializing.OnDeserializing() => _loading = true;
 
-    void IJsonOnDeserialized.OnDeserialized() => _loading = false;
+    void IJsonOnDeserialized.OnDeserialized()
+    {
+        _loading = false;
+        // A reminder saved before colours (or by hand) gets one now, kept in memory and written
+        // with the next save: loading never saves on its own.
+        Color ??= ReminderColors.Stable(Id);
+    }
 
     partial void OnRecurrenceChanged(RecurrenceRule? value) => OnPropertyChanged(nameof(IsScheduled));
+    partial void OnColorChanged(string? value) => OnPropertyChanged(nameof(DisplayColor));
+    partial void OnIdChanged(Guid value) => OnPropertyChanged(nameof(DisplayColor));
     partial void OnHasFiredChanged(bool value) => OnPropertyChanged(nameof(StatusSortOrder));
     partial void OnEnabledChanged(bool value) => OnPropertyChanged(nameof(StatusSortOrder));
 }

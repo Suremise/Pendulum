@@ -21,7 +21,8 @@ internal static class Views
     private static readonly (string File, string Title, Func<FrameworkElement> Build)[] Shots =
     [
         ("01-reminders.png", "Reminders", () => MainWindowShot(tab: 0)),
-        ("02-calendar.png", "Calendar", () => MainWindowShot(tab: 1)),
+        ("02-calendar.png", "Calendar: a busy month, each reminder in its own colour", () => MainWindowShot(tab: 1)),
+        ("02-calendar-small.png", "Calendar in the smallest window (820 × 560): \"+N more\" beside the day's number", () => MainWindowShot(tab: 1, 820, 560)),
         ("03-settings.png", "Settings", Settings),
         ("04-editor.png", "A reminder's editor (a reminder that's turned off)", Editor),
         ("05-repeat.png", "Repeat", Repeat),
@@ -66,16 +67,31 @@ internal static class Views
     {
         Directory.CreateDirectory(output);
         Mockups.Dark = dark;
+
+        // A busy day, so the calendar shows "+N more".
+        var busy = DateTime.Today.AddDays(3);
+        foreach (var (name, hour) in new[] { ("School run", 8), ("Parcel collection", 13), ("Pick up prescription", 16) })
+        {
+            var at = busy.AddHours(hour);
+            AppServices.Instance.Triggers.Add(new TriggerTimer
+            {
+                Name = name,
+                TriggerAt = at,
+                RecurrenceAnchor = at,
+                SoundFileName = "chime.wav", // not user-visible: invented
+                Color = ReminderColors.ForNew(AppServices.Instance.Triggers),
+            });
+        }
         AppServices.Instance.Settings.Theme = dark ? ThemeMode.Dark : ThemeMode.Light;
         AppThemeManager.Apply(dark ? ThemeMode.Dark : ThemeMode.Light);
         foreach (var shot in Shots)
             Save(Draw(shot.Build()), Path.Combine(output, shot.File));
     }
 
-    private static FrameworkElement MainWindowShot(int tab)
+    private static FrameworkElement MainWindowShot(int tab, double width = 1100, double height = 720)
     {
         var window = new MainWindow();
-        var host = Detach(window, 1100, 720);
+        var host = Detach(window, width, height);
         Mockups.Inherit(host);
         window.MainTabControl.SelectedIndex = tab;
         Layout(host);

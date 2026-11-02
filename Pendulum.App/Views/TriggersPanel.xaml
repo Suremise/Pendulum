@@ -335,6 +335,10 @@
                                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                        AutomationProperties.Name="{x:Static res:Strings.Reminders_Spent}"
                                                        Visibility="{Binding HasFired, Converter={StaticResource BoolToVis}}"/>
+                                            <!-- Its colour, as on the calendar (once spent, the tick instead). -->
+                                            <Ellipse Width="10" Height="10" Margin="1,0,8,0" VerticalAlignment="Center"
+                                                     services:PaletteBrush.Fill="{Binding DisplayColor}"
+                                                     Visibility="{Binding HasFired, Converter={StaticResource InverseBoolToVis}}"/>
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"
                                                        Style="{StaticResource NameText}"/>
                                         </StackPanel>

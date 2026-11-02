@@ -135,6 +135,19 @@ public class ThemeColourTests
         }
     }
 
+    /// The theme has a colour for each one a reminder can be saved with, and no other.
+    [Fact]
+    public void The_theme_s_palette_is_the_reminders_colours()
+    {
+        Assert.Equal(Pendulum.Core.Models.ReminderColors.All,
+            AppThemeManager.Palette.Select(c => c.Name.ToLowerInvariant()));
+        Assert.All(Pendulum.Core.Models.ReminderColors.All, name =>
+        {
+            Assert.NotNull(PaletteBrush.KeyFor(name, tint: true));
+            Assert.NotNull(PaletteBrush.KeyFor(name, tint: false));
+        });
+    }
+
     [Fact]
     public void Rose_is_not_one_of_the_palette()
     {

@@ -210,6 +210,13 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   for the alert types), each easy to read on the light and dark themes and told
   apart by colour-blind eyes too. The rose frame round the main panel and the
   rose sort arrows are gone.
+- Each reminder has its own colour, so reminders are easy to tell apart on the
+  calendar: its chips are in it, and a dot by its name in the Reminders list. New
+  reminders take the colour fewest have; change it in the reminder's window. Your
+  reminders from earlier versions each get one too, the same every time.
+- The calendar's "+N more" is plain text and never cut off at the foot of a day:
+  a day shows as many reminders as fit, keeping a line for the rest, and in a small
+  window says how many it has beside the day's number.
 - Links (in About and the "View release" link in the status bar) are now easy
   to read on the dark theme, and match the app's accent on the light one.
 - Runs on .NET 10, Microsoft's current long-term support release, in place of

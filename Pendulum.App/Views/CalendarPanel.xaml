@@ -4,7 +4,8 @@
              xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
-             xmlns:conv="clr-namespace:Pendulum.App.Converters">
+             xmlns:conv="clr-namespace:Pendulum.App.Converters"
+             xmlns:services="clr-namespace:Pendulum.App.Services">
     <UserControl.DataContext>
         <vm:CalendarViewModel/>
     </UserControl.DataContext>
@@ -12,25 +13,31 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
 
-        <!-- A reminder chip: a rose tint of the accent (AppThemeManager sets it per theme), or
-             neutral once it has fired. -->
+        <!-- A reminder chip, in the reminder's own colour (ReminderColors, from the palette): a tint
+             of it with a bar of its shade at the start, the theme's text on it (4.5:1 or more in
+             light and dark, ThemeColourTests). Neutral once it has gone off. A chip is one line,
+             ChipLine high with its gap (CalendarPanel.xaml.cs fits the day's chips to its cell). -->
         <Style x:Key="ReminderPillBadge" TargetType="Border">
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="5,0,5,1"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource PendulumChipStrokeBrush}"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Padding" Value="5,0,5,0"/>
+            <Setter Property="BorderThickness" Value="3,0,0,0"/>
             <Setter Property="Margin" Value="0,0,0,2"/>
-            <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
+            <Setter Property="services:PaletteBrush.Background" Value="{Binding DisplayColor}"/>
+            <Setter Property="services:PaletteBrush.BorderBrush" Value="{Binding DisplayColor}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="services:PaletteBrush.Background" Value="{x:Null}"/>
+                    <Setter Property="services:PaletteBrush.BorderBrush" Value="{x:Null}"/>
                     <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="ReminderPillText" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
             <Style.Triggers>
@@ -56,30 +63,28 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- "+N more": secondary to the chips, a rose outline with rose text; while its list is
-             open, filled with the chips' tint and the text the chips' own (rose text on the tint
-             would fall below 4.5:1 in the dark theme). -->
+        <!-- "+N more": plain text in the theme's secondary text colour, one chip line high, with
+             room below it; under the pointer or while its list is open, the primary text colour. -->
         <Style x:Key="OverflowChip" TargetType="ToggleButton">
-            <Setter Property="Padding" Value="5,0,5,1"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Padding" Value="2,0,2,0"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource PendulumAccentBrush}"/>
-            <Setter Property="Foreground" Value="{DynamicResource PendulumAccentTextBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
+                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+                </Trigger>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
                     <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
                 </Trigger>
             </Style.Triggers>
@@ -104,14 +109,19 @@
         </Style>
 
         <DataTemplate x:Key="DayCellTemplate">
-            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0.6" Padding="6,4">
+            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0.6" Padding="6,3">
+                <!-- The day's number, then its chips, then "+N more" for those that don't fit
+                     (CalendarDayCell.Lines). A cell too short for even one line under the number
+                     (a small window) shows "+N more" beside the number instead. -->
                 <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0" Width="19" Height="19" CornerRadius="10" HorizontalAlignment="Left" Margin="0,0,0,2">
+                    <Border Grid.Row="0" Width="18" Height="18" CornerRadius="9" HorizontalAlignment="Left" Margin="0,0,0,2">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
@@ -139,8 +149,7 @@
                         </TextBlock>
                     </Border>
 
-                    <StackPanel Grid.Row="1">
-                        <ItemsControl ItemsSource="{Binding VisibleReminders}">
+                    <ItemsControl Grid.Row="1" ItemsSource="{Binding VisibleReminders}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button Style="{StaticResource PillButton}"
@@ -152,13 +161,25 @@
                                     </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                    </ItemsControl>
 
-                        <ToggleButton x:Name="OverflowToggle" Style="{StaticResource OverflowChip}"
-                                      Visibility="{Binding HasOverflow, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="{Binding OverflowCount, StringFormat={x:Static res:Strings.Calendar_MoreFormat}}"
-                                       FontSize="10" FontWeight="SemiBold"/>
-                        </ToggleButton>
+                    <ToggleButton x:Name="OverflowToggle"
+                                  Visibility="{Binding HasOverflow, Converter={StaticResource BoolToVis}}">
+                        <ToggleButton.Style>
+                            <Style TargetType="ToggleButton" BasedOn="{StaticResource OverflowChip}">
+                                <Setter Property="Grid.Row" Value="2"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCompact}" Value="True">
+                                        <Setter Property="Grid.Row" Value="0"/>
+                                        <Setter Property="HorizontalAlignment" Value="Right"/>
+                                        <Setter Property="VerticalAlignment" Value="Top"/>
+                                        <Setter Property="Height" Value="18"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ToggleButton.Style>
+                        <TextBlock Text="{Binding OverflowText}" FontSize="10" FontWeight="SemiBold"/>
+                    </ToggleButton>
                         <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
                             <Border Style="{StaticResource OverflowPopupBorder}" MinWidth="160" MaxWidth="260">
@@ -181,7 +202,6 @@
                                 </StackPanel>
                             </Border>
                         </Popup>
-                    </StackPanel>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -237,7 +257,8 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <ItemsControl Grid.Row="1" ItemsSource="{Binding Days}" ItemTemplate="{StaticResource DayCellTemplate}">
+                <ItemsControl x:Name="DayGrid" Grid.Row="1" ItemsSource="{Binding Days}" ItemTemplate="{StaticResource DayCellTemplate}"
+                              SizeChanged="DayGrid_SizeChanged">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Rows="6" Columns="7"/>

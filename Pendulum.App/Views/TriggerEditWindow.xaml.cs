@@ -22,6 +22,11 @@ public partial class TriggerEditWindow : FluentWindow
     private readonly bool _use24Hour;
     private readonly bool _isNew;
     private bool _isLoading;
+
+    /// The colour chosen in the swatches, and whether the user chose it (otherwise a colour from a
+    /// later version that this one doesn't know is kept as it is).
+    private string _colour = ReminderColors.AssignOrder[0];
+    private bool _colourChosen;
     private RecurrenceRule? _recurrence;
     // The date and time the window loaded, so Save can tell whether the user changed them.
     private DateTime _shownAt;
@@ -71,7 +76,28 @@ public partial class TriggerEditWindow : FluentWindow
         foreach (var f in AppServices.Instance.GetAvailableSoundFiles())
             SoundBox.Items.Add(f);
 
+        foreach (var name in ReminderColors.All)
+        {
+            var swatch = new System.Windows.Controls.RadioButton
+            {
+                Style = (Style)FindResource("ColourSwatch"), // not user-visible: a resource key
+                GroupName = nameof(ColourChoices),
+                Tag = name,
+                ToolTip = ReminderColorNames.Display(name),
+            };
+            System.Windows.Automation.AutomationProperties.SetName(swatch, ReminderColorNames.Display(name));
+            swatch.Checked += (_, _) => ShowColour(name, chosen: !_isLoading);
+            ColourChoices.Children.Add(swatch);
+        }
+
         LoadFrom(target);
+    }
+
+    private void ShowColour(string name, bool chosen)
+    {
+        _colour = name;
+        _colourChosen |= chosen;
+        ColourNameText.Text = ReminderColorNames.Display(name);
     }
 
     private void SetupTimeFormat()
@@ -136,6 +162,12 @@ public partial class TriggerEditWindow : FluentWindow
 
         _recurrence = t.Recurrence;
         UpdateRecurrenceSummary();
+
+        // A new reminder's: the colour fewest reminders have; a saved one's: its own.
+        var colour = _isNew && t.Color is null ? ReminderColors.ForNew(AppServices.Instance.Triggers) : ReminderColors.Effective(t);
+        foreach (var swatch in ColourChoices.Children.OfType<System.Windows.Controls.RadioButton>())
+            swatch.IsChecked = (string)swatch.Tag == colour;
+        ShowColour(colour, chosen: false);
 
         _isLoading = false;
         UpdateModeDependentUi();
@@ -305,6 +337,8 @@ public partial class TriggerEditWindow : FluentWindow
         _target.SoundFileName = soundFile;
         _target.Phrase = phrase;
         _target.Volume = volume;
+        if (_colourChosen || _target.Color is null)
+            _target.Color = _colour;
 
         if (firstOccurrence is not null)
         {

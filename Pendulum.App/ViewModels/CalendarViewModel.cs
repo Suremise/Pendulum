@@ -51,6 +51,24 @@ public partial class CalendarViewModel : ObservableObject
 
     public ObservableCollection<CalendarDayCell> Days { get; } = new();
 
+    /// How many lines of chips fit in a day's cell, as the view measures it (CalendarPanel): the
+    /// grid is rebuilt when it changes.
+    private int _chipLines = 2;
+
+    public int ChipLines
+    {
+        get => _chipLines;
+        set
+        {
+            value = Math.Max(0, value);
+            if (value == _chipLines)
+                return;
+            _chipLines = value;
+            OnPropertyChanged();
+            RebuildGrid();
+        }
+    }
+
     // Tracks which RecurrenceRule instance is currently subscribed per trigger, so that when
     // TriggerTimer.Recurrence is replaced (e.g. via the Repeat dialog) we can unsubscribe the
     // specific old instance — by the time the PropertyChanged event fires, t.Recurrence already
@@ -188,7 +206,8 @@ public partial class CalendarViewModel : ObservableObject
             {
                 Date = date,
                 IsCurrentMonth = date.Month == firstOfMonth.Month && date.Year == firstOfMonth.Year,
-                IsToday = date.Date == today
+                IsToday = date.Date == today,
+                Lines = ChipLines,
             });
         }
 

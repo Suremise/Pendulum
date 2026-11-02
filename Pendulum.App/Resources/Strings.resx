@@ -51,6 +51,8 @@ This replaces all your current settings and reminders. This cannot be undone.</v
   <data name="Backup_Restored" xml:space="preserve"><value>Restored settings and {0} reminder(s).</value><comment>{0}: how many reminders.</comment></data>
   <data name="Backup_RestoredCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows Backup_Restored. {0}: how many reminders.</comment></data>
   <data name="Calendar_Calendar" xml:space="preserve"><value>Calendar</value><comment>CalendarPanel.xaml, Text</comment></data>
+  <data name="Calendar_OneReminder" xml:space="preserve"><value>1 reminder</value><comment>Calendar: beside a day's number when the window is too small for its reminders' names</comment></data>
+  <data name="Calendar_RemindersFormat" xml:space="preserve"><value>{0} reminders</value><comment>Calendar: beside a day's number when the window is too small for its reminders' names. {0} is how many (2 or more)</comment></data>
   <data name="Calendar_MoreFormat" xml:space="preserve"><value>+{0} more</value><comment>{0}: how many more reminders that day.</comment></data>
   <data name="Calendar_SeeYourRemindersLaidOutByDay" xml:space="preserve"><value>See your reminders laid out by day.</value><comment>CalendarPanel.xaml, Text</comment></data>
   <data name="Calendar_Today" xml:space="preserve"><value>Today</value><comment>CalendarPanel.xaml, Content</comment></data>
@@ -72,6 +74,15 @@ This replaces all your current settings and reminders. This cannot be undone.</v
   <data name="Edit_ALERTTYPE" xml:space="preserve"><value>ALERT TYPE</value><comment>TriggerEditWindow.xaml, Text</comment></data>
   <data name="Edit_Am" xml:space="preserve"><value>AM</value></data>
   <data name="Edit_Cancel" xml:space="preserve"><value>Cancel</value><comment>TriggerEditWindow.xaml, Content</comment></data>
+  <data name="Edit_Colour" xml:space="preserve"><value>Colour</value><comment>TriggerEditWindow.xaml: the label over the reminder's colour swatches</comment></data>
+  <data name="Edit_ColourTerracotta" xml:space="preserve"><value>Terracotta</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourOchre" xml:space="preserve"><value>Ochre</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourOlive" xml:space="preserve"><value>Olive</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourSage" xml:space="preserve"><value>Sage</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourTeal" xml:space="preserve"><value>Teal</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourBlue" xml:space="preserve"><value>Blue</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourViolet" xml:space="preserve"><value>Violet</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
+  <data name="Edit_ColourPlum" xml:space="preserve"><value>Plum</value><comment>A reminder colour's name (TriggerEditWindow, beside the swatches and for screen readers)</comment></data>
   <data name="Edit_Disabled" xml:space="preserve"><value> (disabled)</value><comment>TriggerEditWindow.xaml, Text</comment></data>
   <data name="Edit_DoesNotRepeat" xml:space="preserve"><value>Does not repeat</value><comment>TriggerEditWindow.xaml, Text</comment></data>
   <data name="Edit_EditReminder" xml:space="preserve"><value>Edit Reminder</value></data>
