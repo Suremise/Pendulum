@@ -166,6 +166,39 @@ public sealed class ReminderFilterPanelTests : IDisposable
         });
     }
 
+    [Fact]
+    public void A_reminders_on_off_button_shows_its_state_by_shape_and_name_not_colour_alone()
+    {
+        UiThread.Invoke(() =>
+        {
+            var panel = Build(new AppSettings());
+            var style = (Style)panel.FindResource("EnableToggleButton");
+            Button Toggle() => Elements(panel).OfType<Button>().Single(b => ReferenceEquals(b.Style, style));
+            string Name(Button b) => UIElementAutomationPeer.CreatePeerForElement(b).GetName();
+
+            // On: a tick, and named for what a click does.
+            Assert.Equal("", Toggle().Content);
+            Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Disable, Name(Toggle()));
+            Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Disable, Toggle().ToolTip);
+
+            try
+            {
+                _reminder.Enabled = false;
+                panel.UpdateLayout();
+
+                // Off: no tick, an edge to see it by, and the other name.
+                Assert.Equal(string.Empty, Toggle().Content);
+                Assert.Equal(1, Toggle().BorderThickness.Left);
+                Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Enable, Name(Toggle()));
+                Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Enable, Toggle().ToolTip);
+            }
+            finally
+            {
+                _reminder.Enabled = true;
+            }
+        });
+    }
+
     private static TriggersPanel Build(AppSettings settings)
     {
         AppServices.Instance.UseSettingsForTests(settings);

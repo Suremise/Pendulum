@@ -20,25 +20,21 @@
         <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
         <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
         <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
-        <SolidColorBrush x:Key="SpentTextBrush" Color="#D9534F"/>
         <!-- The badges' colours fit the rose theme (AppThemeManager sets each per theme): Upcoming
              the calendar's rose chip, Scheduled a rose outline, Fixed and Disabled neutral greys,
              the alert types muted tints. Each is told apart by its words. -->
+        <!-- A spent reminder is greyed out: its name in the theme's secondary text (AA in light and
+             dark), and its row's Spent badge says it in words. -->
         <Style x:Key="NameText" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource SpentTextBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="TriggersOnText" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource SpentTextBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
         <Style x:Key="TagBadge" TargetType="Border">
             <Setter Property="CornerRadius" Value="4"/>
@@ -150,8 +146,13 @@
         </Style>
         <!-- Plain Button (not ui:Button) with its own ControlTemplate: ui:Button's built-in hover
              state swaps its whole background to a fixed neutral grey regardless of what's set via
-             style triggers, which drowns out the green/red enabled state. This button dims its own
-             colour on hover/press instead, so it still reads as clickable without losing the colour. -->
+             style triggers, which drowns out the on/off state. Under the pointer and pressed, a
+             thin layer of the theme's text colour goes over the fill only (lighter in dark, darker in
+             light, so the fill moves further from the row and from the tick): the edge and the tick
+             are never dimmed, and keep their contrast in every state.
+             On: the rose accent with a tick. Off: the Disabled badge's grey with a strong edge and no
+             tick. So on and off differ in shape as well as colour, and each has a name (what a click
+             does) for screen readers, the same as its tooltip. -->
         <Style x:Key="EnableToggleButton" TargetType="Button">
             <Setter Property="Width" Value="36"/>
             <Setter Property="Height" Value="28"/>
@@ -162,14 +163,22 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bg" Background="{TemplateBinding Background}" CornerRadius="4"/>
+                        <Grid x:Name="Bg">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4"/>
+                            <Border x:Name="Feedback" Background="{DynamicResource TextFillColorPrimaryBrush}" CornerRadius="4" Opacity="0"/>
+                            <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4"/>
+                            <TextBlock Text="{TemplateBinding Content}" Foreground="{TemplateBinding Foreground}"
+                                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bg" Property="Opacity" Value="0.8"/>
+                                <Setter TargetName="Feedback" Property="Opacity" Value="0.1"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bg" Property="Opacity" Value="0.65"/>
+                                <Setter TargetName="Feedback" Property="Opacity" Value="0.2"/>
                             </Trigger>
+                            <!-- A spent reminder's: it can't be clicked, and is faded as a whole. -->
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bg" Property="Opacity" Value="0.35"/>
                             </Trigger>
@@ -180,11 +189,19 @@
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Enabled}" Value="True">
                     <Setter Property="ToolTip" Value="{x:Static res:Strings.Reminders_Disable}"/>
-                    <Setter Property="Background" Value="#2E7D32"/>
+                    <Setter Property="AutomationProperties.Name" Value="{x:Static res:Strings.Reminders_Disable}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumAccentBrush}"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
+                    <Setter Property="Content" Value="&#xE73E;"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Enabled}" Value="False">
                     <Setter Property="ToolTip" Value="{x:Static res:Strings.Reminders_Enable}"/>
-                    <Setter Property="Background" Value="#C0392B"/>
+                    <Setter Property="AutomationProperties.Name" Value="{x:Static res:Strings.Reminders_Enable}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeDisabledBrush}"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Content" Value=""/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>

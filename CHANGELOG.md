@@ -127,6 +127,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- In the Reminders list, the on/off button is rose with a tick when a reminder is
+  on and grey when it's off, instead of green and red, and screen readers name
+  it. A spent reminder is greyed out instead of drawn in a red that was hard to
+  read.
 - The Reminders list's badges fit the app's rose colour: Upcoming is rose and
   Scheduled a rose outline, Fixed and Disabled are greys, and the alert types
   muted tints. The "Filters" button turns rose while filters are on, and the
