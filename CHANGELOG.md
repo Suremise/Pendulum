@@ -153,6 +153,12 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- The Reminders list fills the window: Name takes the spare width, and the other
+  columns are as wide as their widest content, so nothing is cut off; in a narrow
+  window Sound, then Mode, step aside. Double-click a reminder (or press Enter) to
+  edit it; right-click it for Edit, Turn on/off and Delete, or press Delete. The
+  Edit and Delete buttons on every row are gone; the on/off button stays, at the
+  right edge.
 - A spent reminder looks finished at a glance in the Reminders list: a tick in a
   circle before its name, all its text greyed and its row a shade quieter.
 - In the Reminders list, the on/off button is rose with a tick when a reminder is

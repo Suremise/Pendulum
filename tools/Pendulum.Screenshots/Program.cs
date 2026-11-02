@@ -205,6 +205,11 @@ public static class Program
         {
             tabs.SelectedIndex = tab;
             Layout(host);
+            // The Reminders list sizes its columns when it loads, which a view never shown doesn't:
+            // raised here, as the app's window does when the tab first shows.
+            foreach (var panel in Descendants(host).OfType<TriggersPanel>())
+                panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            Layout(host);
             // The calendar builds its grid once it's on screen (its Loaded): here, by hand.
             foreach (var calendar in Descendants(host).OfType<CalendarPanel>())
                 (calendar.DataContext as CalendarViewModel)?.RefreshForDisplay();

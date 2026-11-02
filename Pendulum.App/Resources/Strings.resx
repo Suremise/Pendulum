@@ -219,7 +219,12 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Reminders_Delete" xml:space="preserve"><value>Delete</value><comment>TriggersPanel.xaml, Content</comment></data>
   <data name="Reminders_Disable" xml:space="preserve"><value>Disable</value><comment>TriggersPanel.xaml, a setter</comment></data>
   <data name="Reminders_Disabled" xml:space="preserve"><value>Disabled</value><comment>TriggersPanel.xaml, Text</comment></data>
-  <data name="Reminders_Edit" xml:space="preserve"><value>Edit</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_RowEdit" xml:space="preserve"><value>_Edit…</value><comment>TriggersPanel.xaml, a reminder's right-click menu: opens its editor.</comment></data>
+  <data name="Reminders_RowEditShortcut" xml:space="preserve"><value>Enter</value><comment>TriggersPanel.xaml, the right-click menu: the key shown beside Edit (a double-click does it too).</comment></data>
+  <data name="Reminders_RowTurnOff" xml:space="preserve"><value>Turn _off</value><comment>TriggersPanel.xaml, the right-click menu, for a reminder that's on.</comment></data>
+  <data name="Reminders_RowTurnOn" xml:space="preserve"><value>Turn _on</value><comment>TriggersPanel.xaml, the right-click menu, for a reminder that's off.</comment></data>
+  <data name="Reminders_RowDelete" xml:space="preserve"><value>_Delete</value><comment>TriggersPanel.xaml, the right-click menu: deletes the reminder, after asking.</comment></data>
+  <data name="Reminders_RowDeleteShortcut" xml:space="preserve"><value>Del</value><comment>TriggersPanel.xaml, the right-click menu: the key shown beside Delete.</comment></data>
   <data name="Reminders_Enable" xml:space="preserve"><value>Enable</value><comment>TriggersPanel.xaml, a setter</comment></data>
   <data name="Reminders_EnablePastOneOff" xml:space="preserve"><value>"{0}" was due at {1}, which has passed, so it stays off. Edit it to give it a new time.</value><comment>Turning a past one-off reminder back on from the list. {0}: its name. {1}: the time it was due, from DisplayFormat.DateAndTime.</comment></data>
   <data name="Reminders_EnableSeriesEnded" xml:space="preserve"><value>"{0}" has no more times to go off: its repeats ended while it was off, so it's now spent.</value><comment>Turning a repeating reminder back on from the list, after its end date or count. {0}: its name.</comment></data>

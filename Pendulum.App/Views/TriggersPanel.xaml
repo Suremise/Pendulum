@@ -134,7 +134,32 @@
         </Style>
         <!-- A spent reminder's row is a shade quieter, its text in the secondary colour and its name
              after a "finished" tick: it reads as done at a glance, neutral rather than red. -->
+        <!-- A reminder's right-click menu (the context-menu key opens it too): Edit, turn on or off,
+             Delete. Each row gets its own, set up for its reminder as it opens (PrepareRowMenu). -->
+        <ContextMenu x:Key="ReminderRowMenu" x:Shared="False">
+            <MenuItem x:Name="RowEditItem" Header="{x:Static res:Strings.Reminders_RowEdit}"
+                      InputGestureText="{x:Static res:Strings.Reminders_RowEditShortcut}" Click="RowEdit_Click">
+                <MenuItem.Icon><ui:SymbolIcon Symbol="Edit24"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Tag="TurnOff" Header="{x:Static res:Strings.Reminders_RowTurnOff}" Click="RowToggle_Click">
+                <MenuItem.Icon><ui:SymbolIcon Symbol="AlertOff24"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Tag="TurnOn" Header="{x:Static res:Strings.Reminders_RowTurnOn}" Click="RowToggle_Click">
+                <MenuItem.Icon><ui:SymbolIcon Symbol="Alert24"/></MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="{x:Static res:Strings.Reminders_RowDelete}"
+                      InputGestureText="{x:Static res:Strings.Reminders_RowDeleteShortcut}" Click="RowDelete_Click">
+                <MenuItem.Icon><ui:SymbolIcon Symbol="Delete24"/></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+        <!-- A row: double-click (or Enter) edits its reminder, a right-click offers the menu above, and
+             screen readers name it for its reminder. -->
         <Style TargetType="ListViewItem">
+            <Setter Property="ContextMenu" Value="{StaticResource ReminderRowMenu}"/>
+            <Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>
+            <EventSetter Event="MouseDoubleClick" Handler="Row_MouseDoubleClick"/>
+            <EventSetter Event="ContextMenuOpening" Handler="Row_ContextMenuOpening"/>
             <Setter Property="Padding" Value="0,6"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
@@ -265,7 +290,8 @@
         <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="8">
             <Grid>
                 <ListView x:Name="RemindersList" ItemsSource="{Binding Source={StaticResource SortedTriggers}}" SelectedItem="{Binding SelectedTrigger}"
-                          VerticalAlignment="Top"
+                          VerticalAlignment="Top" KeyDown="RemindersList_KeyDown" SizeChanged="RemindersList_SizeChanged"
+                          ScrollViewer.ScrollChanged="RemindersList_ScrollChanged"
                           BorderThickness="0" Background="Transparent"
                           Visibility="{Binding HasTriggers, Converter={StaticResource BoolToVis}, FallbackValue=Visible}">
                     <ListView.View>
@@ -283,7 +309,9 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="215">
+                            <!-- Name takes the list's spare width; every other column is sized for its
+                                 widest content, measured as the list loads (FitColumns). -->
+                            <GridViewColumn x:Name="NameColumn" Width="200">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Name" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel>
@@ -312,7 +340,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="128">
+                            <GridViewColumn x:Name="TypeColumn" Width="128">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="IsScheduled" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
@@ -358,8 +386,8 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <!-- Widened in code, when needed, to the widest date and time the current
-                                 format can show (FitDateColumn): it never cuts off AM/PM. -->
+                            <!-- As wide as the widest date and time the current format can show: it never
+                                 cuts off AM/PM. -->
                             <GridViewColumn x:Name="DateColumn" Width="177">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="TriggerAt" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
@@ -403,7 +431,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="135">
+                            <GridViewColumn x:Name="ModeColumn" Width="135">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="Mode" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
@@ -447,7 +475,7 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="87">
+                            <GridViewColumn x:Name="SoundColumn" Width="87">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="SoundFileName" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel Orientation="Horizontal">
@@ -458,12 +486,15 @@
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- The date's style: the secondary colour, and the row's font (as every cell's
+                                             text, so the column is measured in the font it's drawn in). -->
                                         <TextBlock Text="{Binding SoundFileName}" VerticalAlignment="Center" Margin="6,0,0,0"
-                                                   Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding SoundFileName}"
+                                                   Style="{StaticResource TriggersOnText}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Width="118">
+                            <GridViewColumn x:Name="StatusColumn" Width="118">
                                 <GridViewColumn.Header>
                                     <GridViewColumnHeader Tag="StatusSortOrder" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                     <StackPanel>
@@ -529,20 +560,14 @@
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
-                            <GridViewColumn Header="" Width="185">
+                            <!-- Only the on/off button on each row, at the right edge: Edit and Delete are
+                                 the row's double-click, its right-click menu and the Enter and Delete keys. -->
+                            <GridViewColumn x:Name="ToggleColumn" Header="" Width="56">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                            <ui:Button Content="{x:Static res:Strings.Reminders_Edit}" Appearance="Secondary" Padding="12,4"
-                                                       Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                       CommandParameter="{Binding}"/>
-                                            <ui:Button Content="{x:Static res:Strings.Reminders_Delete}" Appearance="Secondary" Padding="12,4" Margin="8,0,0,0"
-                                                       Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                       CommandParameter="{Binding}"/>
-                                            <Button Style="{StaticResource EnableToggleButton}"
-                                                    Command="{Binding DataContext.ToggleEnabledCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                    CommandParameter="{Binding}"/>
-                                        </StackPanel>
+                                        <Button Style="{StaticResource EnableToggleButton}" HorizontalAlignment="Right"
+                                                Command="{Binding DataContext.ToggleEnabledCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
