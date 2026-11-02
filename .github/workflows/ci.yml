@@ -1,9 +1,34 @@
 name: CI
 
+# A push or pull request that changes only the files under paths-ignore (writing and pictures that
+# no build step, test or check reads; the same list for both) doesn't run CI. Anything else still
+# does. Kept in on purpose: CHANGELOG.md (the release notes come from it), THIRD-PARTY-NOTICES.md
+# (the notices check reads it), LICENSE (shipped), the icons under assets/ (compiled in), the
+# tests' Fixtures, global.json, .editorconfig (the format check) and the workflows themselves.
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'docs/**'
+      - 'assets/README.md'
+      - 'assets/preview.png'
+      - '.github/ISSUE_TEMPLATE/**'
   pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'SECURITY.md'
+      - 'AGENTS.md'
+      - 'CLAUDE.md'
+      - 'docs/**'
+      - 'assets/README.md'
+      - 'assets/preview.png'
+      - '.github/ISSUE_TEMPLATE/**'
   # Run by hand (Actions > CI > Run workflow).
   workflow_dispatch:
 

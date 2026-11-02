@@ -22,7 +22,9 @@ dotnet format Pendulum.sln --verify-no-changes --no-restore   # the layout in .e
 ```
 
 CI runs the Release build (warnings are errors), the tests, the notices check and the format check
-on every push to master and every pull request, so run them before you open one.
+on every push to master and every pull request, so run them before you open one. A change to the
+docs and pictures alone (README, CONTRIBUTING, SECURITY, AGENTS.md, docs/, the issue templates)
+doesn't run CI: the list is `paths-ignore` in `.github/workflows/ci.yml`.
 
 The build is self-contained for win-x64: `Pendulum.App\bin\<Configuration>\<framework>\win-x64\`
 holds `Pendulum.exe`, and a run from there keeps its data in a `Data\` folder beside it, apart from

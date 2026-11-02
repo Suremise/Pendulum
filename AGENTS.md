@@ -62,7 +62,8 @@ pwsh scripts/screenshots.ps1                         # the README's pictures, in
   own restore leaves nodes running, so run it with `--no-restore` after a build.
 - **CI** (`.github/workflows/ci.yml`, on Windows) runs on every push to master, every pull request
   and by hand: the Release build with warnings as errors, the tests, the notices check and the
-  format check. Run the same four before review.
+  format check. Run the same four before review. A change to the docs and pictures alone doesn't
+  run it (`paths-ignore` in ci.yml): never add to that list a file a build step, test or check reads.
 
 - **Tests use temp folders only**, never the app's real `Data\`, the registry or the user's
   sounds, and clean up even when they fail. They **wait for conditions, never for time**, and pass
