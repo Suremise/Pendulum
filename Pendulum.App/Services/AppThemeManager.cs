@@ -41,6 +41,9 @@ internal static class AppThemeManager
     public const string BadgeSoundAndSpeechBrushKey = "PendulumBadgeSoundAndSpeechBrush";  // not user-visible
     public const string BadgeSpeechOnlyBrushKey = "PendulumBadgeSpeechOnlyBrush";  // not user-visible
 
+    /// A spent reminder's row in the Reminders list: a shade quieter than the others.
+    public const string SpentRowBrushKey = "PendulumSpentRowBrush";  // not user-visible
+
     /// The accent for one theme. WPF-UI 3 uses `Fill` for primary buttons, toggles and checked
     /// boxes, `Hover` for a primary button under the pointer and its other accent fills, and
     /// `Text` for accent-coloured text; `System` is the selection highlight. On light, labels on
@@ -63,6 +66,11 @@ internal static class AppThemeManager
     // on the tint would be 3.7:1 in dark).
     private const byte ChipAlpha = 0x47;
     private const byte ChipStrokeAlpha = 0x73;
+
+    // A spent row: a little of the theme's shadow over the list (light #0A000000, dark #1F000000),
+    // so the secondary text on it keeps AA contrast.
+    private const string SpentRowOnLight = "#0A000000";
+    private const string SpentRowOnDark = "#1F000000";
 
     // The calendar's background (ControlFillColorDefault over the window), made opaque.
     private const string PopupOnLight = "#FBFBFB";
@@ -106,6 +114,8 @@ internal static class AppThemeManager
         SetBrush(ChipBrushKey, WithAlpha(accent.Fill, ChipAlpha));
         SetBrush(ChipStrokeBrushKey, WithAlpha(accent.Fill, ChipStrokeAlpha));
         SetBrush(PopupBrushKey, Parse(theme == ApplicationTheme.Dark ? PopupOnDark : PopupOnLight));
+
+        SetBrush(SpentRowBrushKey, Parse(theme == ApplicationTheme.Dark ? SpentRowOnDark : SpentRowOnLight));
 
         var badges = theme == ApplicationTheme.Dark ? BadgesOnDark : BadgesOnLight;
         SetBrush(BadgeFixedBrushKey, Parse(badges.Fixed));

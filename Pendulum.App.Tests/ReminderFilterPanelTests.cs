@@ -272,6 +272,48 @@ public sealed class ReminderFilterPanelTests : IDisposable
         });
     }
 
+    [Fact]
+    public void A_spent_reminders_row_looks_finished_and_an_upcoming_ones_does_not()
+    {
+        UiThread.Invoke(() =>
+        {
+            // AppThemeManager sets the row's brush in the app; the test's own stands in for it.
+            var spentRow = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x1F, 0, 0, 0));
+            Application.Current.Resources["PendulumSpentRowBrush"] = spentRow;
+            var secondary = Application.Current.FindResource("TextFillColorSecondaryBrush");
+            var panel = Build(new AppSettings());
+
+            TextBlock Tick() => Elements(panel).OfType<TextBlock>().Single(t => t.Text == "" && ReferenceEquals(t.DataContext, _reminder));
+            ListViewItem Row() => Elements(panel).OfType<ListViewItem>().Single(i => ReferenceEquals(i.Content, _reminder));
+            TextBlock Badge(string text) => Elements(panel).OfType<TextBlock>()
+                .Single(t => t.Text == text && ReferenceEquals(t.DataContext, _reminder) && t.Style == panel.FindResource("RowBadgeText"));
+
+            // Upcoming: no tick, the list's own background, badges in the primary text.
+            Assert.Equal(Visibility.Collapsed, Tick().Visibility);
+            Assert.NotSame(spentRow, Row().Background);
+            Assert.NotSame(secondary, Badge(Pendulum.App.Resources.Strings.Reminders_Fixed).Foreground);
+
+            try
+            {
+                _reminder.HasFired = true;
+                panel.UpdateLayout();
+
+                // Spent: the tick (named so for screen readers), the quieter row, every badge's text
+                // and the name in the secondary text.
+                Assert.Equal(Visibility.Visible, Tick().Visibility);
+                Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Spent, UIElementAutomationPeer.CreatePeerForElement(Tick()).GetName());
+                Assert.Same(spentRow, Row().Background);
+                Assert.Same(secondary, Badge(Pendulum.App.Resources.Strings.Reminders_Fixed).Foreground);
+                Assert.Same(secondary, Elements(panel).OfType<TextBlock>().Single(t => t.Text == _reminder.Name).Foreground);
+            }
+            finally
+            {
+                _reminder.HasFired = false;
+                Application.Current.Resources.Remove("PendulumSpentRowBrush");
+            }
+        });
+    }
+
     private static TriggersPanel Build(AppSettings settings)
     {
         AppServices.Instance.UseSettingsForTests(settings);

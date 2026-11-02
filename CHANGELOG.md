@@ -144,6 +144,8 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   it listens no longer leaves Quick Reminder stuck on "Listening".
 
 ### Changed
+- A spent reminder looks finished at a glance in the Reminders list: a tick in a
+  circle before its name, all its text greyed and its row a shade quieter.
 - In the Reminders list, the on/off button is rose with a tick when a reminder is
   on and grey when it's off, instead of green and red, and screen readers name
   it. A spent reminder is greyed out instead of drawn in a red that was hard to

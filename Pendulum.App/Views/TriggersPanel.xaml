@@ -46,6 +46,14 @@
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
+        <Style x:Key="RowBadgeText" TargetType="TextBlock" BasedOn="{StaticResource TagBadgeText}">
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="ModeBadge" TargetType="Border" BasedOn="{StaticResource TagBadge}">
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Style.Triggers>
@@ -124,6 +132,8 @@
             <Setter Property="Margin" Value="0,0,0,8"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
+        <!-- A spent reminder's row is a shade quieter, its text in the secondary colour and its name
+             after a "finished" tick: it reads as done at a glance, neutral rather than red. -->
         <Style TargetType="ListViewItem">
             <Setter Property="Padding" Value="0,6"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -143,6 +153,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding HasFired}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PendulumSpentRowBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
         <!-- Plain Button (not ui:Button) with its own ControlTemplate: ui:Button's built-in hover
              state swaps its whole background to a fixed neutral grey regardless of what's set via
@@ -285,8 +300,15 @@
                                 </GridViewColumn.Header>
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="10,0,0,0"
-                                                   Style="{StaticResource NameText}"/>
+                                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                                            <TextBlock Text="&#xE930;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13"
+                                                       VerticalAlignment="Center" Margin="0,0,6,0"
+                                                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                       AutomationProperties.Name="{x:Static res:Strings.Reminders_Spent}"
+                                                       Visibility="{Binding HasFired, Converter={StaticResource BoolToVis}}"/>
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center"
+                                                       Style="{StaticResource NameText}"/>
+                                        </StackPanel>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>
@@ -326,13 +348,11 @@
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                                             <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeFixedBrush}"
                                                     Visibility="{Binding Recurrence, Converter={StaticResource FixedVis}}">
-                                                <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource TagBadgeText}"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                             <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource PendulumAccentBrush}"
                                                     Visibility="{Binding Recurrence, Converter={StaticResource ScheduledVis}}">
-                                                <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource TagBadgeText}"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                         </StackPanel>
                                     </DataTemplate>
@@ -422,8 +442,7 @@
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
                                         <Border Style="{StaticResource ModeBadge}" Margin="6,0,0,0">
-                                            <TextBlock Text="{Binding Mode, Converter={StaticResource EnumSpaced}}" Style="{StaticResource TagBadgeText}"
-                                                       Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                            <TextBlock Text="{Binding Mode, Converter={StaticResource EnumSpaced}}" Style="{StaticResource RowBadgeText}"/>
                                         </Border>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
@@ -495,8 +514,7 @@
                                                         <Binding Path="HasFired"/>
                                                     </MultiBinding>
                                                 </Border.Visibility>
-                                                <TextBlock Text="{x:Static res:Strings.Reminders_Upcoming}" Style="{StaticResource TagBadgeText}"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <TextBlock Text="{x:Static res:Strings.Reminders_Upcoming}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                             <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeDisabledBrush}">
                                                 <Border.Visibility>
@@ -505,8 +523,7 @@
                                                         <Binding Path="HasFired"/>
                                                     </MultiBinding>
                                                 </Border.Visibility>
-                                                <TextBlock Text="{x:Static res:Strings.Reminders_Disabled}" Style="{StaticResource TagBadgeText}"
-                                                           Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                                                <TextBlock Text="{x:Static res:Strings.Reminders_Disabled}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                         </StackPanel>
                                     </DataTemplate>
