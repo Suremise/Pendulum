@@ -167,7 +167,7 @@ public partial class App : Application
     private void UpdateTrayTooltip()
     {
         if (_trayIcon is not null)
-            _trayIcon.ToolTipText = string.Format(Strings.Tray_ToolTipWithStatus, ReminderStatus.GetNextReminderSummary());
+            _trayIcon.ToolTipText = TrayTooltip.Build(ReminderStatus.GetNextReminderSummary(), _hotkey?.Active);
     }
 
     /// Holds the Quick Reminder shortcut the settings name, and says so when another app has it:
@@ -186,6 +186,9 @@ public partial class App : Application
         // Kept the one before: Settings shows it again (applying it then is a no-op).
         if (outcome is HotkeyOutcome.TakenKeptPrevious or HotkeyOutcome.InvalidKeptPrevious)
             settings.QuickAddHotkeyGesture = _hotkey.Active!;
+
+        // The tooltip names the shortcut held now: changed, kept, turned off or none at all.
+        UpdateTrayTooltip();
 
         var message = outcome switch
         {

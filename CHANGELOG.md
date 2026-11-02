@@ -8,6 +8,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- The tray icon's tooltip shows the Quick Reminder shortcut ("Quick Reminder:
+  Ctrl+Alt+R") under the next reminder, while the shortcut is on.
 - A portable zip with each release: unzip it anywhere and run Pendulum.exe,
   which keeps its data in a Data folder beside it. Each release also lists
   its files' SHA-256 checksums, to check a download before running it.

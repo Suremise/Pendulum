@@ -342,6 +342,7 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Tray_MissedOne" xml:space="preserve"><value>"{0}" was missed while Pendulum was closed.</value><comment>{0}: the reminder's name.</comment></data>
   <data name="Tray_Open" xml:space="preserve"><value>Open Pendulum</value><comment>The tray menu.</comment></data>
   <data name="Tray_StillRunning" xml:space="preserve"><value>Still running in the system tray. Click the tray icon to reopen, or right-click it to exit.</value></data>
+  <data name="Tray_ToolTipShortcut" xml:space="preserve"><value>Quick Reminder: {0}</value><comment>A line of the tray icon's tooltip. {0}: the Quick Reminder shortcut, as Settings shows it ("Ctrl+Alt+R").</comment></data>
   <data name="Tray_ToolTipWithStatus" xml:space="preserve"><value>Pendulum - {0}</value><comment>{0}: the next reminder, as Status_Next says it.</comment></data>
   <data name="Voice_Alba_Credit" xml:space="preserve"><value>Trained on the Alba recordings, datashare.ed.ac.uk/handle/10283/3270.</value><comment>The credit the voice's licence asks for.</comment></data>
   <data name="Voice_Alba_Licence" xml:space="preserve"><value>Licence: CC BY 4.0</value><comment>A voice's licence.</comment></data>
