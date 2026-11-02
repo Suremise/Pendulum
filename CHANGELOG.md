@@ -32,6 +32,8 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   under Monthly or Yearly.
 
 ### Fixed
+- The Reminders list's Select mode shows each checkbox whole: they were cut off
+  at the list's left edge. Screen readers now name each one for its reminder.
 - Choosing a value in a column's filter in the Reminders list no longer re-sorts the
   list by that column. Clicking the column's heading still sorts it.
 - Quick Reminder: "today" with a time that has already gone ("report today

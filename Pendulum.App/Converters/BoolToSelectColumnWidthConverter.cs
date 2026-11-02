@@ -8,8 +8,12 @@ namespace Pendulum.App.Converters;
 /// until it's actually needed.
 public sealed class BoolToSelectColumnWidthConverter : IValueConverter
 {
+    /// The column in select mode: the cell's 6 px padding each side, the box itself, and room
+    /// between it and the name.
+    public const double SelectingWidth = 44d;
+
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
-        value is bool b && b ? 34d : 0d;
+        value is bool b && b ? SelectingWidth : 0d;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         throw new NotSupportedException();

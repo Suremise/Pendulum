@@ -258,7 +258,12 @@
                             <GridViewColumn Header="" Width="{Binding DataContext.IsSelecting, ElementName=RootControl, Converter={StaticResource SelectColumnWidth}}">
                                 <GridViewColumn.CellTemplate>
                                     <DataTemplate>
+                                        <!-- WPF-UI sizes a CheckBox for a label beside it (MinWidth 30, padding
+                                             11 each side): with no label it would overflow the column and be cut
+                                             off. The box alone, named for its reminder for screen readers. -->
                                         <CheckBox IsChecked="{Binding IsSelectedForBulk, Mode=TwoWay}" VerticalAlignment="Center"
+                                                  HorizontalAlignment="Left" MinWidth="0" Padding="0"
+                                                  AutomationProperties.Name="{Binding Name}"
                                                   BorderBrush="{DynamicResource PendulumAccentBrush}" BorderThickness="1.5"/>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>

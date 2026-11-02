@@ -199,6 +199,39 @@ public sealed class ReminderFilterPanelTests : IDisposable
         });
     }
 
+    [Fact]
+    public void In_select_mode_each_checkbox_fits_its_column_whole_and_is_named_for_its_reminder()
+    {
+        UiThread.Invoke(() =>
+        {
+            var panel = Build(new AppSettings());
+            var vm = (TriggersViewModel)panel.DataContext;
+            try
+            {
+                vm.IsSelecting = true;
+                panel.UpdateLayout();
+
+                var box = Elements(panel).OfType<CheckBox>().Single(c => ReferenceEquals(c.DataContext, _reminder));
+                var row = Elements(panel).OfType<GridViewRowPresenter>().Single(r => ReferenceEquals(r.Content, _reminder));
+                var column = ((GridView)Elements(panel).OfType<ListView>().Single().View).Columns[0];
+                var left = box.TranslatePoint(new Point(0, 0), row).X;
+
+                // The whole box inside the select column, none of it cut off, with room after it.
+                Assert.True(box.ActualWidth > 0);
+                Assert.True(left >= 0, $"the box starts at {left}");
+                Assert.True(left + box.ActualWidth + 4 <= column.ActualWidth,
+                    $"the box ends at {left + box.ActualWidth} in a {column.ActualWidth}-wide column");
+                Assert.True(box.ActualWidth <= box.DesiredSize.Width + 0.5, "the box is laid out wider than it draws");
+
+                Assert.Equal(_reminder.Name, UIElementAutomationPeer.CreatePeerForElement(box).GetName());
+            }
+            finally
+            {
+                vm.IsSelecting = false;
+            }
+        });
+    }
+
     private static TriggersPanel Build(AppSettings settings)
     {
         AppServices.Instance.UseSettingsForTests(settings);
