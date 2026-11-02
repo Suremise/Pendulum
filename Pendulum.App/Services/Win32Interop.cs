@@ -89,6 +89,27 @@ internal static class Win32Interop
         return (info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom);
     }
 
+    private const uint MONITORINFOF_PRIMARY = 1;
+
+    private delegate bool MonitorEnumProc(IntPtr monitor, IntPtr hdc, IntPtr rect, IntPtr data);
+
+    [DllImport("user32.dll")]
+    private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr clip, MonitorEnumProc callback, IntPtr data);
+
+    /// Every monitor's work area, in device pixels, and which is the primary. Reads only.
+    public static IReadOnlyList<(int Left, int Top, int Right, int Bottom, bool Primary)> MonitorWorkAreas()
+    {
+        var areas = new List<(int, int, int, int, bool)>();
+        EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (monitor, _, _, _) =>
+        {
+            var info = new MonitorInfo { Size = Marshal.SizeOf<MonitorInfo>() };
+            if (GetMonitorInfo(monitor, ref info))
+                areas.Add((info.Work.Left, info.Work.Top, info.Work.Right, info.Work.Bottom, (info.Flags & MONITORINFOF_PRIMARY) != 0));
+            return true;
+        }, IntPtr.Zero);
+        return areas;
+    }
+
     [DllImport("kernel32.dll")]
     private static extern uint GetCurrentThreadId();
 

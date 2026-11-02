@@ -20,6 +20,10 @@ if it matches, choose **More info**, then **Run anyway**.
 Installing it over 1.1.0 keeps your reminders, settings and downloaded voices and speech models.
 
 ### Added
+- The main window behaves like any Windows window: minimise, maximise and close in
+  the title bar, double-click it to maximise or restore, Windows 11's snap layouts,
+  Win+arrow keys and resizing from its edges. It opens where you last left it, at
+  the same size (or maximised), and comes back onto a screen if that one's gone.
 - The tray icon's tooltip shows the Quick Reminder shortcut ("Quick Reminder:
   Ctrl+Alt+R") under the next reminder, while the shortcut is on.
 - A portable zip with each release: unzip it anywhere and run Pendulum.exe,

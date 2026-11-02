@@ -95,6 +95,16 @@ public partial class AppSettings : ObservableObject, IJsonOnDeserializing
     [ObservableProperty][property: Bookkeeping] private DateTime? reminderFilterFrom;
     [ObservableProperty][property: Bookkeeping] private DateTime? reminderFilterTo;
 
+    /// Internal bookkeeping: the main window's size and place as it was last left (its normal
+    /// bounds, in WPF's device-independent units), and whether it was maximised, restored at the
+    /// next start. Null until the window is first closed: it then opens at its default size,
+    /// centred.
+    [ObservableProperty][property: Bookkeeping] private double? mainWindowLeft;
+    [ObservableProperty][property: Bookkeeping] private double? mainWindowTop;
+    [ObservableProperty][property: Bookkeeping] private double? mainWindowWidth;
+    [ObservableProperty][property: Bookkeeping] private double? mainWindowHeight;
+    [ObservableProperty][property: Bookkeeping] private bool mainWindowMaximized;
+
     /// Runs before a file's values are applied. Up to 1.1.0 the update check was on by default,
     /// so a file without the key had it on: keep it so, rather than turning a user's check off
     /// when they upgrade. A file that names the key sets it as it says.

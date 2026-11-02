@@ -34,7 +34,12 @@
     "ReminderFilterModeSoundAndSpeech": false,
     "ReminderFilterModeSpeechOnly": false,
     "ReminderFilterFrom": "2026-08-01T00:00:00",
-    "ReminderFilterTo": null
+    "ReminderFilterTo": null,
+    "MainWindowLeft": null,
+    "MainWindowTop": null,
+    "MainWindowWidth": null,
+    "MainWindowHeight": null,
+    "MainWindowMaximized": false
   },
   "Triggers": [
     {

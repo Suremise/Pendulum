@@ -124,6 +124,7 @@ public partial class App : Application
 
             var mainWindow = new MainWindow();
             MainWindow = mainWindow;
+            mainWindow.RestorePlacement();
 
             // Force the window's handle to exist (needed for hotkey registration) without
             // making it visible, so "Start minimized" can skip Show() entirely and launch

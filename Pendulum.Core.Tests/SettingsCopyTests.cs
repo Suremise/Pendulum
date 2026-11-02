@@ -25,6 +25,9 @@ public sealed class SettingsCopyTests
         nameof(AppSettings.ReminderFilterStatusSpent), nameof(AppSettings.ReminderFilterStatusDisabled),
         nameof(AppSettings.ReminderFilterModeSoundOnly), nameof(AppSettings.ReminderFilterModeSoundAndSpeech),
         nameof(AppSettings.ReminderFilterModeSpeechOnly), nameof(AppSettings.ReminderFilterFrom),
+        nameof(AppSettings.MainWindowLeft), nameof(AppSettings.MainWindowTop),
+        nameof(AppSettings.MainWindowWidth), nameof(AppSettings.MainWindowHeight),
+        nameof(AppSettings.MainWindowMaximized),
         nameof(AppSettings.ReminderFilterTo),
     ];
 

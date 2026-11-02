@@ -9,9 +9,10 @@
         mc:Ignorable="d"
         Title="{x:Static res:Strings.App_Name}"
         Height="800" Width="1200"
-        ResizeMode="CanMinimize"
+        MinHeight="560" MinWidth="820"
+        ResizeMode="CanResize"
         WindowStartupLocation="CenterScreen"
-        Icon="pack://application:,,,/Resources/pendulum.ico"
+        Icon="pack://application:,,,/Pendulum;component/Resources/pendulum.ico"
         ExtendsContentIntoTitleBar="True"
         Closing="FluentWindow_Closing"
         Closed="FluentWindow_Closed">
@@ -92,7 +93,10 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ui:TitleBar Grid.Row="0" Title="{x:Static res:Strings.App_Name}" ShowMaximize="False"/>
+        <!-- Windows' own controls: minimise, maximise/restore (with Windows 11's snap layouts under
+             the pointer) and close; a double-click on the title bar maximises and restores. -->
+        <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="{x:Static res:Strings.App_Name}"
+                     ShowMinimize="True" ShowMaximize="True" ShowClose="True" CanMaximize="True"/>
 
         <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="28,12,28,20" Style="{StaticResource PendulumTabControl}">
             <TabItem x:Name="FixedTriggersTab" Header="{x:Static res:Strings.Main_Reminders}" Tag="&#xE823;" Style="{StaticResource PendulumTabItem}">

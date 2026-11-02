@@ -105,10 +105,16 @@ public sealed class SettingsPanelTests : IDisposable
             Assert.Equal("30", Value(panel, "AutoDeleteBox"));
         });
 
-        // Saved back, it is the same file: every key, every value.
+        // Saved back, it is the same file: every key, every value. The only keys added are the ones
+        // this version saves that v1.1.0 didn't, at their defaults (where the window was left).
         new SettingsRepository().Save(settings);
-        var expected = JsonNode.Parse(File.ReadAllText(FixturePath));
-        var actual = JsonNode.Parse(File.ReadAllText(AppPaths.SettingsFile));
+        var expected = JsonNode.Parse(File.ReadAllText(FixturePath))!.AsObject();
+        var actual = JsonNode.Parse(File.ReadAllText(AppPaths.SettingsFile))!.AsObject();
+        string[] added = ["MainWindowLeft", "MainWindowTop", "MainWindowWidth", "MainWindowHeight", "MainWindowMaximized"];
+        Assert.Equal(added.Order(), actual.Select(kv => kv.Key).Where(k => !expected.ContainsKey(k)).Order());
+        Assert.All(added, k => Assert.True(actual[k] is null || actual[k]!.ToJsonString() == "false", k));
+        foreach (var k in added)
+            actual.Remove(k);
         Assert.True(JsonNode.DeepEquals(expected, actual), $"Saved settings differ from v1.1.0's:\n{actual}");
     }
 

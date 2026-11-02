@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
@@ -44,10 +45,88 @@ public partial class MainWindow : FluentWindow
         Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
     }
 
+    /// Opens where the window was last left (WindowPlacement keeps it on a screen), maximised if
+    /// it was. Before the window is shown or has a handle; with nothing saved, the default size,
+    /// centred.
+    internal void RestorePlacement()
+    {
+        var s = AppServices.Instance.Settings;
+        if (s.MainWindowLeft is not { } left || s.MainWindowTop is not { } top
+            || s.MainWindowWidth is not { } width || s.MainWindowHeight is not { } height
+            || width <= 0 || height <= 0)
+            return;
+
+        var scale = VisualTreeHelper.GetDpi(this).DpiScaleX;
+        var areas = Win32Interop.MonitorWorkAreas()
+            .Select(a => (Rect: new Rect(a.Left / scale, a.Top / scale, (a.Right - a.Left) / scale, (a.Bottom - a.Top) / scale), a.Primary))
+            .ToList();
+        if (areas.Count == 0)
+            return;
+
+        var primary = areas.FirstOrDefault(a => a.Primary).Rect;
+        if (primary.IsEmpty)
+            primary = areas[0].Rect;
+        var placed = WindowPlacement.Fit(new Rect(left, top, Math.Max(width, MinWidth), Math.Max(height, MinHeight)),
+            areas.Select(a => a.Rect).ToList(), primary);
+
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        Left = placed.Left;
+        Top = placed.Top;
+        Width = placed.Width;
+        Height = placed.Height;
+        if (s.MainWindowMaximized)
+            WindowState = WindowState.Maximized;
+    }
+
+    // The state a minimised window goes back to: a minimised window's own WindowState can't say
+    // whether it was maximised before.
+    private WindowState _stateBeforeMinimized = WindowState.Normal;
+
+    protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+        if (e.Property == WindowStateProperty && e.NewValue is WindowState state && state != WindowState.Minimized)
+            _stateBeforeMinimized = state;
+    }
+
+    /// Whether the window opens maximised next time: it's maximised now, or it's minimised from
+    /// maximised.
+    internal bool MaximizedToRemember =>
+        WindowState == WindowState.Maximized
+        || (WindowState == WindowState.Minimized && _stateBeforeMinimized == WindowState.Maximized);
+
+    /// Remembers the window's normal bounds (its size before it was maximised or minimised) and
+    /// whether it's maximised (or minimised from maximised), in one save. Nothing until it has
+    /// been shown.
+    internal void SavePlacement()
+    {
+        var bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, ActualWidth, ActualHeight) : RestoreBounds;
+        if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0 || double.IsNaN(bounds.Left))
+            return;
+
+        SavePlacement(bounds, MaximizedToRemember);
+    }
+
+    /// Saves these normal bounds and whether the window was maximised, in one save.
+    internal static void SavePlacement(Rect bounds, bool maximized)
+    {
+        AppServices.Instance.ChangeSettingsTogether(() =>
+        {
+            var s = AppServices.Instance.Settings;
+            s.MainWindowLeft = bounds.Left;
+            s.MainWindowTop = bounds.Top;
+            s.MainWindowWidth = bounds.Width;
+            s.MainWindowHeight = bounds.Height;
+            s.MainWindowMaximized = maximized;
+        });
+    }
+
     private void FluentWindow_Closing(object sender, CancelEventArgs e)
     {
-        var app = (App)Application.Current;
-        if (app.IsExiting)
+        if (IsVisible)
+            SavePlacement();
+        // Only Pendulum's own App hides the window to the tray (a test's host closes it).
+        if (Application.Current is not App app || app.IsExiting)
             return;
 
         e.Cancel = true;
@@ -57,9 +136,8 @@ public partial class MainWindow : FluentWindow
 
     private void FluentWindow_Closed(object sender, EventArgs e)
     {
-        var app = (App)Application.Current;
-        if (app.IsExiting)
-            Application.Current.Shutdown();
+        if (Application.Current is App { IsExiting: true } app)
+            app.Shutdown();
     }
 
     private void AboutButton_Click(object sender, RoutedEventArgs e)
