@@ -102,35 +102,40 @@ them). Contrast is WCAG 2, against the themes' backgrounds (light `#FAFAFA` to `
 
 | Token | Light | Dark | Used for | Contrast (worst case) |
 |---|---|---|---|---|
-| `--accent-fill` | `#C7305E` | `#F56A8F` | Primary buttons, toggles, checked boxes; the selected tab's bar, the panel's frame, today in the calendar | Its label (white on light, black on dark): 5.23 / 7.34. On the backgrounds: 4.51 / 4.48 |
+| `--accent-fill` | `#C7305E` | `#F56A8F` | Primary buttons, checked boxes; the selected tab's and Settings section's bar, today in the calendar | Its label (white on light, black on dark): 5.23 / 7.34. On the backgrounds: 4.51 / 4.48 |
 | `--accent-hover` | `#A3234B` | `#FF8FB0` | A primary button under the pointer; WPF-UI's other accent fills | Its label: 7.24 / 9.81 |
-| `--accent-text` | `#A3234B` | `#FF8FB0` | Accent-coloured text and icons (the Settings section icons) | 6.24 / 5.99 |
+| `--accent-text` | `#A3234B` | `#FF8FB0` | Accent-coloured text (the calendar's "+N more") | 6.24 / 5.99 |
 | `--accent-link` | `#A3234B` | `#FF8FB0` | Links | 6.24 / 5.99 |
 | `--accent-system` | `#D23A66` | `#F0567F` | The selection highlight | |
-| `--accent-soft` | `#C7305E` at 16% | `#F56A8F` at 16% | The selected tab's background | |
+| `--accent-soft` | `#C7305E` at 16% | `#F56A8F` at 16% | The selected tab's and Settings section's background | |
+
+**Rose is the brand's alone:** primary buttons, check boxes, the selection, today in the calendar,
+focus and links. Everything else that colour tells apart takes the palette below, and the rest is
+the theme's own neutrals. `AppThemeManager` is the only place a colour is written:
+`ThemeColourTests` fails on a colour written in any other XAML or C# file of the app, and checks
+the contrast of every brush it sets, at rest, under the pointer and pressed.
 
 The alert popup keeps its own dark look in both themes: a plum face (`#2A1720`, the icon's face
 colour), a `#8E3A58` frame, the "PENDULUM" label in `#E3A9BD` (8.6:1) and the subtitle in
 `#EBD3DC` (12.0:1).
 
-## Reminder colours (proposed for the redesign)
+## The palette
 
-Rose stays the brand's: the primary button, the selection, today in the calendar and focus. The
-panel loses its rose frame, the sort arrows and the Scheduled badge go grey, and everything else
-that needs a colour takes one of eight **muted colours chosen round the colour wheel from rose**.
-Each reminder gets one of them (its chips in the calendar, a dot beside its name in the Reminders
-list), and the list's badges use them for their categories. Rose isn't one of the eight, so a
-reminder's colour is never confused with the app's own accent.
+Everything that colour tells apart, other than the brand, takes one of eight **muted colours
+chosen round the colour wheel from rose**: the Reminders list's badges and its on/off toggles, the
+calendar's chips, and each reminder's own colour. The panel has no rose frame, and the sort arrows
+and the Scheduled badge are grey. Rose isn't one of the eight, so nothing in the palette is
+confused with the app's own accent.
 
 Each token has a **shade** per theme, a solid colour 3:1 or more against the panels' surface (light
 `#FBFBFB`, dark `#2D2D2D`): a dot, a chip's bar, a swatch. Chips and badges are a **tint**, the
 shade at 20% (light) or 30% (dark) over the surface, with the theme's own text on it (light
-`#1C1C1C`, dark white), 4.5:1 or more. The shades were picked in OKLCH (the hue fixed for each,
+`#1C1C1C`, dark white), 4.5:1 or more. (`ThemeColourTests` checks both against every surface
+they sit on, light `#FFFFFF` to `#EEEEEE` and dark `#202020` to `#3A3A3A`.) The shades were picked in OKLCH (the hue fixed for each,
 chroma 0.07 to 0.11, lightness varied between them) so that every pair stays apart for colour-blind
 eyes too. A reminder's name is always written beside its colour, so colour is never the only cue.
 
-The figures are WCAG 2 contrast and CIEDE2000 differences, printed by the mock-ups
-(`Pendulum.Screenshots --mockups <folder>`, which writes `palette-tokens.md` beside the pictures):
+The figures are WCAG 2 contrast on the panels' surface, and CIEDE2000 differences:
 
 | Token | Light | Dark | Light: on surface / text on tint | Dark: on surface / text on tint |
 |---|---|---|---|---|
@@ -138,30 +143,38 @@ The figures are WCAG 2 contrast and CIEDE2000 differences, printed by the mock-u
 | `--palette-ochre` | `#946A10` | `#CEA153` | 4.69 / 12.73 | 5.80 / 7.83 |
 | `--palette-olive` | `#81894F` | `#C2CB8E` | 3.61 / 13.28 | 8.02 / 6.78 |
 | `--palette-sage` | `#456F4E` | `#89B591` | 5.58 / 12.53 | 5.96 / 7.73 |
-| `--palette-teal` | `#2A9898` | `#4CB3B2` | 3.36 / 13.22 | 5.51 / 8.12 |
-| `--palette-blue` | `#537AA2` | `#6E96BF` | 4.34 / 12.90 | 4.45 / 8.64 |
+| `--palette-teal` | `#269595` | `#4CB3B2` | 3.49 / 13.20 | 5.51 / 8.12 |
+| `--palette-blue` | `#4E77A1` | `#6E96BF` | 4.53 / 12.88 | 4.45 / 8.64 |
 | `--palette-violet` | `#614D92` | `#BAA7F4` | 6.80 / 12.18 | 6.51 / 7.43 |
 | `--palette-plum` | `#724869` | `#E3B2D7` | 7.13 / 12.13 | 7.62 / 6.98 |
 
 The closest two colours, as each kind of eye sees them (simulated with Machado, Oliveira and
-Fernandes 2009 at full strength; about 10 or more reads as clearly different side by side):
+Fernandes 2009 at full strength; about 10 or more reads as clearly different side by side, and
+`ThemeColourTests` fails under 9):
 
 | Vision | Light: closest pair, ΔE2000 | Dark: closest pair, ΔE2000 |
 |---|---|---|
 | Typical | Violet and Plum, 13.0 | Olive and Sage, 13.5 |
-| Deuteranopia | Ochre and Olive, 9.7 | Terracotta and Ochre, 9.6 |
+| Deuteranopia | Blue and Violet, 9.2 | Terracotta and Ochre, 9.6 |
 | Protanopia | Violet and Plum, 9.9 | Olive and Sage, 9.6 |
-| Tritanopia | Sage and Blue, 9.8 | Teal and Blue, 9.6 |
+| Tritanopia | Sage and Blue, 9.2 | Teal and Blue, 9.6 |
 
-**The categories** (the Reminders list's badges): Upcoming in teal, Sound only in blue, Sound and
-speech in ochre, Speech only in plum, each as a tint with the theme's text. Fixed, Scheduled,
-Disabled and Spent stay neutral greys.
+**What takes which:** Upcoming (the badge, and the calendar's chips until each reminder has its
+own colour) in teal; the on/off toggle, when on, in teal with the theme's text-on-accent tick;
+the Filters button and its dot, while filters are on, in teal; Sound only in blue, Sound and speech
+in ochre, Speech only in plum, each as a tint with the theme's text. Fixed, Scheduled, Disabled and
+Spent stay neutral greys. Error messages are Windows' own critical red (`#C42B1C` light, `#FF99A4`
+dark).
 
-**In the theme** these become brushes beside the accent's in `AppThemeManager`, a pair for each
-token (`PendulumPalette<Name>Brush` for the shade and `PendulumPalette<Name>TintBrush` for the
-tint), set per theme as the accent's are, so a theme switch recolours everything at once.
+**In the theme** each token is a pair of brushes in `AppThemeManager`, `PendulumPalette<Name>Brush`
+for the shade and `PendulumPalette<Name>TintBrush` for the tint, set per theme as the accent's are,
+so a theme switch recolours everything at once. The views use them through named brushes for what
+they mean (`PendulumChipBrush`, `PendulumToggleOnBrush`, `PendulumBadgeSoundOnlyBrush` and so on).
 
-### How a reminder's colour is chosen and saved
+The light teal and blue were darkened a little from the first proposal (`#2A9898` and `#537AA2`),
+so that teal keeps 3:1 on the lightest surface too.
+
+### How a reminder's colour is chosen and saved (planned)
 
 - **Saved by name, not by value:** a new optional property on the reminder in `triggers.json`,
   `"Color": "teal"` (one of the eight token names). The name, not a hex value, so the theme picks

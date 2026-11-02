@@ -37,20 +37,26 @@ public static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // --mockups <folder>: the redesign's mock-ups (Mockups.cs) instead of the README's pictures.
-        // Each theme is drawn in a process of its own (--mockups-theme light|dark <folder>): some
-        // of WPF-UI's styles keep the colours of the theme they first loaded in.
-        var mockups = args.Length > 0 && args[0] == "--mockups"; // not user-visible: a command-line switch
-        bool? mockupTheme = args.Length > 1 && args[0] == "--mockups-theme" ? args[1] == "dark" : null; // not user-visible
-        if (mockups)
-            args = args[1..];
-        else if (mockupTheme is not null)
+        // --views <folder>: every view, light and dark side by side (Views.cs). --mockups <folder>:
+        // the redesign's mock-ups (Mockups.cs). Otherwise the README's pictures. For the first two,
+        // each theme is drawn in a process of its own (--views-theme or --mockups-theme, then
+        // light or dark, then the folder): some of WPF-UI's styles keep the colours of the theme
+        // they first loaded in.
+        var mode = "readme"; // not user-visible: the modes are the switches' own words
+        bool? theme = null;
+        if (args.Length > 0 && args[0] is "--views" or "--mockups") // not user-visible
         {
-            mockups = true;
+            mode = args[0][2..];
+            args = args[1..];
+        }
+        else if (args.Length > 1 && args[0] is "--views-theme" or "--mockups-theme") // not user-visible
+        {
+            mode = args[0][2..^6];
+            theme = args[1] == "dark"; // not user-visible
             args = args[2..];
         }
         var output = Path.GetFullPath(args.Length > 0 ? args[0]
-            : mockups ? Path.Combine(Path.GetTempPath(), "pendulum-mockups") // not user-visible
+            : mode != "readme" ? Path.Combine(Path.GetTempPath(), "pendulum-" + mode) // not user-visible
             : Path.Combine(RepoRoot(), "docs", "screenshots"));
         Directory.CreateDirectory(output);
 
@@ -70,18 +76,24 @@ public static class Program
             foreach (var sound in new[] { "alert.wav", "bell.wav", "chime.wav" })
                 File.WriteAllBytes(Path.Combine(AppPaths.SoundsDirectory, sound), []);
 
-            StartApplication(mockupTheme == false ? ThemeMode.Light : ThemeMode.Dark);
+            StartApplication(theme == false ? ThemeMode.Light : ThemeMode.Dark);
             AppServices.Instance.UseSettingsForTests(InventedSettings());
             foreach (var reminder in InventedReminders(DateTime.Now))
                 AppServices.Instance.Triggers.Add(reminder);
 
-            if (mockupTheme is { } dark)
+            if (mode == "views") // not user-visible
             {
-                Mockups.RenderTheme(dark, output);
+                if (theme is { } dark)
+                    Views.RenderTheme(dark, output);
+                else
+                    Views.Render(output);
             }
-            else if (mockups)
+            else if (mode == "mockups") // not user-visible
             {
-                Mockups.Render(output);
+                if (theme is { } dark)
+                    Mockups.RenderTheme(dark, output);
+                else
+                    Mockups.Render(output);
             }
             else
             {
@@ -103,7 +115,7 @@ public static class Program
             if (foregroundAfter != foregroundBefore)
                 Console.Error.WriteLine($"Note: the foreground moved from {ProcessName(foregroundBefore)} to {ProcessName(foregroundAfter)} while rendering (not this tool)."); // not user-visible
 
-            Console.WriteLine($"{(mockups ? "Mock-ups" : "Screenshots")} written to {output}"); // not user-visible
+            Console.WriteLine($"{(mode == "readme" ? "Screenshots" : mode == "views" ? "Views" : "Mock-ups")} written to {output}"); // not user-visible
             return 0;
         }
         catch (Exception e)

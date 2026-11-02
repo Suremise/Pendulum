@@ -20,9 +20,10 @@
         <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
         <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
         <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
-        <!-- The badges' colours fit the rose theme (AppThemeManager sets each per theme): Upcoming
-             the calendar's rose chip, Scheduled a rose outline, Fixed and Disabled neutral greys,
-             the alert types muted tints. Each is told apart by its words. -->
+        <!-- The badges take the palette (AppThemeManager sets each per theme): Upcoming in teal (as
+             the calendar's chips), the alert types in blue, ochre and plum; Fixed, Scheduled and
+             Disabled are the theme's neutral greys. Rose is kept for the brand. Each badge is told
+             apart by its words as well. -->
         <!-- A spent reminder is greyed out: its name in the theme's secondary text (AA in light and
              dark), and its row's Spent badge says it in words. -->
         <Style x:Key="NameText" TargetType="TextBlock">
@@ -190,8 +191,8 @@
              thin layer of the theme's text colour goes over the fill only (lighter in dark, darker in
              light, so the fill moves further from the row and from the tick): the edge and the tick
              are never dimmed, and keep their contrast in every state.
-             On: the rose accent with a tick. Off: the Disabled badge's grey with a strong edge and no
-             tick. So on and off differ in shape as well as colour, and each has a name (what a click
+             On: the palette's teal (as Upcoming) with a tick. Off: the Disabled badge's grey with a
+             strong edge and no tick. So on and off differ in shape as well as colour, and each has a name (what a click
              does) for screen readers, the same as its tooltip. -->
         <Style x:Key="EnableToggleButton" TargetType="Button">
             <Setter Property="Width" Value="36"/>
@@ -230,7 +231,7 @@
                 <DataTrigger Binding="{Binding Enabled}" Value="True">
                     <Setter Property="ToolTip" Value="{x:Static res:Strings.Reminders_Disable}"/>
                     <Setter Property="AutomationProperties.Name" Value="{x:Static res:Strings.Reminders_Disable}"/>
-                    <Setter Property="Background" Value="{DynamicResource PendulumAccentBrush}"/>
+                    <Setter Property="Background" Value="{DynamicResource PendulumToggleOnBrush}"/>
                     <Setter Property="BorderThickness" Value="0"/>
                     <Setter Property="Foreground" Value="{DynamicResource TextOnAccentFillColorPrimaryBrush}"/>
                     <Setter Property="Content" Value="&#xE73E;"/>
@@ -277,7 +278,7 @@
                     <ui:Button Content="{x:Static res:Strings.Reminders_Filters}" Icon="{ui:SymbolIcon Filter24}"
                                Style="{StaticResource FiltersToggleButton}"
                                Command="{Binding ToggleFilterRowCommand}"/>
-                    <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource PendulumAccentBrush}"
+                    <Border Width="8" Height="8" CornerRadius="4" Background="{DynamicResource PendulumChipStrokeBrush}"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0"
                             IsHitTestVisible="False"
                             Visibility="{Binding HasActiveFilters, Converter={StaticResource BoolToVis}}"/>
@@ -317,7 +318,7 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_NAME}" Style="{StaticResource ColumnFilterLabel}"/>
-                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                             </StackPanel>
                                             <ui:TextBox Text="{Binding Filter.Name, UpdateSourceTrigger=PropertyChanged}"
                                                         PlaceholderText="{x:Static res:Strings.Reminders_Filter}" FontSize="12" FontWeight="Normal"
@@ -346,7 +347,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_TYPE}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -361,7 +362,7 @@
                                                         </Border>
                                                     </CheckBox>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" Margin="0" IsChecked="{Binding Filter.TypeScheduled}">
-                                                        <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource PendulumAccentBrush}">
+                                                        <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}">
                                                             <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource TagBadgeText}" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
                                                         </Border>
                                                     </CheckBox>
@@ -378,7 +379,7 @@
                                                     Visibility="{Binding Recurrence, Converter={StaticResource FixedVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
-                                            <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource PendulumAccentBrush}"
+                                            <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}"
                                                     Visibility="{Binding Recurrence, Converter={StaticResource ScheduledVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
@@ -394,7 +395,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_TRIGGERSON}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -437,7 +438,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_MODE}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -480,7 +481,7 @@
                                     <GridViewColumnHeader Tag="SoundFileName" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_SOUND}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                         </StackPanel>
                                     </GridViewColumnHeader>
                                 </GridViewColumn.Header>
@@ -500,7 +501,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_STATUS}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0" Foreground="{DynamicResource PendulumAccentBrush}"/>
+                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
                                         </StackPanel>
                                         <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"

@@ -26,8 +26,8 @@ internal static class Palette
         new("ochre", "Ochre", 80, "#946A10", "#CEA153"),
         new("olive", "Olive", 115, "#81894F", "#C2CB8E"),
         new("sage", "Sage", 150, "#456F4E", "#89B591"),
-        new("teal", "Teal", 195, "#2A9898", "#4CB3B2"),
-        new("blue", "Blue", 250, "#537AA2", "#6E96BF"),
+        new("teal", "Teal", 195, "#269595", "#4CB3B2"),
+        new("blue", "Blue", 250, "#4E77A1", "#6E96BF"),
         new("violet", "Violet", 295, "#614D92", "#BAA7F4"),
         new("plum", "Plum", 335, "#724869", "#E3B2D7"),
     ];

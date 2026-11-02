@@ -93,7 +93,7 @@
                       Checked="EnabledBox_CheckedChanged" Unchecked="EnabledBox_CheckedChanged">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Static res:Strings.Edit_Enable}"/>
-                    <TextBlock x:Name="DisabledHint" Text="{x:Static res:Strings.Edit_Disabled}" Foreground="#FFE05252" Visibility="Collapsed"/>
+                    <TextBlock x:Name="DisabledHint" Text="{x:Static res:Strings.Edit_Disabled}" Foreground="{DynamicResource PendulumErrorTextBrush}" Visibility="Collapsed"/>
                 </StackPanel>
             </CheckBox>
 

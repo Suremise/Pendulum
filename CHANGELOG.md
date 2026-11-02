@@ -199,10 +199,17 @@ Installing it over 1.1.0 keeps your reminders, settings and downloaded voices an
   Alerts, Spoken alerts, Quick Reminder, Backup and data) with plainer labels and
   short explanations, and settings that only apply to another one sit under it.
   All your settings carry over unchanged.
-- The app's accent colour is now rose, to match the new icon: buttons, toggles,
-  the selected tab, links and the alert popup, in shades that stay easy to read
-  on the light and dark themes. Switching the theme while Pendulum runs no
-  longer turns buttons blue.
+- The app's accent colour is now rose, to match the new icon, and kept for what's
+  Pendulum's own: buttons, check boxes, the selected tab, today in the calendar,
+  links and the alert popup, in shades that stay easy to read on the light and
+  dark themes. Switching the theme while Pendulum runs no longer turns buttons
+  blue.
+- Less rose everywhere else: the Reminders list's badges and on/off buttons and
+  the calendar take a small set of muted colours chosen to sit with the rose
+  (teal for upcoming reminders and reminders that are on; blue, ochre and plum
+  for the alert types), each easy to read on the light and dark themes and told
+  apart by colour-blind eyes too. The rose frame round the main panel and the
+  rose sort arrows are gone.
 - Links (in About and the "View release" link in the status bar) are now easy
   to read on the dark theme, and match the app's accent on the light one.
 - Runs on .NET 10, Microsoft's current long-term support release, in place of

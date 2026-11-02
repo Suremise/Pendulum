@@ -88,7 +88,9 @@ pwsh scripts/screenshots.ps1                         # the README's pictures, in
   invented reminders dated around today (dark theme, en-GB dates, 24-hour times), and draws them
   with `RenderTargetBitmap` into `docs/screenshots`. It shows no window, uses a temp folder through
   the same test seams, and never uses the `App` class. Run it again when a change alters what the
-  pictures show. Never take them from a screen, where private reminders could show.
+  pictures show. Never take them from a screen, where private reminders could show. For a change
+  to the look, the same tool draws every view in light and dark side by side for before and after:
+  build it as the script does, then run its exe with `--views <folder>` (a temp folder).
 - **Nothing a test, check or screenshot script does may take the foreground or focus.** The user is
   working in other apps while it runs. A shown window can take the foreground even with
   `ShowActivated = false` and `WS_EX_NOACTIVATE`, so don't show one: lay the view out in memory and
@@ -143,6 +145,13 @@ pwsh scripts/screenshots.ps1                         # the README's pictures, in
   - The app itself registers its hotkey with `RegisterHotKey` only: no keyboard or mouse hooks.
 - **Every change a user would notice** adds a plain-words line under `## [Unreleased]` in
   CHANGELOG.md.
+- **Every colour comes from the theme**, never a literal in XAML or C#: a brush set in
+  `Pendulum.App/Services/AppThemeManager.cs` (rose for the brand: primary buttons, check boxes,
+  the selection, today, focus and links; the palette's eight muted colours for everything else
+  that colour tells apart) or one of WPF-UI's theme brushes. A new colour goes there, with a
+  shade for light and dark, and `ThemeColourTests` both fails on a colour written anywhere else
+  and checks the theme's contrast (text 4.5:1, controls 3:1, at rest, hovered and pressed).
+  assets/README.md lists the colours and what uses each.
 - **Every word the app shows comes from a resource**, never a literal in XAML or C#: the App's from
   `Pendulum.App/Resources/Strings.resx` (XAML: `{x:Static res:Strings.Key}`; C#: `Strings.Key`,
   with `string.Format` for placeholders), Core's from `Pendulum.Core/Resources/CoreStrings.resx`.

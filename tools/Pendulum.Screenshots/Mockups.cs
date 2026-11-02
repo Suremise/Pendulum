@@ -43,6 +43,9 @@ internal static class Mockups
 {
     private static bool _dark;
 
+    /// Which theme the pictures being drawn are in (the frame round a window follows it).
+    internal static bool Dark { set => _dark = value; }
+
     /// Each reminder's colour, as the design assigns them: in the order the reminders were made,
     /// each the least used so far (ties in <see cref="Palette.AssignOrder"/>).
     private static readonly Dictionary<Guid, Palette.Swatch> ColorOf = [];
@@ -94,7 +97,7 @@ internal static class Mockups
         }
     }
 
-    private static BitmapSource Load(string path)
+    internal static BitmapSource Load(string path)
     {
         using var file = File.OpenRead(path);
         var frame = BitmapFrame.Create(file, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
@@ -626,7 +629,7 @@ internal static class Mockups
 
     /// The text colour a window gives what's in it (its theme's), which content moved out of the
     /// window would otherwise lose: the menu's words and the title bar's buttons inherit it.
-    private static void Inherit(FrameworkElement host)
+    internal static void Inherit(FrameworkElement host)
     {
         host.SetResourceReference(TextElement.ForegroundProperty, "TextFillColorPrimaryBrush"); // not user-visible
         foreach (var bar in Descendants(host).OfType<TitleBar>().Concat(LogicalTitleBars(host)))
@@ -640,7 +643,7 @@ internal static class Mockups
     // --- Framing and sheets ------------------------------------------------------------------------
 
     /// A window as it sits on the desktop: rounded corners, a hairline edge and a soft shadow.
-    private static FrameworkElement Framed(Border host)
+    internal static FrameworkElement Framed(Border host)
     {
         // The title bar's buttons take their glyphs' colour as they load, before the content is
         // in a theme: given the theme's text colour here.
@@ -676,7 +679,7 @@ internal static class Mockups
     }
 
     /// The light and dark renderings side by side, each on a desktop of its theme, under a title.
-    private static BitmapSource SideBySide(string title, BitmapSource light, BitmapSource dark)
+    internal static BitmapSource SideBySide(string title, BitmapSource light, BitmapSource dark)
     {
         var grid = new Grid();
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });

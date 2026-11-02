@@ -13,9 +13,9 @@
         Topmost="True"
         ShowActivated="False"
         WindowStartupLocation="Manual">
-    <Border Background="#FF2A1720"
+    <Border Background="{DynamicResource PendulumAlertFaceBrush}"
             CornerRadius="12"
-            BorderBrush="#FF8E3A58"
+            BorderBrush="{DynamicResource PendulumAlertFrameBrush}"
             BorderThickness="1.5"
             Padding="22">
         <Border.Effect>
@@ -24,13 +24,13 @@
         <StackPanel>
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                 <Image Source="pack://application:,,,/Resources/pendulum.ico" Width="18" Height="18" Margin="0,0,9,0"/>
-                <TextBlock Text="{x:Static res:Strings.Alert_AppNameHeading}" FontSize="11" FontWeight="Bold" Foreground="#FFE3A9BD" VerticalAlignment="Center"
+                <TextBlock Text="{x:Static res:Strings.Alert_AppNameHeading}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource PendulumAlertLabelBrush}" VerticalAlignment="Center"
                            TextOptions.TextFormattingMode="Ideal" Padding="0,1,0,0"/>
             </StackPanel>
-            <TextBlock x:Name="TitleText" Text="" FontSize="21" FontWeight="SemiBold" Foreground="White" TextWrapping="Wrap" Margin="0,0,0,4"/>
-            <TextBlock x:Name="SubtitleText" Text="" FontSize="13" Foreground="#FFEBD3DC" TextWrapping="Wrap" Margin="0,0,0,20"/>
+            <TextBlock x:Name="TitleText" Text="" FontSize="21" FontWeight="SemiBold" Foreground="{DynamicResource PendulumAlertTitleBrush}" TextWrapping="Wrap" Margin="0,0,0,4"/>
+            <TextBlock x:Name="SubtitleText" Text="" FontSize="13" Foreground="{DynamicResource PendulumAlertSubtitleBrush}" TextWrapping="Wrap" Margin="0,0,0,20"/>
             <TextBlock x:Name="WaitingText" Text="{x:Static res:Strings.Alert_Waiting}" FontSize="12" FontStyle="Italic"
-                       Foreground="#FFE3A9BD" TextWrapping="Wrap" Margin="0,-12,0,16" Visibility="Collapsed"/>
+                       Foreground="{DynamicResource PendulumAlertLabelBrush}" TextWrapping="Wrap" Margin="0,-12,0,16" Visibility="Collapsed"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <ui:Button x:Name="DismissAllButton" Content="{x:Static res:Strings.Alert_DismissAll}" Appearance="Secondary" Margin="0,0,10,0"
                            Visibility="Collapsed" Click="DismissAllButton_Click"/>

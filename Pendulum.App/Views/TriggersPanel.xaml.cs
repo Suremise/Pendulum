@@ -283,7 +283,7 @@ public partial class TriggersPanel : UserControl
     private static double TextWidth(Control font, string text) =>
         new FormattedText(text, CultureInfo.CurrentCulture, font.FlowDirection,
             new Typeface(font.FontFamily, font.FontStyle, font.FontWeight, font.FontStretch),
-            font.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(font).PixelsPerDip).WidthIncludingTrailingWhitespace;
+            font.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(font).PixelsPerDip).WidthIncludingTrailingWhitespace;  // not a colour: the text is only measured
 
     private void RemindersList_SizeChanged(object sender, SizeChangedEventArgs e) => LayoutColumns();
 
@@ -374,7 +374,7 @@ public partial class TriggersPanel : UserControl
             foreach (var hour in new[] { 10, 22 })
             {
                 var text = DisplayFormat.DateAndTime(day.AddHours(hour).AddMinutes(58), use24Hour);
-                var formatted = new FormattedText(text, CultureInfo.CurrentCulture, list.FlowDirection, typeface, list.FontSize, Brushes.Black, pixelsPerDip);
+                var formatted = new FormattedText(text, CultureInfo.CurrentCulture, list.FlowDirection, typeface, list.FontSize, Brushes.Black, pixelsPerDip);  // not a colour: only measured
                 widest = Math.Max(widest, formatted.WidthIncludingTrailingWhitespace);
             }
         }

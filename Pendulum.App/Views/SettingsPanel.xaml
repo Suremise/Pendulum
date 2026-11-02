@@ -101,7 +101,7 @@
                                 <Border x:Name="Bar" Width="3" Height="18" CornerRadius="2" Background="Transparent" Margin="2,0,10,0"/>
                                 <TextBlock Text="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
                                            FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" Margin="0,0,12,0" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"/>
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
                                 <ContentPresenter VerticalAlignment="Center" TextElement.FontSize="14"/>
                             </StackPanel>
                         </Border>

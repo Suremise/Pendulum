@@ -36,7 +36,7 @@
                            Icon="{ui:SymbolIcon Mic24}" ToolTip="{x:Static res:Strings.QuickAdd_SpeakAReminder}"/>
             </Grid>
 
-            <TextBlock x:Name="ErrorText" FontSize="12" Foreground="#D13438"
+            <TextBlock x:Name="ErrorText" FontSize="12" Foreground="{DynamicResource PendulumErrorTextBrush}"
                        TextWrapping="Wrap" Visibility="Collapsed" Margin="0,0,0,10"/>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
