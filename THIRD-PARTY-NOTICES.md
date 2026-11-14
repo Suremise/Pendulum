@@ -25,8 +25,8 @@ Pendulum is built from: edit those, not this.
 | [Whisper.net.Runtime](https://github.com/ggml-org/whisper.cpp) | 1.9.1 | MIT | The ggml authors (whisper.cpp and ggml); Whisper.net: Sandro Hanea | The native whisper.cpp and ggml libraries in runtimes\, built by Whisper.net's windows-scripts.ps1 with ggml's defaults for llamafile and KleidiAI (both off), so neither Mozilla's llamafile code nor Arm's KleidiAI is in them. They use the Visual C++ and OpenMP runtimes found on the PC (VCRUNTIME140, MSVCP140, VCOMP140), which Pendulum doesn't ship. Native source: whisper.cpp f24588a272ae8e23280d9c220536437164e6ed28, the submodule Whisper.net 1.9.1 builds from |
 | [Whisper.net.Runtime.Metal](https://github.com/sandrohanea/whisper.net) | 1.9.1 | MIT | Sandro Hanea | For macOS only: nothing of it is copied into the Windows app. |
 | [WPF-UI](https://github.com/lepoco/wpfui) | 3.1.1 | MIT | 2021-2025 Leszek Pomianowski and WPF UI Contributors | Embeds the Fluent System Icons fonts (MIT). Its notices also list Microsoft's Segoe Fluent Icons font, which Pendulum and WPF-UI use by name from Windows and don't ship. |
-| [.NET runtime](https://github.com/dotnet/runtime) | 10.0.14 | MIT | .NET Foundation and Contributors | Self-contained: the app carries its own .NET. |
-| [Windows Desktop runtime (WPF and Windows Forms)](https://github.com/dotnet/wpf) | 10.0.14 | MIT | .NET Foundation and Contributors | Self-contained: the app carries its own .NET. |
+| [.NET runtime](https://github.com/dotnet/runtime) | 10.0.15 | MIT | .NET Foundation and Contributors | Self-contained: the app carries its own .NET. |
+| [Windows Desktop runtime (WPF and Windows Forms)](https://github.com/dotnet/wpf) | 10.0.15 | MIT | .NET Foundation and Contributors | Self-contained: the app carries its own .NET. |
 | Microsoft Visual C++ runtime (vcruntime140_cor3.dll) and DirectX shader compiler (D3DCompiler_47_cor3.dll) |  | Microsoft's redistribution terms | Microsoft Corporation | Inside the Windows Desktop runtime, unmodified. Allowed: Darren (1 Nov 2026) extended the family's exception for Microsoft's C runtime, used unmodified under Microsoft's redistribution terms, to these files that come inside .NET's runtime |
 | [Microsoft Visual C++ runtime for whisper.cpp (vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll, vcomp140.dll)](https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files) | 14 (Visual Studio 2022) | Microsoft's redistribution terms (Distributable Code) | Microsoft Corporation | runtimes\win-x64\, beside whisper.cpp's libraries, unmodified, from Visual Studio's redistributable folder. Allowed: Darren (1 Nov 2026), under his exception for Microsoft's C runtime, so Whisper starts on a PC without the Visual C++ redistributable |
 | [Inno Setup (the installer's setup program)](https://jrsoftware.org/isinfo.php) | 6 | Inno Setup License | Jordan Russell; portions Martijn Laan | Inside PendulumSetup.exe. Allowed: Darren (1 Nov 2026), a permissive licence; its copyright notice is kept here |
@@ -454,7 +454,7 @@ You may use the Segoe and icon fonts, or glyphs included in this file (“Softwa
 END OF microsoft/segoe-fluent-icons-font NOTICES AND INFORMATION
 ```
 
-### .NET runtime 10.0.14
+### .NET runtime 10.0.15
 
 ```
 .NET Runtime uses third-party libraries or other resources that may be
