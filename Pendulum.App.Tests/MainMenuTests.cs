@@ -93,6 +93,48 @@ public sealed class MainMenuTests : IDisposable
     }
 
     [Fact]
+    public void The_menu_bar_sits_in_the_title_bar_beside_the_name_with_the_tabs_on_the_row_below()
+    {
+        WithWindow(w =>
+        {
+            // In the title bar's Header, after the app's name; the window's own title, the one the
+            // taskbar and screen readers give, is still the app's name.
+            Assert.Same(w.TitleBarHeader, w.WindowTitleBar.Header);
+            Assert.Equal([w.AppTitleText, w.MainMenu], w.TitleBarHeader.Children.Cast<UIElement>());
+            Assert.Equal(Strings.App_Name, w.AppTitleText.Text);
+            Assert.Equal(Strings.App_Name, w.Title);
+
+            // Laid out in memory (never shown): the header keeps to its own width, so the rest of
+            // the bar stays caption to drag the window by, and the tabs come straight after the bar.
+            var content = (FrameworkElement)w.Content;
+            w.Content = null;
+            var host = new Border { Child = content, Width = 1100, Height = 720 };
+            host.Resources.MergedDictionaries.Add(w.Resources);
+            for (var pass = 0; pass < 3; pass++)
+            {
+                host.Measure(new Size(host.Width, host.Height));
+                host.Arrange(new Rect(0, 0, host.Width, host.Height));
+                host.UpdateLayout();
+            }
+
+            Assert.Equal(HorizontalAlignment.Left, w.TitleBarHeader.HorizontalAlignment);
+            Assert.InRange(w.TitleBarHeader.ActualWidth, 1, 500);
+            Assert.Equal(Grid.GetRow(w.WindowTitleBar) + 1, Grid.GetRow(w.MainTabControl));
+            var titleBottom = w.WindowTitleBar.TranslatePoint(new Point(0, w.WindowTitleBar.ActualHeight), host).Y;
+            var tabsTop = w.MainTabControl.TranslatePoint(new Point(0, 0), host).Y;
+            Assert.InRange(tabsTop - titleBottom, 0, 16);
+            // The menu's top-level items fit inside the bar.
+            Assert.InRange(w.MainMenu.ActualHeight, 1, w.WindowTitleBar.ActualHeight);
+
+            // The name is caption: a point on it is within it, one past its edge isn't.
+            var size = w.AppTitleText.RenderSize;
+            Assert.True(MainWindow.IsWithin(new Point(1, 1), size));
+            Assert.False(MainWindow.IsWithin(new Point(size.Width, 1), size));
+            Assert.False(MainWindow.IsWithin(new Point(-1, 1), size));
+        });
+    }
+
+    [Fact]
     public void View_switches_between_the_two_tabs_and_Settings_and_About_are_no_longer_on_the_window()
     {
         WithWindow(w =>

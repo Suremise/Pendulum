@@ -11,6 +11,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Right-click a day in the calendar and choose **Add reminder** to add one on that day: the
   editor opens with the day's date and 00:00:00, ready to change.
 
+### Changed
+- The main window's header is shorter: the File, View, Tools and Help menus sit in the title bar
+  beside "Pendulum", leaving the Reminders and Calendar tabs on the row below. The title bar still
+  moves, snaps and maximises the window as before, and Alt, F10 and the menus' shortcuts still work.
+
 ## [1.2.1] - 2026-11-14
 
 Pendulum stays responsive while other apps are busy, with fixes to saving, alerts, the calendar

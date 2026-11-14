@@ -89,54 +89,65 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Windows' own controls: minimise, maximise/restore (with Windows 11's snap layouts under
-             the pointer) and close; a double-click on the title bar maximises and restores. -->
+             the pointer) and close. The rest of the bar is the caption: drag to move, double-click
+             to maximise and restore, right-click for the system menu. Its Header holds the app's
+             name and the menu bar beside it (a Header takes the Title's place, so the name is drawn
+             here, as the Title would be). The TitleBar leaves the Header's bounds to its content and
+             treats the rest as caption, so the Header keeps to its own width, left-aligned, and the
+             window makes the name caption again (MainWindow.xaml.cs, TitleHitTest). -->
         <ui:TitleBar x:Name="WindowTitleBar" Grid.Row="0" Title="{x:Static res:Strings.App_Name}"
-                     ShowMinimize="True" ShowMaximize="True" ShowClose="True" CanMaximize="True"/>
+                     ShowMinimize="True" ShowMaximize="True" ShowClose="True" CanMaximize="True">
+            <ui:TitleBar.Header>
+                <StackPanel x:Name="TitleBarHeader" Orientation="Horizontal" HorizontalAlignment="Left">
+                    <TextBlock x:Name="AppTitleText" Text="{x:Static res:Strings.App_Name}" FontSize="12"
+                               VerticalAlignment="Center" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/>
+                    <!-- The menu bar: access keys from the underscores in its strings (Alt+F, Alt+V, ...); the
+                         shortcuts it shows are the main window's KeyBindings (MainWindow.xaml.cs). -->
+                    <Menu x:Name="MainMenu" Margin="12,0,0,0" Background="Transparent"
+                          HorizontalAlignment="Left" VerticalAlignment="Center">
+                        <MenuItem Header="{x:Static res:Strings.Menu_File}">
+                            <MenuItem x:Name="NewReminderMenuItem" Header="{x:Static res:Strings.Menu_NewReminder}"
+                                      InputGestureText="{x:Static res:Strings.Menu_NewReminderShortcut}" Click="NewReminder_Click">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Add24"/></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
+                            <MenuItem x:Name="ImportMenuItem" Header="{x:Static res:Strings.Menu_Import}" Click="Import_Click">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="ArrowImport24"/></MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem x:Name="ExportMenuItem" Header="{x:Static res:Strings.Menu_Export}" Click="Export_Click">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="ArrowExportUp24"/></MenuItem.Icon>
+                            </MenuItem>
+                            <Separator/>
+                            <MenuItem x:Name="ExitMenuItem" Header="{x:Static res:Strings.Menu_Exit}" Click="Exit_Click"/>
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.Menu_View}">
+                            <MenuItem x:Name="ViewRemindersMenuItem" Header="{x:Static res:Strings.Menu_Reminders}" Click="ViewReminders_Click"/>
+                            <MenuItem x:Name="ViewCalendarMenuItem" Header="{x:Static res:Strings.Menu_Calendar}" Click="ViewCalendar_Click"/>
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.Menu_Tools}">
+                            <MenuItem x:Name="SettingsMenuItem" Header="{x:Static res:Strings.Menu_Settings}"
+                                      InputGestureText="{x:Static res:Strings.Menu_SettingsShortcut}" Click="Settings_Click">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Settings24"/></MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                        <MenuItem Header="{x:Static res:Strings.Menu_Help}">
+                            <MenuItem x:Name="CheckForUpdatesMenuItem" Header="{x:Static res:Strings.Menu_CheckForUpdates}" Click="CheckForUpdates_Click"/>
+                            <Separator/>
+                            <MenuItem x:Name="AboutMenuItem" Header="{x:Static res:Strings.Menu_About}" Click="About_Click">
+                                <MenuItem.Icon><ui:SymbolIcon Symbol="Info24"/></MenuItem.Icon>
+                            </MenuItem>
+                        </MenuItem>
+                    </Menu>
+                </StackPanel>
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
 
-        <!-- The menu bar: access keys from the underscores in its strings (Alt+F, Alt+V, ...); the
-             shortcuts it shows are the main window's KeyBindings (MainWindow.xaml.cs). -->
-        <Menu x:Name="MainMenu" Grid.Row="1" Margin="20,0,20,0" Background="Transparent">
-            <MenuItem Header="{x:Static res:Strings.Menu_File}">
-                <MenuItem x:Name="NewReminderMenuItem" Header="{x:Static res:Strings.Menu_NewReminder}"
-                          InputGestureText="{x:Static res:Strings.Menu_NewReminderShortcut}" Click="NewReminder_Click">
-                    <MenuItem.Icon><ui:SymbolIcon Symbol="Add24"/></MenuItem.Icon>
-                </MenuItem>
-                <Separator/>
-                <MenuItem x:Name="ImportMenuItem" Header="{x:Static res:Strings.Menu_Import}" Click="Import_Click">
-                    <MenuItem.Icon><ui:SymbolIcon Symbol="ArrowImport24"/></MenuItem.Icon>
-                </MenuItem>
-                <MenuItem x:Name="ExportMenuItem" Header="{x:Static res:Strings.Menu_Export}" Click="Export_Click">
-                    <MenuItem.Icon><ui:SymbolIcon Symbol="ArrowExportUp24"/></MenuItem.Icon>
-                </MenuItem>
-                <Separator/>
-                <MenuItem x:Name="ExitMenuItem" Header="{x:Static res:Strings.Menu_Exit}" Click="Exit_Click"/>
-            </MenuItem>
-            <MenuItem Header="{x:Static res:Strings.Menu_View}">
-                <MenuItem x:Name="ViewRemindersMenuItem" Header="{x:Static res:Strings.Menu_Reminders}" Click="ViewReminders_Click"/>
-                <MenuItem x:Name="ViewCalendarMenuItem" Header="{x:Static res:Strings.Menu_Calendar}" Click="ViewCalendar_Click"/>
-            </MenuItem>
-            <MenuItem Header="{x:Static res:Strings.Menu_Tools}">
-                <MenuItem x:Name="SettingsMenuItem" Header="{x:Static res:Strings.Menu_Settings}"
-                          InputGestureText="{x:Static res:Strings.Menu_SettingsShortcut}" Click="Settings_Click">
-                    <MenuItem.Icon><ui:SymbolIcon Symbol="Settings24"/></MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-            <MenuItem Header="{x:Static res:Strings.Menu_Help}">
-                <MenuItem x:Name="CheckForUpdatesMenuItem" Header="{x:Static res:Strings.Menu_CheckForUpdates}" Click="CheckForUpdates_Click"/>
-                <Separator/>
-                <MenuItem x:Name="AboutMenuItem" Header="{x:Static res:Strings.Menu_About}" Click="About_Click">
-                    <MenuItem.Icon><ui:SymbolIcon Symbol="Info24"/></MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
-
-        <TabControl x:Name="MainTabControl" Grid.Row="2" Margin="28,8,28,20" Style="{StaticResource PendulumTabControl}">
+        <TabControl x:Name="MainTabControl" Grid.Row="1" Margin="28,8,28,20" Style="{StaticResource PendulumTabControl}">
             <TabItem x:Name="FixedTriggersTab" Header="{x:Static res:Strings.Main_Reminders}" Tag="&#xE823;" Style="{StaticResource PendulumTabItem}">
                 <views:TriggersPanel x:Name="TriggersPanelControl"/>
             </TabItem>
@@ -145,7 +156,7 @@
             </TabItem>
         </TabControl>
 
-        <Border Grid.Row="3" Background="{DynamicResource ControlFillColorDefaultBrush}"
+        <Border Grid.Row="2" Background="{DynamicResource ControlFillColorDefaultBrush}"
                 BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
                 Padding="16,8">
             <Grid>

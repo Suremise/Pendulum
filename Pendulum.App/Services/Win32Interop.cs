@@ -14,6 +14,8 @@ internal static class Win32Interop
     private const long WS_EX_NOACTIVATE = 0x08000000;
 
     public const int WM_HOTKEY = 0x0312;
+    public const int WM_NCHITTEST = 0x0084;
+    public const int HTCAPTION = 2;
 
     [Flags]
     public enum HotkeyModifiers : uint

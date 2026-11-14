@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.Input;
@@ -34,6 +35,39 @@ public partial class MainWindow : FluentWindow
         InputBindings.Add(new KeyBinding(new RelayCommand(NewReminder), Key.N, ModifierKeys.Control));
         InputBindings.Add(new KeyBinding(new RelayCommand(OpenSettings), Key.OemComma, ModifierKeys.Control));
     }
+
+    // ---- The title bar ----
+
+    /// The title bar holds the menu as its Header, beside the app's name. WPF-UI's TitleBar answers
+    /// Windows' hit test with "caption" everywhere on it but its buttons and its Header, so the name,
+    /// being in the Header, is made caption here: dragging it moves the window, a double-click
+    /// maximises and restores, and a right-click shows the system menu, as on the rest of the bar.
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        HwndSource.FromHwnd(new WindowInteropHelper(this).Handle)?.AddHook(TitleHitTest);
+    }
+
+    private IntPtr TitleHitTest(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != Win32Interop.WM_NCHITTEST || handled || !AppTitleText.IsVisible
+            || PresentationSource.FromVisual(AppTitleText) is null)
+            return IntPtr.Zero;
+
+        // The pointer's screen position, in physical pixels: signed, for screens left of or above
+        // the primary one.
+        var packed = lParam.ToInt64();
+        var screen = new Point((short)(packed & 0xFFFF), (short)((packed >> 16) & 0xFFFF));
+        if (!IsWithin(AppTitleText.PointFromScreen(screen), AppTitleText.RenderSize))
+            return IntPtr.Zero;
+
+        handled = true;
+        return Win32Interop.HTCAPTION;
+    }
+
+    /// Whether a point in an element's own coordinates falls on it.
+    internal static bool IsWithin(Point point, Size size) =>
+        point.X >= 0 && point.Y >= 0 && point.X < size.Width && point.Y < size.Height;
 
     // ---- The menu bar ----
 
