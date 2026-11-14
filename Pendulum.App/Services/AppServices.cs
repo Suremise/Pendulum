@@ -296,8 +296,15 @@ public sealed class AppServices
     /// also apply its settings. Throws if the file isn't a valid Pendulum backup.
     public AppBackup RestoreBackup(string path, out int caughtUp)
     {
-        var backup = BackupRepository.Load(path)
-            ?? throw new InvalidOperationException(Strings.Backup_NotValid);
+        AppBackup backup;
+        try
+        {
+            backup = BackupRepository.Load(path);
+        }
+        catch (InvalidDataException e)
+        {
+            throw new InvalidOperationException(Strings.Backup_NotValid, e);
+        }
 
         // Before any reaches the engine: ones already past their time move on, or are spent,
         // instead of all ringing at once.

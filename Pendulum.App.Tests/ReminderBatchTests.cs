@@ -163,7 +163,7 @@ public sealed class ReminderBatchTests : IDisposable
                 && notice.Outcome == (hasBackup ? StoreOutcome.RecoveredFromBackup : StoreOutcome.SetAside));
             services.AddTrigger(Reminder("saved after recovery"));
             services.FlushPendingSaves();
-            Assert.Contains(repository.Load(), reminder => reminder.Name == "saved after recovery");
+            Assert.Contains(repository.LoadWithOutcome().Value!, reminder => reminder.Name == "saved after recovery");
             Assert.False(File.Exists(AppPaths.TriggersFile)); // injected path, never the default file
         }
         finally
@@ -197,6 +197,42 @@ public sealed class ReminderBatchTests : IDisposable
             Assert.Same(selected, ((TriggersViewModel)panel.DataContext).SelectedTrigger);
         }
         finally { services.Reminders.ReplaceAll(previous); }
+    });
+
+    [Fact]
+    public void A_wrong_shape_backup_keeps_the_invalid_backup_message_and_existing_reminders() => UiThread.Invoke(() =>
+    {
+        var services = new AppServices((_, _) => { }, new CountingClock());
+        var original = Reminder("existing");
+        try
+        {
+            services.AddTrigger(original);
+            var file = Path.Combine(_folder, "backup.json");
+            Directory.CreateDirectory(_folder);
+            File.WriteAllText(file, "{}");
+            var error = Assert.Throws<InvalidOperationException>(() => services.RestoreBackup(file, out _));
+            Assert.Equal(Pendulum.App.Resources.Strings.Backup_NotValid, error.Message);
+            Assert.IsType<InvalidDataException>(error.InnerException);
+            Assert.Same(original, Assert.Single(services.Triggers));
+        }
+        finally { services.Shutdown(); }
+    });
+
+    [Fact]
+    public void A_locked_backup_reaches_the_restore_read_error_without_changing_reminders() => UiThread.Invoke(() =>
+    {
+        var services = new AppServices((_, _) => { }, new CountingClock());
+        var original = Reminder("existing");
+        try
+        {
+            services.AddTrigger(original);
+            var file = Path.Combine(_folder, "backup.json");
+            BackupRepository.Save(file, new AppBackup { Settings = new(), Triggers = [Reminder("restored")] });
+            using (new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.None))
+                Assert.ThrowsAny<IOException>(() => services.RestoreBackup(file, out _));
+            Assert.Same(original, Assert.Single(services.Triggers));
+        }
+        finally { services.Shutdown(); }
     });
 
     [Fact]

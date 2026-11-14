@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using Pendulum.Core.Resources;
 
@@ -34,16 +33,8 @@ public static class JsonStore
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
-    /// How long a read that fails with an I/O error waits before each retry (antivirus or a
-    /// backup tool can hold a file for a moment at sign-in). Tests set it to nothing.
-    internal static TimeSpan[] RetryDelays { get; set; } = [TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800)];
-
     /// The copy kept from the save before the last one, beside the file.
     public static string BackupPath(string path) => path + ".bak";
-
-    /// Loads one of Pendulum's own data files, or null when there's none or it was set aside.
-    /// Throws StoreUnreadableException when it can't be read at all. LoadWithOutcome says which.
-    public static T? Load<T>(string path) where T : class => LoadWithOutcome<T>(path).Value;
 
     /// Loads one of Pendulum's own data files (settings.json, triggers.json):
     /// - a file that isn't valid JSON (an empty one left by a power cut, say) is set aside as
@@ -51,7 +42,11 @@ public static class JsonStore
     ///   a damaged .bak is kept aside the same way, never ignored;
     /// - a file (or its .bak) that can't be read at all is retried, then StoreUnreadableException
     ///   is thrown, with nothing moved or changed.
-    public static StoreLoad<T> LoadWithOutcome<T>(string path) where T : class
+    public static StoreLoad<T> LoadWithOutcome<T>(string path) where T : class =>
+        LoadWithOutcome<T>(path, [TimeSpan.FromMilliseconds(200), TimeSpan.FromMilliseconds(800)]);
+
+    /// Per-call retry delays let tests exercise held files without changing other readers.
+    internal static StoreLoad<T> LoadWithOutcome<T>(string path, IReadOnlyList<TimeSpan> retryDelays) where T : class
     {
         RemoveLeftoverTempFiles(path);
 
@@ -61,19 +56,19 @@ public static class JsonStore
             // A save that stopped between keeping the .bak and putting the new file in place.
             if (!File.Exists(backupPath))
                 return new StoreLoad<T>(null, StoreOutcome.Missing, null);
-            var fromBackup = TryDeserialize<T>(ReadWithRetries(backupPath));
+            var fromBackup = TryDeserialize<T>(ReadWithRetries(backupPath, retryDelays));
             return fromBackup is null
                 ? new StoreLoad<T>(null, StoreOutcome.SetAside, SetAside(backupPath))
                 : new StoreLoad<T>(fromBackup, StoreOutcome.RecoveredFromBackup, null);
         }
 
-        var json = ReadWithRetries(path);
+        var json = ReadWithRetries(path, retryDelays);
         if (TryDeserialize<T>(json) is { } value)
             return new StoreLoad<T>(value, StoreOutcome.Loaded, null);
 
         // Read the .bak before moving anything: if it can't be read at all, this throws with both
         // files still in place.
-        var backupJson = File.Exists(backupPath) ? ReadWithRetries(backupPath) : null;
+        var backupJson = File.Exists(backupPath) ? ReadWithRetries(backupPath, retryDelays) : null;
         var setAside = SetAside(path);
         var backup = backupJson is null ? null : TryDeserialize<T>(backupJson);
         if (backup is not null)
@@ -85,19 +80,18 @@ public static class JsonStore
         return new StoreLoad<T>(null, StoreOutcome.SetAside, setAside);
     }
 
-    /// Reads a file the user chose (a backup to restore, reminders to import). Unlike Load, a file
-    /// it can't read is never moved or changed: it's the user's, wherever they keep it. Throws
-    /// InvalidDataException when the file isn't JSON of the expected shape.
-    public static T? ReadUserFile<T>(string path) where T : class =>
-        DeserializeUserJson<T>(File.ReadAllText(path));
-
-    /// The text of a file the user chose, read as <typeparamref name="T"/>: InvalidDataException
-    /// when it isn't JSON of that shape.
-    internal static T? DeserializeUserJson<T>(string json) where T : class
+    /// Reads a file the user chose without moving or changing it. Invalid JSON, a wrong
+    /// shape or an incompatible property throws InvalidDataException; file-access errors pass through.
+    internal static T ReadUserFile<T>(string path, Func<JsonElement, bool> shapeCheck) where T : class
     {
+        var json = File.ReadAllText(path);
         try
         {
-            return JsonSerializer.Deserialize<T>(json, Options);
+            using var doc = JsonDocument.Parse(json);
+            if (!shapeCheck(doc.RootElement))
+                throw new InvalidDataException(CoreStrings.File_NotPendulumFormat);
+            return doc.RootElement.Deserialize<T>(Options)
+                ?? throw new InvalidDataException(CoreStrings.File_NotPendulumFormat);
         }
         catch (JsonException e)
         {
@@ -115,7 +109,7 @@ public static class JsonStore
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
 
-        var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(value, Options));
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value, Options);
         var tempPath = $"{path}.{Guid.NewGuid():N}.tmp";
         try
         {
@@ -137,7 +131,7 @@ public static class JsonStore
         }
     }
 
-    private static string ReadWithRetries(string path)
+    private static string ReadWithRetries(string path, IReadOnlyList<TimeSpan> retryDelays)
     {
         for (var attempt = 0; ; attempt++)
         {
@@ -147,9 +141,9 @@ public static class JsonStore
             }
             catch (Exception e) when (e is IOException or UnauthorizedAccessException)
             {
-                if (attempt >= RetryDelays.Length)
+                if (attempt >= retryDelays.Count)
                     throw new StoreUnreadableException(path, e);
-                Thread.Sleep(RetryDelays[attempt]);
+                Thread.Sleep(retryDelays[attempt]);
             }
         }
     }

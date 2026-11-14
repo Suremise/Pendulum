@@ -155,8 +155,8 @@ public sealed class SaveSchedulingTests
             Assert.False(File.Exists(Pendulum.Core.Persistence.AppPaths.SettingsFile));
             Assert.False(File.Exists(Pendulum.Core.Persistence.AppPaths.TriggersFile));
             services.Shutdown();
-            Assert.Equal("tea", new Pendulum.Core.Persistence.SettingsRepository().Load().ReminderFilterName);
-            Assert.Equal("Saved before exit", Assert.Single(new Pendulum.Core.Persistence.TriggerRepository().Load()).Name);
+            Assert.Equal("tea", new Pendulum.Core.Persistence.SettingsRepository().LoadWithOutcome().Value!.ReminderFilterName);
+            Assert.Equal("Saved before exit", Assert.Single(new Pendulum.Core.Persistence.TriggerRepository().LoadWithOutcome().Value!).Name);
         }
         finally
         {

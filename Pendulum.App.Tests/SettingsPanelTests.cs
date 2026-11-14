@@ -66,7 +66,7 @@ public sealed class SettingsPanelTests : IDisposable
     [Fact]
     public void A_v1_1_0_settings_file_shows_every_value_and_saves_back_unchanged()
     {
-        var settings = new SettingsRepository().Load();
+        var settings = new SettingsRepository().LoadWithOutcome().Value!;
         UiThread.Invoke(() =>
         {
             var panel = Build(settings);
@@ -121,7 +121,7 @@ public sealed class SettingsPanelTests : IDisposable
     [Fact]
     public void Each_section_is_named_and_only_one_shows_at_a_time()
     {
-        var settings = new SettingsRepository().Load();
+        var settings = new SettingsRepository().LoadWithOutcome().Value!;
         UiThread.Invoke(() =>
         {
             var panel = Build(settings);
@@ -144,7 +144,7 @@ public sealed class SettingsPanelTests : IDisposable
         // Checked from its properties, with no keyboard focus or key presses (they can take the
         // foreground from the user's apps). A single-selection ListBox moves with the arrow keys;
         // Tab enters it once and goes on to the section shown.
-        var settings = new SettingsRepository().Load();
+        var settings = new SettingsRepository().LoadWithOutcome().Value!;
         UiThread.Invoke(() =>
         {
             var panel = Build(settings);
@@ -165,7 +165,7 @@ public sealed class SettingsPanelTests : IDisposable
     [Fact]
     public void The_download_offers_show_their_licences()
     {
-        var settings = new SettingsRepository().Load();
+        var settings = new SettingsRepository().LoadWithOutcome().Value!;
         UiThread.Invoke(() =>
         {
             var panel = Build(settings);
@@ -200,7 +200,7 @@ public sealed class SettingsPanelTests : IDisposable
     [Fact]
     public void Settings_that_depend_on_another_follow_it()
     {
-        var settings = new SettingsRepository().Load();
+        var settings = new SettingsRepository().LoadWithOutcome().Value!;
         UiThread.Invoke(() =>
         {
             var panel = Build(settings);

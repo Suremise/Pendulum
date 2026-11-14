@@ -49,7 +49,7 @@ public sealed class UserFileShapeTests : IDisposable
         var json = $$"""{ "Settings": {{Settings}}, "Triggers": {{triggers}} }""";
         var path = Write("backup.json", json);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
 
         AssertUntouched(path, json);
     }
@@ -65,7 +65,7 @@ public sealed class UserFileShapeTests : IDisposable
         var json = $$"""{ "Settings": {{settings}}, "Triggers": [ {{Reminder}} ] }""";
         var path = Write("backup.json", json);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
 
         AssertUntouched(path, json);
     }

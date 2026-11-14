@@ -43,7 +43,7 @@ public sealed class RestoreResetTests : IDisposable
     {
         var current = new AppSettings { LaunchOnWindowsStartup = false };
         var vm = Ready(current);
-        var restored = new SettingsRepository(FixturePath).Load();
+        var restored = new SettingsRepository(FixturePath).LoadWithOutcome().Value!;
         var savedMidway = WatchForSavesMidway(current);
 
         vm.ApplySettingsFrom(restored);
@@ -56,7 +56,7 @@ public sealed class RestoreResetTests : IDisposable
 
         // Saved once, at the end, with everything in it.
         AppServices.Instance.FlushPendingSaves();
-        var onDisk = new SettingsRepository(AppPaths.SettingsFile).Load();
+        var onDisk = new SettingsRepository(AppPaths.SettingsFile).LoadWithOutcome().Value!;
         Assert.Equal(30, onDisk.AutoDeleteSpentAfterDays);
         Assert.Equal("Ctrl+Alt+P", onDisk.QuickAddHotkeyGesture);
         Assert.False(onDisk.LaunchOnWindowsStartup);
@@ -65,7 +65,7 @@ public sealed class RestoreResetTests : IDisposable
     [Fact]
     public void Reset_gives_defaults_for_every_setting_but_leaves_Start_with_Windows() => UiThread.Invoke(() =>
     {
-        var current = new SettingsRepository(FixturePath).Load();
+        var current = new SettingsRepository(FixturePath).LoadWithOutcome().Value!;
         current.LaunchOnWindowsStartup = false;
         var vm = Ready(current);
         var savedMidway = WatchForSavesMidway(current);
@@ -78,7 +78,7 @@ public sealed class RestoreResetTests : IDisposable
             Assert.True(Equals(p.GetValue(defaults), p.GetValue(current)), p.Name);
         Assert.False(current.LaunchOnWindowsStartup);  // the default is on: Reset doesn't turn it on
         AppServices.Instance.FlushPendingSaves();
-        Assert.Equal(0, new SettingsRepository(AppPaths.SettingsFile).Load().AutoDeleteSpentAfterDays);
+        Assert.Equal(0, new SettingsRepository(AppPaths.SettingsFile).LoadWithOutcome().Value!.AutoDeleteSpentAfterDays);
     });
 
     private static SettingsViewModel Ready(AppSettings settings)

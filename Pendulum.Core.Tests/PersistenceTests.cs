@@ -38,13 +38,14 @@ public sealed class PersistenceTests : IDisposable
     }
 
     [Fact]
-    public void Without_a_settings_file_the_defaults_load_and_nothing_is_written()
+    public void Without_a_settings_file_the_missing_outcome_is_returned_and_nothing_is_written()
     {
         var path = _temp.File("settings.json");
 
-        var s = new SettingsRepository(path).Load();
+        var load = new SettingsRepository(path).LoadWithOutcome();
 
-        Assert.Equal(Json(new AppSettings()), Json(s));
+        Assert.Null(load.Value);
+        Assert.Equal(StoreOutcome.Missing, load.Outcome);
         Assert.False(File.Exists(path));
     }
 
@@ -64,7 +65,7 @@ public sealed class PersistenceTests : IDisposable
         };
 
         new SettingsRepository(path).Save(saved);
-        var loaded = new SettingsRepository(path).Load();
+        var loaded = new SettingsRepository(path).LoadWithOutcome().Value!;
 
         Assert.Equal(Json(saved), Json(loaded));
         Assert.False(File.Exists(path + ".tmp"));
@@ -79,21 +80,22 @@ public sealed class PersistenceTests : IDisposable
         repo.Save(new AppSettings { SnoozeMinutes = 7 });
         repo.Save(new AppSettings { SnoozeMinutes = 9 });
 
-        Assert.Equal(9, repo.Load().SnoozeMinutes);
+        Assert.Equal(9, repo.LoadWithOutcome().Value!.SnoozeMinutes);
         // The save before is kept as the .bak; no temp file is left.
         Assert.Equal(new[] { path, path + ".bak" }, Directory.GetFiles(_temp.Path).Order());
-        Assert.Equal(7, JsonStore.Load<AppSettings>(path + ".bak")!.SnoozeMinutes);
+        Assert.Equal(7, JsonStore.LoadWithOutcome<AppSettings>(path + ".bak").Value!.SnoozeMinutes);
     }
 
     [Fact]
-    public void A_corrupt_settings_file_is_kept_aside_and_the_defaults_load()
+    public void A_corrupt_settings_file_is_kept_aside_and_reported_without_a_value()
     {
         var path = _temp.File("settings.json");
         File.WriteAllText(path, "{ \"SnoozeMinutes\": 12, oops");
 
-        var s = new SettingsRepository(path).Load();
+        var load = new SettingsRepository(path).LoadWithOutcome();
 
-        Assert.Equal(Json(new AppSettings()), Json(s));
+        Assert.Null(load.Value);
+        Assert.Equal(StoreOutcome.SetAside, load.Outcome);
         Assert.False(File.Exists(path));
         var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "settings.json.corrupt-*"));
         Assert.Equal("{ \"SnoozeMinutes\": 12, oops", File.ReadAllText(quarantined));
@@ -105,7 +107,9 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("settings.json");
         File.WriteAllText(path, "");
 
-        new SettingsRepository(path).Load();
+        var load = new SettingsRepository(path).LoadWithOutcome();
+
+        Assert.Equal(StoreOutcome.SetAside, load.Outcome);
 
         Assert.Single(Directory.GetFiles(_temp.Path, "settings.json.corrupt-*"));
     }
@@ -116,7 +120,7 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("settings.json");
         File.WriteAllText(path, """{ "SnoozeMinutes": 8, "SomethingFromTheFuture": true }""");
 
-        Assert.Equal(8, new SettingsRepository(path).Load().SnoozeMinutes);
+        Assert.Equal(8, new SettingsRepository(path).LoadWithOutcome().Value!.SnoozeMinutes);
     }
 
     // ---- The update check's default, old files and new (on by default up to 1.1.0, off since) ----
@@ -135,7 +139,7 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("settings.json");
         File.WriteAllText(path, json);
 
-        var s = JsonStore.Load<AppSettings>(path)!;
+        var s = JsonStore.LoadWithOutcome<AppSettings>(path).Value!;
 
         Assert.True(s.CheckForUpdatesOnStartup);
         if (json.Contains("SnoozeMinutes"))
@@ -153,7 +157,7 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("settings.json");
         File.WriteAllText(path, $$"""{ "CheckForUpdatesOnStartup": {{(value ? "true" : "false")}} }""");
 
-        Assert.Equal(value, JsonStore.Load<AppSettings>(path)!.CheckForUpdatesOnStartup);
+        Assert.Equal(value, JsonStore.LoadWithOutcome<AppSettings>(path).Value!.CheckForUpdatesOnStartup);
     }
 
     [Fact]
@@ -173,7 +177,7 @@ public sealed class PersistenceTests : IDisposable
         JsonStore.Save(path, new AppSettings());
 
         Assert.Contains("\"CheckForUpdatesOnStartup\": false", File.ReadAllText(path));
-        Assert.False(JsonStore.Load<AppSettings>(path)!.CheckForUpdatesOnStartup);
+        Assert.False(JsonStore.LoadWithOutcome<AppSettings>(path).Value!.CheckForUpdatesOnStartup);
     }
 
     // ---- Reminders ----
@@ -209,7 +213,7 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("triggers.json");
         File.WriteAllText(path, "[ { \"Name\": \"half a remind");
 
-        Assert.Null(JsonStore.Load<List<TriggerTimer>>(path));
+        Assert.Null(JsonStore.LoadWithOutcome<List<TriggerTimer>>(path).Value);
         var quarantined = Assert.Single(Directory.GetFiles(_temp.Path, "triggers.json.corrupt-*"));
         Assert.Equal("[ { \"Name\": \"half a remind", File.ReadAllText(quarantined));
     }
@@ -252,20 +256,11 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("triggers.json");
         JsonStore.Save(path, new List<TriggerTimer> { new() { Name = "Dentist" } });
         var before = File.ReadAllText(path);
-        var delays = JsonStore.RetryDelays;
-        JsonStore.RetryDelays = [];
-        try
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
         {
-            using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
-            {
-                var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path));
-                Assert.Equal(path, e.Path);
-                Assert.Contains(path, e.Message, StringComparison.Ordinal);
-            }
-        }
-        finally
-        {
-            JsonStore.RetryDelays = delays;
+            var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path, []));
+            Assert.Equal(path, e.Path);
+            Assert.Contains(path, e.Message, StringComparison.Ordinal);
         }
 
         Assert.Equal(before, File.ReadAllText(path));
@@ -332,19 +327,10 @@ public sealed class PersistenceTests : IDisposable
     /// Loading path while held is open with no sharing: StoreUnreadableException naming it.
     private static void AssertUnreadableWhileHeld(string held, string path)
     {
-        var delays = JsonStore.RetryDelays;
-        JsonStore.RetryDelays = [];
-        try
+        using (new FileStream(held, FileMode.Open, FileAccess.Read, FileShare.None))
         {
-            using (new FileStream(held, FileMode.Open, FileAccess.Read, FileShare.None))
-            {
-                var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path));
-                Assert.Equal(held, e.Path);
-            }
-        }
-        finally
-        {
-            JsonStore.RetryDelays = delays;
+            var e = Assert.Throws<StoreUnreadableException>(() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(path, []));
+            Assert.Equal(held, e.Path);
         }
     }
 
@@ -377,7 +363,7 @@ public sealed class PersistenceTests : IDisposable
         JsonStore.Save(path, new AppSettings { SnoozeMinutes = 7 });
         File.WriteAllText(path + ".0123456789abcdef0123456789abcdef.tmp", "{ half");
 
-        Assert.Equal(7, JsonStore.Load<AppSettings>(path)!.SnoozeMinutes);
+        Assert.Equal(7, JsonStore.LoadWithOutcome<AppSettings>(path).Value!.SnoozeMinutes);
         Assert.Empty(Directory.GetFiles(_temp.Path, "*.tmp"));
     }
 
@@ -428,7 +414,7 @@ public sealed class PersistenceTests : IDisposable
         File.WriteAllText(path, content);
         var written = File.GetLastWriteTimeUtc(path);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
 
         AssertUntouched(path, content, written);
     }
@@ -471,6 +457,35 @@ public sealed class PersistenceTests : IDisposable
     // ---- Backups ----
 
     [Fact]
+    public void A_missing_backup_reports_the_missing_file()
+    {
+        Assert.Throws<FileNotFoundException>(() => BackupRepository.Load(_temp.File("missing.json")));
+    }
+
+    [Fact]
+    public void Both_user_file_readers_preserve_access_errors()
+    {
+        // Reading a directory as a file is denied without changing machine permissions.
+        Assert.Throws<UnauthorizedAccessException>(() => BackupRepository.Load(_temp.Path));
+        Assert.Throws<UnauthorizedAccessException>(() => new TriggerRepository().LoadFrom(_temp.Path));
+        Assert.Empty(Directory.GetFiles(_temp.Path));
+    }
+
+    [Fact]
+    public void A_locked_backup_reports_a_read_error_and_is_left_untouched()
+    {
+        var path = _temp.File("backup.json");
+        BackupRepository.Save(path, new AppBackup { Settings = new AppSettings(), Triggers = SampleReminders() });
+        var content = File.ReadAllText(path);
+        var written = File.GetLastWriteTimeUtc(path);
+
+        using (new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.None))
+            Assert.ThrowsAny<IOException>(() => BackupRepository.Load(path));
+
+        AssertUntouched(path, content, written);
+    }
+
+    [Fact]
     public void A_whole_app_backup_restores_the_same_settings_and_reminders()
     {
         var path = _temp.File("backup.json");
@@ -491,7 +506,7 @@ public sealed class PersistenceTests : IDisposable
         new TriggerRepository().SaveTo(path, SampleReminders());
         var content = File.ReadAllText(path);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
         AssertUntouched(path, content, File.GetLastWriteTimeUtc(path));
     }
 
@@ -503,7 +518,7 @@ public sealed class PersistenceTests : IDisposable
         JsonStore.Save(path, new AppSettings { SnoozeMinutes = 9 });
         var content = File.ReadAllText(path);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
         AssertUntouched(path, content, File.GetLastWriteTimeUtc(path));
     }
 
@@ -518,7 +533,7 @@ public sealed class PersistenceTests : IDisposable
         var path = _temp.File("backup.json");
         File.WriteAllText(path, json);
 
-        Assert.Null(BackupRepository.Load(path));
+        Assert.Throws<InvalidDataException>(() => BackupRepository.Load(path));
         AssertUntouched(path, json, File.GetLastWriteTimeUtc(path));
     }
 
@@ -556,7 +571,7 @@ public sealed class PersistenceTests : IDisposable
         var path = Copy(release, "settings.json");
         var original = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
 
-        var s = new SettingsRepository(path).Load();
+        var s = new SettingsRepository(path).LoadWithOutcome().Value!;
 
         Assert.True(File.Exists(path), "the file was set aside as corrupt");
         var reloaded = JsonNode.Parse(JsonSerializer.Serialize(s))!.AsObject();
@@ -580,7 +595,7 @@ public sealed class PersistenceTests : IDisposable
     [Fact]
     public void Settings_from_1_0_0_which_had_no_update_check_keep_it_on()
     {
-        var s = new SettingsRepository(Copy("v1.0.0", "settings.json")).Load();
+        var s = new SettingsRepository(Copy("v1.0.0", "settings.json")).LoadWithOutcome().Value!;
 
         Assert.True(s.CheckForUpdatesOnStartup);
     }
@@ -588,7 +603,7 @@ public sealed class PersistenceTests : IDisposable
     [Fact]
     public void Settings_from_1_1_0_keep_the_update_check_as_they_had_it()
     {
-        var s = new SettingsRepository(Copy("v1.1.0", "settings.json")).Load();
+        var s = new SettingsRepository(Copy("v1.1.0", "settings.json")).LoadWithOutcome().Value!;
 
         Assert.False(s.CheckForUpdatesOnStartup);
         Assert.Equal("1.1.0", s.LastKnownLatestVersion);
@@ -687,7 +702,7 @@ public sealed class PersistenceTests : IDisposable
     [MemberData(nameof(Releases))]
     public void Data_from_a_release_saved_again_by_this_version_loads_the_same(string release)
     {
-        var settings = new SettingsRepository(Copy(release, "settings.json")).Load();
+        var settings = new SettingsRepository(Copy(release, "settings.json")).LoadWithOutcome().Value!;
         var reminders = new TriggerRepository().LoadFrom(Copy(release, "triggers.json"));
 
         var settingsPath = _temp.File("resaved-settings.json");
@@ -695,7 +710,7 @@ public sealed class PersistenceTests : IDisposable
         new SettingsRepository(settingsPath).Save(settings);
         new TriggerRepository().SaveTo(remindersPath, reminders);
 
-        Assert.Equal(Json(settings), Json(new SettingsRepository(settingsPath).Load()));
+        Assert.Equal(Json(settings), Json(new SettingsRepository(settingsPath).LoadWithOutcome().Value!));
         Assert.Equal(Json(reminders), Json(new TriggerRepository().LoadFrom(remindersPath)));
     }
 
