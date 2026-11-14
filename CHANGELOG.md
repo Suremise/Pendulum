@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Late alert actions and edits are ignored after shutdown, avoiding errors or changes to reminders that can no longer be saved.
 - Editing sounds or showing filters no longer repeats the work of sizing every date.
 - A failed final save is logged without interrupting the rest of shutdown or leaving save timers running.
 - Pendulum attempts to save pending reminder and settings changes before a fatal error on its window thread.

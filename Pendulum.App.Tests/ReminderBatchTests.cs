@@ -7,6 +7,7 @@ using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
+using Pendulum.Core.Engine;
 using Pendulum.Core.Persistence;
 
 namespace Pendulum.App.Tests;
@@ -16,6 +17,42 @@ public sealed class ReminderBatchTests : IDisposable
 {
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "pendulum-batch-tests-" + Guid.NewGuid().ToString("N"));
     private static TriggerTimer Reminder(string name) => new() { Name = name, TriggerAt = new DateTime(2090, 1, 1), RecurrenceAnchor = new DateTime(2090, 1, 1) };
+
+    [Fact]
+    public void Late_alert_editor_and_batch_callbacks_after_shutdown_cannot_mutate_or_save() => UiThread.Invoke(() =>
+    {
+        var clock = new CountingClock();
+        var writes = 0;
+        var services = new AppServices((_, _) => writes++, clock);
+        var now = new DateTime(2026, 11, 14, 12, 0, 0);
+        var reminder = new TriggerTimer
+        {
+            Name = "before",
+            TriggerAt = now,
+            RecurrenceAnchor = now,
+            Recurrence = new RecurrenceRule { OccurrencesSoFar = 1 },
+            HasFired = true,
+        };
+        services.AddTrigger(reminder);
+        var editor = new EditorViewModel(reminder, isNew: false, use24HourTime: true, [], "teal") { Name = "late edit" };
+        var draft = editor.CreateDraft(now);
+        services.Shutdown();
+        writes = clock.Requests = 0;
+        var before = JsonSerializer.Serialize(reminder);
+        var refreshes = services.Engine.TriggerSetCount;
+
+        Assert.False(services.Update(reminder, () => TriggerReconciler.Snooze(reminder, now, now, 5, TimeZoneInfo.Utc)));
+        Assert.False(services.Update(reminder, () => TriggerReconciler.Dismiss(reminder, now, now.AddDays(2))));
+        var editAccepted = services.Update(reminder, () => TriggerReconciler.ApplyEdit(reminder, draft, now));
+        Assert.False(editAccepted); // The existing editor returns no result on this failed update.
+        services.ChangeRemindersTogether(() => reminder.Name = "late batch");
+
+        Assert.Equal(before, JsonSerializer.Serialize(reminder));
+        Assert.Same(reminder, Assert.Single(services.Triggers));
+        Assert.Equal(refreshes, services.Engine.TriggerSetCount);
+        Assert.Equal(0, clock.Requests);
+        Assert.Equal(0, writes);
+    });
 
     [Fact]
     public void Importing_fifty_reminders_requests_one_save() => UiThread.Invoke(() =>

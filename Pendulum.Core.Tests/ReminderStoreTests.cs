@@ -138,6 +138,50 @@ public sealed class ReminderStoreTests
     }
 
     [Fact]
+    public void Late_update_and_batch_actions_after_disposal_are_not_run()
+    {
+        var reminder = new TriggerTimer { Name = "original", Recurrence = new() };
+        using var store = new ReminderStore([reminder]);
+        var changes = 0;
+        store.RemindersChanged += (_, _) => changes++;
+        store.Dispose();
+        var actions = 0;
+        void LateAction()
+        {
+            actions++;
+            reminder.Name = "late";
+            reminder.Recurrence.OccurrencesSoFar++;
+        }
+
+        Assert.False(store.Update(reminder, LateAction));
+        store.ChangeTogether(LateAction);
+        Assert.Equal(0, actions);
+        Assert.Equal(0, changes);
+        Assert.Equal("original", reminder.Name);
+        Assert.Equal(0, reminder.Recurrence.OccurrencesSoFar);
+        Assert.Same(reminder, Assert.Single(store.Items));
+    }
+
+    [Fact]
+    public void Membership_operations_still_reject_use_after_disposal()
+    {
+        var reminder = new TriggerTimer();
+        using var store = new ReminderStore([reminder]);
+        store.Dispose();
+        Action[] operations =
+        [
+            () => store.Add(new()),
+            () => store.AddRange([new()]),
+            () => store.Remove(reminder),
+            () => store.RemoveRange([reminder]),
+            () => store.Move(0, 0),
+            () => store.ReplaceAll([new()]),
+        ];
+        foreach (var operation in operations) Assert.Throws<ObjectDisposedException>(operation);
+        Assert.Same(reminder, Assert.Single(store.Items));
+    }
+
+    [Fact]
     public void Initial_load_does_not_mark_dirty_but_later_changes_do()
     {
         using var store = new ReminderStore();

@@ -49,9 +49,10 @@ public sealed class ReminderStore : IDisposable
         if (initial is not null) AddRange(initial);
     }
 
+    /// A queued callback after shutdown is no longer actionable; do not run its changes.
     public void ChangeTogether(Action change)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
+        if (_disposed) return;
         _batch++;
         try { change(); }
         finally
@@ -61,11 +62,10 @@ public sealed class ReminderStore : IDisposable
         }
     }
 
-    /// A removed reminder can still have an open alert/editor. Ignore that stale operation.
+    /// A removed reminder or closed store can still have an alert/editor. Ignore that operation.
     public bool Update(TriggerTimer reminder, Action change)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        if (!_watched.ContainsKey(reminder)) return false;
+        if (_disposed || !_watched.ContainsKey(reminder)) return false;
         ChangeTogether(change);
         return true;
     }
@@ -75,7 +75,7 @@ public sealed class ReminderStore : IDisposable
     public void AddRange(IEnumerable<TriggerTimer> reminders)
     {
         var added = Materialize(reminders);
-        ChangeTogether(() =>
+        ChangeMembership(() =>
         {
             foreach (var reminder in added)
             {
@@ -88,24 +88,24 @@ public sealed class ReminderStore : IDisposable
     public bool Remove(TriggerTimer reminder)
     {
         var removed = false;
-        ChangeTogether(() => removed = _items.Remove(reminder));
+        ChangeMembership(() => removed = _items.Remove(reminder));
         return removed;
     }
 
     public void RemoveRange(IEnumerable<TriggerTimer> reminders)
     {
         var removed = reminders.ToList();
-        ChangeTogether(() => { foreach (var reminder in removed) _items.Remove(reminder); });
+        ChangeMembership(() => { foreach (var reminder in removed) _items.Remove(reminder); });
     }
 
-    public void Move(int oldIndex, int newIndex) => ChangeTogether(() => _items.Move(oldIndex, newIndex));
+    public void Move(int oldIndex, int newIndex) => ChangeMembership(() => _items.Move(oldIndex, newIndex));
 
     /// Restore/load uses one Reset. Import preserves unchanged rows through incremental
     /// notifications, retaining selection while still publishing just one owner change.
     public void ReplaceAll(IEnumerable<TriggerTimer> reminders, bool preserveExisting = false, bool markDirty = true)
     {
         var desired = Materialize(reminders);
-        ChangeTogether(() =>
+        ChangeMembership(() =>
         {
             if (!markDirty) _suppressPersistence++;
             try
@@ -125,6 +125,13 @@ public sealed class ReminderStore : IDisposable
             }
             finally { if (!markDirty) _suppressPersistence--; }
         });
+    }
+
+    // Membership APIs are explicit operations, so misuse after disposal still fails clearly.
+    private void ChangeMembership(Action change)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ChangeTogether(change);
     }
 
     private void ApplyMembership(List<TriggerTimer> desired)
