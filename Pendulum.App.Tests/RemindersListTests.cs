@@ -152,6 +152,52 @@ public sealed class RemindersListTests : IDisposable
     }
 
     [Fact]
+    public void Sound_edits_and_filter_toggles_do_not_remeasure_dates()
+    {
+        var counts = WithPanel(1400, panel =>
+        {
+            var initial = panel.DateMeasurementCount;
+            var initialBadges = panel.BadgeMeasurementCount;
+            _reminders[0].SoundFileName = "longer sound name.wav";
+            Resize(panel, 1400);
+            var afterSound = panel.DateMeasurementCount;
+            ((TriggersViewModel)panel.DataContext).Filter.RowVisible = false;
+            Resize(panel, 1400);
+            return (initial, afterSound, afterFilter: panel.DateMeasurementCount, initialBadges, afterBadges: panel.BadgeMeasurementCount);
+        });
+        Assert.True(counts.initial > 0);
+        Assert.Equal(counts.initial, counts.afterSound);
+        Assert.Equal(counts.initial, counts.afterFilter);
+        Assert.Equal(counts.initialBadges, counts.afterBadges);
+    }
+
+    [Fact]
+    public void Date_width_cache_distinguishes_format_font_and_culture_and_reuses_previous_measurements()
+    {
+        WithPanel(1400, panel =>
+        {
+            var before = panel.DateMeasurementCount;
+            var settings = AppServices.Instance.Settings;
+            settings.Use24HourTime = true;
+            Assert.Equal(before + 1, panel.DateMeasurementCount);
+            settings.Use24HourTime = false;
+            Assert.Equal(before + 1, panel.DateMeasurementCount);
+            var font = (ListViewItem)List(panel).ItemContainerGenerator.ContainerFromIndex(0);
+            var originalSize = font.FontSize;
+            font.FontSize++;
+            panel.FitColumns();
+            Assert.Equal(before + 2, panel.DateMeasurementCount);
+            font.FontSize = originalSize;
+            panel.FitColumns();
+            Assert.Equal(before + 2, panel.DateMeasurementCount);
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
+            panel.FitColumns();
+            Assert.Equal(before + 3, panel.DateMeasurementCount);
+            return true;
+        });
+    }
+
+    [Fact]
     public void Editing_a_reminders_sound_to_a_longer_name_widens_the_Sound_column()
     {
         var dentist = _reminders[0];
@@ -203,6 +249,7 @@ public sealed class RemindersListTests : IDisposable
         {
             var dialogs = new FakeDialogs();
             p.DataContext = new TriggersViewModel(dialogs);
+            Resize(p, 1200);
             var dentist = _reminders[0];
             var row = Descendants(List(p)).OfType<ListViewItem>().Single(r => r.DataContext == dentist);
             var nameText = Descendants(row).OfType<TextBlock>().First(t => t.Text == dentist.Name);
@@ -230,6 +277,7 @@ public sealed class RemindersListTests : IDisposable
         {
             var dialogs = new FakeDialogs();
             p.DataContext = new TriggersViewModel(dialogs);
+            Resize(p, 1200);
             var dentist = _reminders[0];
             var row = Descendants(List(p)).OfType<ListViewItem>().Single(r => r.DataContext == dentist);
             p.PrepareRowMenu(row);   // as the menu opens

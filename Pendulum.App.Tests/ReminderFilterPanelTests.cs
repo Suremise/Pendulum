@@ -76,7 +76,7 @@ public sealed class ReminderFilterPanelTests : IDisposable
             {
                 var panel = Build(new AppSettings { ReminderFilterTypeFixed = true });
                 panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
-                var view = ((CollectionViewSource)panel.FindResource("SortedTriggers")).View;
+                var view = ((TriggersViewModel)panel.DataContext).View;
                 Assert.Contains(_reminder, view.Cast<TriggerTimer>());
                 rule.Frequency = RecurrenceFrequency.Daily;
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
@@ -170,7 +170,7 @@ public sealed class ReminderFilterPanelTests : IDisposable
             var panel = Build(settings);
             // Sorting is set up when the panel loads, which a panel never shown doesn't: by hand.
             panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
-            var view = ((CollectionViewSource)panel.FindResource("SortedTriggers")).View;
+            var view = ((TriggersViewModel)panel.DataContext).View;
             var arrow = (TextBlock)panel.FindName("TypeSortArrow");
             var sortBefore = view.SortDescriptions.Single();
             Assert.Equal(nameof(TriggerTimer.TriggerAt), sortBefore.PropertyName);

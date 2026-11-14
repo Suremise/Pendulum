@@ -12,6 +12,7 @@
     </UserControl.DataContext>
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:SortArrowConverter x:Key="SortArrow"/>
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
         <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
         <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
@@ -72,7 +73,6 @@
         <!-- Initial sort (TriggerAt ascending) is applied in code-behind (ApplySort, called from
              Loaded) rather than declared here, so there's one source of truth shared with the
              column-header click-to-sort logic instead of two independent starting points. -->
-        <CollectionViewSource x:Key="SortedTriggers" Source="{Binding Triggers}"/>
         <Style x:Key="CleanGridViewColumnHeader" TargetType="GridViewColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -290,7 +290,7 @@
 
         <Border Grid.Row="1" Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="8">
             <Grid>
-                <ListView x:Name="RemindersList" ItemsSource="{Binding Source={StaticResource SortedTriggers}}" SelectedItem="{Binding SelectedTrigger}"
+                <ListView x:Name="RemindersList" ItemsSource="{Binding View}" SelectedItem="{Binding SelectedTrigger}"
                           VerticalAlignment="Top" KeyDown="RemindersList_KeyDown" SizeChanged="RemindersList_SizeChanged"
                           ScrollViewer.ScrollChanged="RemindersList_ScrollChanged"
                           BorderThickness="0" Background="Transparent"
@@ -318,7 +318,14 @@
                                         <StackPanel>
                                             <StackPanel Orientation="Horizontal">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_NAME}" Style="{StaticResource ColumnFilterLabel}"/>
-                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                                <TextBlock x:Name="NameSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="Name">
+                                                            <Binding Path="SortProperty"/>
+                                                            <Binding Path="SortDirection"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
                                             </StackPanel>
                                             <ui:TextBox Text="{Binding Filter.Name, UpdateSourceTrigger=PropertyChanged}"
                                                         PlaceholderText="{x:Static res:Strings.Reminders_Filter}" FontSize="12" FontWeight="Normal"
@@ -351,7 +358,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_TYPE}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                            <TextBlock x:Name="TypeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="IsScheduled">
+                                                        <Binding Path="SortProperty"/>
+                                                        <Binding Path="SortDirection"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
                                         </StackPanel>
                                         <ToggleButton x:Name="TypeFilterToggle" Content="{Binding TypeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -399,7 +413,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_TRIGGERSON}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                            <TextBlock x:Name="TriggersOnSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="TriggerAt">
+                                                        <Binding Path="SortProperty"/>
+                                                        <Binding Path="SortDirection"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
                                         </StackPanel>
                                         <ToggleButton x:Name="DateFilterToggle" Content="{Binding TriggerFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -442,7 +463,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_MODE}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                            <TextBlock x:Name="ModeSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="Mode">
+                                                        <Binding Path="SortProperty"/>
+                                                        <Binding Path="SortDirection"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
                                         </StackPanel>
                                         <ToggleButton x:Name="ModeFilterToggle" Content="{Binding ModeFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -485,7 +513,14 @@
                                     <GridViewColumnHeader Tag="SoundFileName" Click="ColumnHeader_Click" Style="{StaticResource CleanGridViewColumnHeader}">
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_SOUND}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                            <TextBlock x:Name="SoundSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="SoundFileName">
+                                                        <Binding Path="SortProperty"/>
+                                                        <Binding Path="SortDirection"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
                                         </StackPanel>
                                     </GridViewColumnHeader>
                                 </GridViewColumn.Header>
@@ -505,7 +540,14 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <TextBlock Text="{x:Static res:Strings.Reminders_STATUS}" Style="{StaticResource ColumnFilterLabel}"/>
-                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0"/>
+                                            <TextBlock x:Name="StatusSortArrow" Style="{StaticResource ColumnFilterLabel}" FontSize="9" Margin="4,0,0,0">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource SortArrow}" ConverterParameter="StatusSortOrder">
+                                                        <Binding Path="SortProperty"/>
+                                                        <Binding Path="SortDirection"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
                                         </StackPanel>
                                         <ToggleButton x:Name="StatusFilterToggle" Content="{Binding StatusFilterSummary}"
                                                       Style="{StaticResource ColumnFilterDropdownButton}"
@@ -589,7 +631,7 @@
                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" HorizontalAlignment="Center"/>
                 </StackPanel>
 
-                <StackPanel x:Name="NoFilterResultsPanel" Visibility="Collapsed"
+                <StackPanel x:Name="NoFilterResultsPanel" Visibility="{Binding HasNoResults, Converter={StaticResource BoolToVis}}"
                             HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,60">
                     <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="40"
                                Foreground="{DynamicResource TextFillColorTertiaryBrush}" HorizontalAlignment="Center"/>

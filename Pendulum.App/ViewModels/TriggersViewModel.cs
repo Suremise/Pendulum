@@ -1,5 +1,9 @@
+using System.Collections;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pendulum.App.Resources;
@@ -14,8 +18,19 @@ public partial class TriggersViewModel : ObservableObject
 {
     private readonly IDialogs _dialogs;
 
-    private ReminderStore Store => AppServices.Instance.Reminders;
+    private readonly ReminderStore Store;
     public ReadOnlyObservableCollection<TriggerTimer> Triggers => Store.Items;
+
+    public ListCollectionView View { get; }
+    public string SortProperty { get; private set; } = nameof(TriggerTimer.TriggerAt);
+    public ListSortDirection SortDirection { get; private set; } = ListSortDirection.Ascending;
+    public bool HasNoResults => HasTriggers && View.IsEmpty;
+
+    private static readonly string[] SortProperties =
+    [
+        nameof(TriggerTimer.Name), nameof(TriggerTimer.IsScheduled), nameof(TriggerTimer.TriggerAt),
+        nameof(TriggerTimer.Mode), nameof(TriggerTimer.SoundFileName), nameof(TriggerTimer.StatusSortOrder)
+    ];
 
     public bool HasTriggers => Triggers.Count > 0;
     public bool HasSelection => Triggers.Any(t => t.IsSelectedForBulk);
@@ -88,12 +103,29 @@ public partial class TriggersViewModel : ObservableObject
 
     public TriggersViewModel() : this(WpfDialogs.Instance) { }
 
-    public TriggersViewModel(IDialogs dialogs)
+    public TriggersViewModel(IDialogs dialogs) : this(AppServices.Instance.Reminders, AppServices.Instance.Settings, dialogs) { }
+
+    internal TriggersViewModel(ReminderStore store, AppSettings settings, IDialogs? dialogs = null)
     {
-        _dialogs = dialogs;
-        Filter = new ReminderFilter(AppServices.Instance.Settings);
+        Store = store;
+        _dialogs = dialogs ?? WpfDialogs.Instance;
+        Filter = new ReminderFilter(settings);
+        View = new ListCollectionView((IList)Triggers)
+        {
+            Filter = item => item is TriggerTimer trigger && PassesFilter(trigger),
+            IsLiveSorting = true,
+            IsLiveFiltering = true
+        };
+        foreach (var property in SortProperties) View.LiveSortingProperties.Add(property);
+        foreach (var property in new[] { nameof(TriggerTimer.Name), nameof(TriggerTimer.HasFired), nameof(TriggerTimer.Enabled),
+            nameof(TriggerTimer.IsScheduled), nameof(TriggerTimer.Mode), nameof(TriggerTimer.TriggerAt) })
+            View.LiveFilteringProperties.Add(property);
+        View.SortDescriptions.Add(new SortDescription(SortProperty, SortDirection));
+        CollectionChangedEventManager.AddHandler(View, OnViewChanged);
         Filter.Changed += (_, _) =>
         {
+            View.Refresh();
+            OnPropertyChanged(nameof(HasNoResults));
             OnPropertyChanged(nameof(HasActiveFilters));
             OnPropertyChanged(nameof(TriggerFilterSummary));
             OnPropertyChanged(nameof(TypeFilterSummary));
@@ -104,9 +136,31 @@ public partial class TriggersViewModel : ObservableObject
         WeakEventManager<ReminderStore, RemindersChangedEventArgs>.AddHandler(Store, nameof(ReminderStore.RemindersChanged), OnRemindersChanged);
     }
 
+    private void OnViewChanged(object? sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged(nameof(HasNoResults));
+
+    [RelayCommand]
+    private void SortBy(string? propertyName)
+    {
+        if (propertyName is null || !SortProperties.Contains(propertyName)) return;
+        SortDirection = SortProperty == propertyName && SortDirection == ListSortDirection.Ascending
+            ? ListSortDirection.Descending : ListSortDirection.Ascending;
+        SortProperty = propertyName;
+        using (View.DeferRefresh())
+        {
+            View.SortDescriptions.Clear();
+            View.SortDescriptions.Add(new SortDescription(SortProperty, SortDirection));
+        }
+        OnPropertyChanged(nameof(SortProperty));
+        OnPropertyChanged(nameof(SortDirection));
+    }
+
     private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        if (e.MembershipChanged) OnPropertyChanged(nameof(HasTriggers));
+        if (e.MembershipChanged)
+        {
+            OnPropertyChanged(nameof(HasTriggers));
+            OnPropertyChanged(nameof(HasNoResults));
+        }
         if (e.MembershipChanged || e.Properties.Contains(nameof(TriggerTimer.IsSelectedForBulk)))
             OnPropertyChanged(nameof(HasSelection));
     }

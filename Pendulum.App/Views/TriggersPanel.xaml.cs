@@ -1,10 +1,8 @@
-﻿using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Pendulum.App.Converters;
@@ -18,10 +16,7 @@ namespace Pendulum.App.Views;
 
 public partial class TriggersPanel : UserControl
 {
-    private ICollectionView? _view;
     private bool _initialized;
-    private string _sortProperty = nameof(TriggerTimer.TriggerAt);
-    private ListSortDirection _sortDirection = ListSortDirection.Ascending;
 
     public TriggersPanel()
     {
@@ -36,9 +31,6 @@ public partial class TriggersPanel : UserControl
                 return;
             _initialized = true;
 
-            EnableLiveSorting();
-            SetupFiltering();
-            ApplySort();
             FitColumns();
 
             var width = DependencyPropertyDescriptor.FromProperty(GridViewColumn.WidthProperty, typeof(GridViewColumn));
@@ -47,7 +39,7 @@ public partial class TriggersPanel : UserControl
             AppServices.Instance.Settings.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(AppSettings.Use24HourTime))
-                    FitColumns();
+                    RefitDateColumn();
             };
             if (DataContext is TriggersViewModel vm)
             {
@@ -56,7 +48,7 @@ public partial class TriggersPanel : UserControl
                 vm.Filter.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(ReminderFilter.RowVisible))    // the headers' dropdowns
-                        Dispatcher.BeginInvoke(FitColumns, System.Windows.Threading.DispatcherPriority.Loaded);
+                        Dispatcher.BeginInvoke(RefitHeaders, System.Windows.Threading.DispatcherPriority.Loaded);
                 };
                 vm.PropertyChanged += (_, e) =>
                 {
@@ -69,16 +61,13 @@ public partial class TriggersPanel : UserControl
 
     private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        if (e.MembershipChanged) { FitColumns(); return; }
-        if (e.Properties.Contains(nameof(TriggerTimer.SoundFileName)) && !_refitQueued)
+        if (!(e.MembershipChanged || e.Properties.Contains(nameof(TriggerTimer.SoundFileName))) || _refitQueued) return;
+        _refitQueued = true;
+        Dispatcher.BeginInvoke(() =>
         {
-            _refitQueued = true;
-            Dispatcher.BeginInvoke(() =>
-            {
-                _refitQueued = false;
-                FitColumns();
-            }, System.Windows.Threading.DispatcherPriority.Loaded);
-        }
+            _refitQueued = false;
+            RefitSoundColumn();
+        }, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private bool _refitQueued;
@@ -188,12 +177,23 @@ public partial class TriggersPanel : UserControl
     /// widest value, whichever is wider. Measured in the list's own fonts as it loads and whenever
     /// what it shows can change.
     private readonly Dictionary<GridViewColumn, double> _fitted = new();
+    private readonly Dictionary<GridViewColumn, double> _contentWidths = new();
+    private readonly Dictionary<(bool Use24, Typeface Font, double Size, FlowDirection Flow, double Dpi, string Culture), double> _dateWidths = new();
+    private (bool Use24, Typeface Font, double Size, FlowDirection Flow, double Dpi, string Culture)? _measuredMetrics;
+
+    private (bool, Typeface, double, FlowDirection, double, string) MeasurementKey(Control font) =>
+        (AppServices.Instance.Settings.Use24HourTime,
+            new Typeface(font.FontFamily, font.FontStyle, font.FontWeight, font.FontStretch), font.FontSize,
+            font.FlowDirection, VisualTreeHelper.GetDpi(font).PixelsPerDip, CultureInfo.CurrentCulture.Name);
 
     /// The narrowest the date column may be: its widest date and time in the current format.
     internal double DateColumnMinWidth => _fitted.TryGetValue(DateColumn, out var w) ? w : 0;
 
     /// The width a fitted column needs for its content and header (0 before the list loads).
     internal double FittedWidth(GridViewColumn column) => _fitted.TryGetValue(column, out var w) ? w : 0;
+
+    internal int DateMeasurementCount { get; private set; }
+    internal int BadgeMeasurementCount { get; private set; }
 
     /// Whether Sound and Mode have stepped aside to leave Name its room (a narrow window).
     internal bool SoundStepsAside { get; private set; }
@@ -202,17 +202,62 @@ public partial class TriggersPanel : UserControl
     /// Measures every fitted column, then lays the columns out across the list's width.
     internal void FitColumns()
     {
-        var use24 = AppServices.Instance.Settings.Use24HourTime;
         var modes = new EnumSpacedDisplayConverter();
-        var sounds = ViewModel?.Triggers.Select(t => t.SoundFileName).Where(n => !string.IsNullOrEmpty(n)).Cast<string>() ?? [];
 
         Fit(TypeColumn, Badges(Strings.Reminders_Fixed, Strings.Reminders_Scheduled));
         var font = RowFont();
-        Fit(DateColumn, WidestDateText(font, use24) + 5);
+        Fit(DateColumn, DateContentWidth(font));
         Fit(ModeColumn, Badges(Enum.GetValues<AlertMode>().Select(m => (string)modes.Convert(m, typeof(string), null!, CultureInfo.CurrentCulture)).ToArray()));
-        Fit(SoundColumn, Math.Min(SoundMaxWidth, sounds.Select(n => TextWidth(font, n)).DefaultIfEmpty(0).Max() + 6));
+        Fit(SoundColumn, SoundContentWidth(font));
         Fit(StatusColumn, Badges(Strings.Reminders_Spent, Strings.Reminders_Upcoming, Strings.Reminders_Disabled));
+        _measuredMetrics = MeasurementKey(font);
         LayoutColumns();
+    }
+
+    private double DateContentWidth(Control font)
+    {
+        var key = MeasurementKey(font);
+        if (!_dateWidths.TryGetValue(key, out var width))
+        {
+            DateMeasurementCount++;
+            _dateWidths[key] = width = WidestDateText(font, AppServices.Instance.Settings.Use24HourTime);
+        }
+        return width + 5;
+    }
+
+    private double SoundContentWidth(Control font)
+    {
+        var sounds = ViewModel?.Triggers.Select(t => t.SoundFileName).Where(n => !string.IsNullOrEmpty(n)).Cast<string>() ?? [];
+        return Math.Min(SoundMaxWidth, sounds.Select(n => TextWidth(font, n)).DefaultIfEmpty(0).Max() + 6);
+    }
+
+    private void RefitDateColumn()
+    {
+        var font = RowFont();
+        Fit(DateColumn, DateContentWidth(font));
+        _measuredMetrics = MeasurementKey(font);
+        LayoutColumns();
+    }
+
+    private void RefitSoundColumn()
+    {
+        var font = RowFont();
+        if (_measuredMetrics is not { } metrics || !metrics.Equals(MeasurementKey(font))) { FitColumns(); return; }
+        Fit(SoundColumn, SoundContentWidth(font));
+        LayoutColumns();
+    }
+
+    private void RefitHeaders()
+    {
+        foreach (var column in FittedColumns)
+            if (_contentWidths.TryGetValue(column, out var content)) Fit(column, content);
+        LayoutColumns();
+    }
+
+    protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi)
+    {
+        base.OnDpiChanged(oldDpi, newDpi);
+        if (_initialized) FitColumns();
     }
 
     /// A long sound file name is cut short (its full name in a tooltip) past this.
@@ -220,6 +265,7 @@ public partial class TriggersPanel : UserControl
 
     private void Fit(GridViewColumn column, double content)
     {
+        _contentWidths[column] = content;
         var header = column.Header is FrameworkElement h ? Measured(h) : 0;
         _fitted[column] = Math.Ceiling(Math.Max(content + CellChrome, header));
     }
@@ -232,12 +278,15 @@ public partial class TriggersPanel : UserControl
 
     // The widest of these badges, drawn as a row draws them (its style, padding and edge), and the
     // cell's own margin.
-    private double Badges(params string[] labels) =>
-        labels.Max(text => Measured(new Border
+    private double Badges(params string[] labels)
+    {
+        BadgeMeasurementCount++;
+        return labels.Max(text => Measured(new Border
         {
             Style = (Style)FindResource("TagBadge"),   // not user-visible: a resource key
             Child = new TextBlock { Text = text, Style = (Style)FindResource("TagBadgeText") },  // not user-visible
         })) + 6;
+    }
 
     /// The font a row's text is drawn in: a row's own once there is one (its style can set a size
     /// of its own), the list's until then.
@@ -345,100 +394,12 @@ public partial class TriggersPanel : UserControl
         return widest;
     }
 
-    private void EnableLiveSorting()
-    {
-        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)  // not user-visible: a resource key
-            return;
-
-        if (cvs.View is ICollectionViewLiveShaping liveShaping && liveShaping.CanChangeLiveSorting)
-        {
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.Name));
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.IsScheduled));
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.TriggerAt));
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.Mode));
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.SoundFileName));
-            liveShaping.LiveSortingProperties.Add(nameof(TriggerTimer.StatusSortOrder));
-            liveShaping.IsLiveSorting = true;
-
-            if (liveShaping.CanChangeLiveFiltering)
-            {
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Name));
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.HasFired));
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Enabled));
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.IsScheduled));
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.Mode));
-                liveShaping.LiveFilteringProperties.Add(nameof(TriggerTimer.TriggerAt));
-                liveShaping.IsLiveFiltering = true;
-            }
-        }
-    }
-
     private void ColumnHeader_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is not GridViewColumnHeader { Tag: string propertyName })
-            return;
-
-        // Only the header's own click sorts. The filter in the header is made of buttons too (the
-        // dropdown's toggle, the checkboxes in its popup, whose events route through the popup to
-        // the header), and their Click bubbles up here: choosing a filter must not re-sort.
-        if (!ReferenceEquals(e.OriginalSource, sender))
-            return;
-
-        _sortDirection = _sortProperty == propertyName && _sortDirection == ListSortDirection.Ascending
-            ? ListSortDirection.Descending
-            : ListSortDirection.Ascending;
-        _sortProperty = propertyName;
-
-        ApplySort();
-    }
-
-    private void ApplySort()
-    {
-        if (_view is null)
-            return;
-
-        _view.SortDescriptions.Clear();
-        _view.SortDescriptions.Add(new SortDescription(_sortProperty, _sortDirection));
-        UpdateSortArrows();
-    }
-
-    private void UpdateSortArrows()
-    {
-        var arrow = _sortDirection == ListSortDirection.Ascending ? "▲" : "▼";
-        NameSortArrow.Text = _sortProperty == nameof(TriggerTimer.Name) ? arrow : string.Empty;
-        TypeSortArrow.Text = _sortProperty == nameof(TriggerTimer.IsScheduled) ? arrow : string.Empty;
-        TriggersOnSortArrow.Text = _sortProperty == nameof(TriggerTimer.TriggerAt) ? arrow : string.Empty;
-        ModeSortArrow.Text = _sortProperty == nameof(TriggerTimer.Mode) ? arrow : string.Empty;
-        SoundSortArrow.Text = _sortProperty == nameof(TriggerTimer.SoundFileName) ? arrow : string.Empty;
-        StatusSortArrow.Text = _sortProperty == nameof(TriggerTimer.StatusSortOrder) ? arrow : string.Empty;
-    }
-
-    private void SetupFiltering()
-    {
-        if (FindResource("SortedTriggers") is not CollectionViewSource cvs)  // not user-visible: a resource key
-            return;
-
-        _view = cvs.View;
-        _view.Filter = FilterItem;
-        _view.CollectionChanged += (_, __) => UpdateNoResultsVisibility();
-        UpdateNoResultsVisibility();
-
-        if (DataContext is TriggersViewModel vm)
-        {
-            vm.Filter.Changed += (_, _) => _view?.Refresh();
-        }
-    }
-
-    private bool FilterItem(object obj) =>
-        DataContext is not TriggersViewModel vm || obj is not TriggerTimer t || vm.PassesFilter(t);
-
-    private void UpdateNoResultsVisibility()
-    {
-        if (_view is null || DataContext is not TriggersViewModel vm)
-            return;
-
-        var isEmpty = !_view.Cast<object>().Any();
-        NoFilterResultsPanel.Visibility = vm.HasTriggers && isEmpty ? Visibility.Visible : Visibility.Collapsed;
+        // Filter controls also bubble Click through their header; only its own click sorts.
+        if (sender is GridViewColumnHeader { Tag: string propertyName }
+            && ReferenceEquals(e.OriginalSource, sender))
+            ViewModel?.SortByCommand.Execute(propertyName);
     }
 
     public void OpenAddTimerDialog()

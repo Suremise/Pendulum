@@ -246,6 +246,8 @@ Save it as Spent anyway, or go back and change the date/time?</value><comment>{0
   <data name="Reminders_Fixed" xml:space="preserve"><value>Fixed</value><comment>TriggersPanel.xaml, Text</comment></data>
   <data name="Reminders_From" xml:space="preserve"><value>From</value><comment>TriggersPanel.xaml, Text</comment></data>
   <data name="Reminders_Import" xml:space="preserve"><value>Import...</value><comment>TriggersPanel.xaml, Content</comment></data>
+  <data name="Reminders_SortAscending" xml:space="preserve"><value>▲</value><comment>Ascending sort indicator in a reminder column header.</comment></data>
+  <data name="Reminders_SortDescending" xml:space="preserve"><value>▼</value><comment>Descending sort indicator in a reminder column header.</comment></data>
   <data name="Reminders_Imported" xml:space="preserve"><value>Imported {0} reminder(s){1}{2}.{3}</value><comment>{0}: how many imported; {1}: optional localized replaced count; {2}: optional localized skipped count; {3}: optional localized caught-up explanation.</comment></data>
   <data name="Reminders_ImportedCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows the import summary. {0}: how many reminders.</comment></data>
   <data name="Reminders_ImportedReplaced" xml:space="preserve"><value> ({0} replaced)</value><comment>{0}: how many.</comment></data>
