@@ -29,11 +29,8 @@ public static class QuickAddParser
     private static readonly string[] DayAbbreviations =
         { "sun", "mon", "tue", "wed", "thu", "fri", "sat" };
 
-    private static readonly Regex RelativeMinutes =
-        new(@"\bin\s+(\d+)\s*(minutes?|mins?)\b", RegexOptions.IgnoreCase);
-
-    private static readonly Regex RelativeHours =
-        new(@"\bin\s+(\d+)\s*(hours?|hrs?)\b", RegexOptions.IgnoreCase);
+    private static readonly Regex RelativeTime =
+        new(@"\bin\s+(\d+)\s*(minutes?|mins?|hours?|hrs?)\b", RegexOptions.IgnoreCase);
 
     private static readonly Regex TimeWithAt =
         new(@"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b", RegexOptions.IgnoreCase);
@@ -58,97 +55,12 @@ public static class QuickAddParser
             return new QuickAddResult(string.Empty, null);
 
         var text = input.Trim();
-        DateTime? when = null;
-
-        var relativeMatch = RelativeMinutes.Match(text);
-        DateTime? dueUtc = null;
-        if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 1, zone, out var inMinutes, out var inMinutesUtc))
-        {
-            when = inMinutes;
-            dueUtc = inMinutesUtc;
-            text = Remove(text, relativeMatch);
-        }
-        else
-        {
-            relativeMatch = RelativeHours.Match(text);
-            if (relativeMatch.Success && TryAddRelative(now, relativeMatch, minutesPerUnit: 60, zone, out var inHours, out var inHoursUtc))
-            {
-                when = inHours;
-                dueUtc = inHoursUtc;
-                text = Remove(text, relativeMatch);
-            }
-        }
-
+        var (when, dueUtc) = ResolveRelative(ref text, now, zone);
         QuickAddRefusal? refusal = null;
         if (when is null)
         {
-            var baseDate = now.Date;
-            var explicitDay = false;
-
-            var namedWeekday = false;
-            var namedToday = false;
-
-            var tomorrowMatch = TomorrowWord.Match(text);
-            if (tomorrowMatch.Success)
-            {
-                baseDate = now.Date.AddDays(1);
-                explicitDay = true;
-                text = Remove(text, tomorrowMatch);
-            }
-            else
-            {
-                var todayMatch = TodayWord.Match(text);
-                if (todayMatch.Success)
-                {
-                    explicitDay = true;
-                    namedToday = true;
-                    text = Remove(text, todayMatch);
-                }
-                else
-                {
-                    var (dayStart, dayLength, dayIndex) = FindWeekday(text);
-                    if (dayIndex >= 0)
-                    {
-                        var delta = ((dayIndex - (int)now.DayOfWeek) + 7) % 7;
-                        baseDate = now.Date.AddDays(delta);
-                        explicitDay = true;
-                        namedWeekday = true;
-                        text = text[..dayStart] + " " + text[(dayStart + dayLength)..];
-                    }
-                }
-            }
-
-            var time = ExtractTime(ref text);
-
-            if (time is not null)
-            {
-                when = baseDate + time.Value;
-                if (!explicitDay && when <= now)
-                    when = when.Value.AddDays(1);
-                // Today's own weekday with a time already gone means next week's, not a moment ago.
-                else if (namedWeekday && when <= now)
-                    when = when.Value.AddDays(7);
-                // "today" with a time already gone can't be: say so rather than ring at once.
-                else if (namedToday && when <= now)
-                {
-                    when = null;
-                    refusal = QuickAddRefusal.TimePassedToday;
-                }
-            }
-            else if (namedToday)
-            {
-                // "today" alone: the next whole hour (10:20 gives 11:00; 10:00 gives 11:00 too).
-                when = now.Date.AddHours(now.Hour + 1);
-            }
-            else if (explicitDay)
-            {
-                // A day was named but no time — default to a reasonable morning time
-                // rather than silently dropping the day the user typed. Today's own weekday, once
-                // that time has gone, means next week's.
-                when = baseDate.AddHours(9);
-                if (namedWeekday && when <= now)
-                    when = when.Value.AddDays(7);
-            }
+            var day = ResolveDay(ref text, now);
+            (when, refusal) = ApplyTime(ref text, now, day);
         }
 
         // Every time is a wall-clock time, whatever kind of DateTime "now" was.
@@ -156,38 +68,79 @@ public static class QuickAddParser
         return new QuickAddResult(CleanName(text), wall, dueUtc, refusal);
     }
 
-    /// The first real time in the text: "at 9", "at 9:30pm", "14:30", "3pm". A number that isn't
-    /// a time of day ("13pm", "25:00", "10:75", "at 42 Main St") is left in the text instead.
+    private enum DayKind { None, Tomorrow, Today, Weekday }
+    private readonly record struct ResolvedDay(DayKind Kind, DateTime Date);
+    private sealed record ParsedTime(Match Match, TimeSpan Time);
+
+    private static (DateTime? When, DateTime? DueUtc) ResolveRelative(ref string text, DateTime now, TimeZoneInfo? zone)
+    {
+        var matches = RelativeTime.Matches(text).ToArray();
+        // Preserve minutes-before-hours priority, regardless of position. Only the first
+        // phrase of each unit is tried, even if its amount is invalid or too large.
+        foreach (var minutesPerUnit in new[] { 1, 60 })
+        {
+            var match = matches.FirstOrDefault(m =>
+                (m.Groups[2].Value[0] is 'm' or 'M') == (minutesPerUnit == 1));
+            if (match is not null && TryAddRelative(now, match, minutesPerUnit, zone, out var when, out var dueUtc))
+            {
+                text = Remove(text, match);
+                return (when, dueUtc);
+            }
+        }
+        return (null, null);
+    }
+
+    private static ResolvedDay ResolveDay(ref string text, DateTime now)
+    {
+        var tomorrow = TomorrowWord.Match(text);
+        if (tomorrow.Success)
+        {
+            text = Remove(text, tomorrow);
+            return new(DayKind.Tomorrow, now.Date.AddDays(1));
+        }
+        var today = TodayWord.Match(text);
+        if (today.Success)
+        {
+            text = Remove(text, today);
+            return new(DayKind.Today, now.Date);
+        }
+        var (start, length, dayIndex) = FindWeekday(text);
+        if (dayIndex < 0)
+            return new(DayKind.None, now.Date);
+        var delta = (dayIndex - (int)now.DayOfWeek + 7) % 7;
+        text = text[..start] + " " + text[(start + length)..];
+        return new(DayKind.Weekday, now.Date.AddDays(delta));
+    }
+
+    private static (DateTime? When, QuickAddRefusal? Refusal) ApplyTime(ref string text, DateTime now, ResolvedDay day)
+    {
+        var time = ExtractTime(ref text);
+        // "today" alone means the next whole hour, including midnight late in the evening.
+        if (time is null && day.Kind == DayKind.Today)
+            return (now.Date.AddHours(now.Hour + 1), null);
+
+        DateTime? when = time is { } t ? day.Date + t
+            : day.Kind == DayKind.None ? null : day.Date.AddHours(9);
+        if (when is null || when > now)
+            return (when, null);
+
+        return day.Kind switch
+        {
+            DayKind.None => (when.Value.AddDays(1), null),
+            DayKind.Weekday => (when.Value.AddDays(7), null),
+            DayKind.Today => (null, QuickAddRefusal.TimePassedToday),
+            _ => (when, null),
+        };
+    }
+
+    /// Takes the first valid match in the existing pattern order, leaving invalid times alone.
     private static TimeSpan? ExtractTime(ref string text)
     {
-        foreach (Match match in TimeWithAt.Matches(text))
-        {
-            if (BuildTime(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value) is { } time)
-            {
-                text = Remove(text, match);
-                return time;
-            }
-        }
-
-        foreach (Match match in TimeWithColon.Matches(text))
-        {
-            if (BuildTime(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value) is { } time)
-            {
-                text = Remove(text, match);
-                return time;
-            }
-        }
-
-        foreach (Match match in TimeWithAmPm.Matches(text))
-        {
-            if (BuildTime(match.Groups[1].Value, string.Empty, match.Groups[2].Value) is { } time)
-            {
-                text = Remove(text, match);
-                return time;
-            }
-        }
-
-        return null;
+        var found = ValidTimes(text).FirstOrDefault();
+        if (found is null)
+            return null;
+        text = Remove(text, found.Match);
+        return found.Time;
     }
 
     private static TimeSpan? BuildTime(string hourText, string minuteText, string amPm)
@@ -237,27 +190,35 @@ public static class QuickAddParser
     private static readonly Regex GapJustBefore = new(@"[\s,]+$");
     private static readonly Regex GapJustAfter = new(@"^[\s,]+");
 
-    /// Every real time in the text, as ExtractTime would take one: the same patterns and the same
-    /// range checks, so "at 42", "25:10pm" or "123pm" aren't times here either.
-    private static IEnumerable<Match> ValidTimes(string text) =>
-        new[] { TimeWithAt, TimeWithColon }
-            .SelectMany(r => r.Matches(text))
-            .Where(m => BuildTime(m.Groups[1].Value, m.Groups[2].Value, m.Groups[3].Value) is not null)
-            .Concat(TimeWithAmPm.Matches(text)
-                .Where(m => BuildTime(m.Groups[1].Value, string.Empty, m.Groups[2].Value) is not null));
-
-    /// Whether a real time ends just before <paramref name="start"/> (spaces or a comma between).
-    private static bool TimeJustBefore(string text, int start)
+    /// The one place that matches and validates time-of-day expressions. Pattern order is
+    /// deliberate: "at" times before colon times before bare am/pm, not text position.
+    private static IEnumerable<ParsedTime> ValidTimes(string text)
     {
-        var gap = GapJustBefore.Match(text[..start]);
-        return gap.Success && ValidTimes(text).Any(m => m.Index + m.Length == gap.Index);
+        foreach (var pattern in new[] { TimeWithAt, TimeWithColon, TimeWithAmPm })
+        {
+            foreach (Match match in pattern.Matches(text))
+            {
+                var time = pattern == TimeWithAmPm
+                    ? BuildTime(match.Groups[1].Value, string.Empty, match.Groups[2].Value)
+                    : BuildTime(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value);
+                if (time is { } valid)
+                    yield return new ParsedTime(match, valid);
+            }
+        }
     }
 
-    /// Whether a real time starts just after <paramref name="end"/> (spaces or a comma between).
-    private static bool TimeJustAfter(string text, int end)
+    /// Whether a cached time ends just before start (spaces or a comma between).
+    private static bool TimeJustBefore(string text, int start, IReadOnlyList<ParsedTime> times)
+    {
+        var gap = GapJustBefore.Match(text[..start]);
+        return gap.Success && times.Any(t => t.Match.Index + t.Match.Length == gap.Index);
+    }
+
+    /// Whether a cached time starts just after end (spaces or a comma between).
+    private static bool TimeJustAfter(string text, int end, IReadOnlyList<ParsedTime> times)
     {
         var gap = GapJustAfter.Match(text[end..]);
-        return gap.Success && ValidTimes(text).Any(m => m.Index == end + gap.Length);
+        return gap.Success && times.Any(t => t.Match.Index == end + gap.Length);
     }
 
     /// The weekday the text names, and where it is (with an "on" before it, which goes with it).
@@ -266,9 +227,14 @@ public static class QuickAddParser
     /// ("gym sat"). So "buy sun cream 3pm" and "sat nav update 2pm" keep their words.
     private static (int Start, int Length, int DayIndex) FindWeekday(string text)
     {
+        var words = Word.Matches(text);
+        ParsedTime[]? times = null;
+        // Full names and "on" need no time check. Once adjacency is needed, evaluate the
+        // time patterns once and share the results across every candidate and both passes.
+        IReadOnlyList<ParsedTime> Times() => times ??= ValidTimes(text).ToArray();
         foreach (var fullNames in new[] { true, false })
         {
-            foreach (Match candidate in Word.Matches(text))
+            foreach (Match candidate in words)
             {
                 var names = fullNames ? DayNames : DayAbbreviations;
                 var dayIndex = Array.IndexOf(names, candidate.Value.ToLowerInvariant());
@@ -281,8 +247,8 @@ public static class QuickAddParser
 
                 var readsAsDay = fullNames
                     || on.Success
-                    || TimeJustBefore(text, candidate.Index)
-                    || TimeJustAfter(text, candidate.Index + candidate.Length)
+                    || TimeJustBefore(text, candidate.Index, Times())
+                    || TimeJustAfter(text, candidate.Index + candidate.Length, Times())
                     || (after.Trim(' ', ',', '.').Length == 0 && before.Trim().Length > 0);
                 if (!readsAsDay)
                     continue;
