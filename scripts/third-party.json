@@ -91,7 +91,7 @@
       "licenceText": "scripts/licences/whisper.cpp-LICENSE.txt",
       "auditedVersion": "1.9.1",
       "nativeSource": "whisper.cpp f24588a272ae8e23280d9c220536437164e6ed28, the submodule Whisper.net 1.9.1 builds from",
-      "note": "The native whisper.cpp and ggml libraries in runtimes\\, built by Whisper.net's windows-scripts.ps1 with ggml's defaults for llamafile and KleidiAI (both off), so neither Mozilla's llamafile code nor Arm's KleidiAI is in them. They use the Visual C++ and OpenMP runtimes found on the PC (VCRUNTIME140, MSVCP140, VCOMP140), which Pendulum doesn't ship."
+      "note": "The native whisper.cpp and ggml libraries in runtimes\\, built by Whisper.net's windows-scripts.ps1 with ggml's defaults for llamafile and KleidiAI (both off), so neither Mozilla's llamafile code nor Arm's KleidiAI is in them. Pendulum ships the Visual C++ and OpenMP runtimes they use (vcruntime140.dll, vcruntime140_1.dll, msvcp140.dll, vcomp140.dll) unmodified in runtimes\\win-x64\\ under the approved Microsoft runtime exception recorded below."
     },
     {
       "id": "Whisper.net.Runtime.Metal",
