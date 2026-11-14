@@ -18,15 +18,17 @@ namespace Pendulum.App;
 public partial class MainWindow : FluentWindow
 {
     private readonly DispatcherTimer _statusTimer;
+    private bool _statusClosed;
     private string? _updateReleaseVersion;
 
     public MainWindow()
     {
         InitializeComponent();
 
-        _statusTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _statusTimer.Tick += (_, __) => UpdateStatusText();
-        _statusTimer.Start();
+        _statusTimer = new DispatcherTimer();
+        _statusTimer.Tick += (_, __) => RefreshStatus();
+        IsVisibleChanged += (_, __) => RefreshStatus();
+        ReminderStatus.Changed += RefreshStatus;
         UpdateStatusText();
 
         // The shortcuts the menu shows beside its items.
@@ -121,6 +123,20 @@ public partial class MainWindow : FluentWindow
     }
 
     private void UpdateStatusText() => StatusText.Text = ReminderStatus.GetNextReminderSummary();
+
+    private void RefreshStatus()
+    {
+        _statusTimer.Stop();
+        if (!IsVisible || _statusClosed)
+            return;
+
+        UpdateStatusText();
+        if (ReminderStatus.GetNextUpdateDelay(DateTime.Now) is { } delay)
+        {
+            _statusTimer.Interval = delay;
+            _statusTimer.Start();
+        }
+    }
 
     /// Shown at the right of the status bar once a check finds a newer version on GitHub. Never a popup — just a small, persistent line that clears
     /// itself naturally once the user's actually on the newer build.
@@ -232,6 +248,9 @@ public partial class MainWindow : FluentWindow
 
     private void FluentWindow_Closed(object sender, EventArgs e)
     {
+        _statusClosed = true;
+        _statusTimer.Stop();
+        ReminderStatus.Changed -= RefreshStatus;
         if (Application.Current is App { IsExiting: true } app)
             app.Shutdown();
     }

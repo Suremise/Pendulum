@@ -26,6 +26,7 @@ public partial class App : Application
     private bool _ownsMutex;
     private EventWaitHandle? _wakeEvent;
     private TaskbarIcon? _trayIcon;
+    private TrayTooltipUpdater? _trayTooltipUpdater;
     private DispatcherTimer? _trayTooltipTimer;
     private HotkeyManager? _hotkeyManager;
     private HotkeyBinding? _hotkey;
@@ -116,6 +117,9 @@ public partial class App : Application
             // H.NotifyIcon defaults to process-wide Idle priority and EcoQoS. Reminders,
             // audio and child speech processes need normal scheduling even while hidden.
             _trayIcon.ForceCreate(enablesEfficiencyMode: false);
+            _trayTooltipUpdater = new TrayTooltipUpdater(
+                text => _trayIcon.ToolTipText = text,
+                ex => CrashLog.Write("TrayTooltip.Update", ex)); // not user-visible: log context
 
             // The OS reads the tooltip text at the moment it's set, not live on hover,
             // so keep it refreshed periodically rather than computing it on click/hover.
@@ -169,8 +173,7 @@ public partial class App : Application
 
     private void UpdateTrayTooltip()
     {
-        if (_trayIcon is not null)
-            _trayIcon.ToolTipText = TrayTooltip.Build(ReminderStatus.GetNextReminderSummary(), _hotkey?.Active);
+        _trayTooltipUpdater?.Update(TrayTooltip.Build(ReminderStatus.GetNextReminderSummary(), _hotkey?.Active));
     }
 
     /// Holds the Quick Reminder shortcut the settings name, and says so when another app has it:

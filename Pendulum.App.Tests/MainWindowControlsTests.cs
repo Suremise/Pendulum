@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Threading;
 using Pendulum.App.Services;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
@@ -42,6 +44,25 @@ public sealed class MainWindowControlsTests : IDisposable
                 Assert.Equal(IntPtr.Zero, Process.GetCurrentProcess().MainWindowHandle);
             }
         });
+
+    [Fact]
+    public void A_hidden_window_has_no_status_timer_and_closing_keeps_it_stopped()
+    {
+        UiThread.Invoke(() =>
+        {
+            AppServices.Instance.UseSettingsForTests(new AppSettings());
+            var window = new MainWindow();
+            var timer = (DispatcherTimer)typeof(MainWindow).GetField("_statusTimer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(window)!;
+            try
+            {
+                Assert.False(window.IsVisible);
+                Assert.False(timer.IsEnabled);
+            }
+            finally { window.Close(); }
+            Assert.False(timer.IsEnabled);
+            Assert.Empty(Application.Current.Windows);
+        });
+    }
 
     [Fact]
     public void It_has_minimise_maximise_and_close_and_can_be_resized()
