@@ -1,6 +1,6 @@
 # Fixtures
 
-`v1.0.0/`, `v1.1.0/` and `v1.2.0/` hold a `Data\` folder's `settings.json` and `triggers.json`, and a
+`v1.0.0/`, `v1.1.0/`, `v1.2.0/` and `v1.2.1/` hold a `Data\` folder's `settings.json` and `triggers.json`, and a
 whole-app `backup.json`, **as those releases write them**: each was saved by that release's own
 `Pendulum.Core` (`JsonStore`, `BackupRepository`), from made-up settings and reminders, not anyone's
 real data. The tests load them with today's code to prove an upgrade keeps every reminder and
@@ -13,3 +13,6 @@ span ("Call the dentist", its `DueUtc`), a snoozed repeating one ("Stand-up", it
 `SnoozedOccurrence`) and a seventh, "Book club", monthly on the last Friday, with a colour chosen
 for it ("plum"). The others have the colour 1.2.0 gives a reminder saved without one, worked out
 from its Id as it loads and written with the next save (these made-up Ids all give "teal").
+
+`v1.2.1/` is the same sample read and saved by 1.2.1's `JsonStore`, `TriggerRepository` and
+`BackupRepository`. The file format is unchanged; the files remain byte for byte the same.

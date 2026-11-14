@@ -7,38 +7,49 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-11-14
+
+Pendulum stays responsive while other apps are busy, with fixes to saving, alerts, the calendar
+and repeating reminders.
+
+**Not signed yet:** Windows SmartScreen may warn the first time you run the installer or the exe
+("Windows protected your PC"). Check the download against the release's `SHA256SUMS.txt` first
+(`sha256sum -c SHA256SUMS.txt --ignore-missing`, or compare `Get-FileHash <file>` with it), and
+if it matches, choose **More info**, then **Run anyway**.
+
+Installing it over 1.2.0 keeps your reminders, settings and downloaded voices and speech models.
+
 ### Fixed
-- Quick Reminder and the new-reminder editor ignore submissions once shutdown begins.
-- Late alert actions and edits are ignored after shutdown, avoiding errors or changes to reminders that can no longer be saved.
-- Editing sounds or showing filters no longer repeats the work of sizing every date.
-- A failed final save is logged without interrupting the rest of shutdown or leaving save timers running.
-- Pendulum attempts to save pending reminder and settings changes before a fatal error on its window thread.
-- The calendar's today marker updates on time when clock changes skip or repeat midnight.
-- Long gaps between uses now count every missed weekly, monthly and yearly reminder, so series that end after a set number stop on time.
-- The calendar shows the correct days and reminder layout immediately when opening, changing month or resizing.
-- Quick Reminder recognizes short weekday names after 24-hour times, so "meet at 14:30 fri notes" schedules Friday and keeps "meet notes" as the name.
-- When Piper's files are missing, a Windows voice failure is reported without retrying the same voice or claiming it fell back from Piper.
-- Restoring a backup that another program has open now reports the read error instead of calling it an invalid backup.
-- Saving a reminder without changing its displayed time keeps its exact relative deadline.
-- Settings panels no longer repeat changes to the theme or Windows startup entry.
-- Quick Reminder no longer shares the foreground app's input queue when opening, so a hung
-  app cannot hold up Pendulum's focus request.
-- Alert sound and speech start away from the window thread, and repeating alerts reuse their
-  prepared speech. Dismissing or snoozing stops playback without waiting for device cleanup.
-- Hidden windows stop refreshing their reminder countdown, and unchanged tray tooltips no
-  longer contact Windows Explorer. A failed tooltip update is logged without an error dialog.
 - Pendulum no longer puts itself in Windows Efficiency Mode, keeping reminders and speech
   responsive while other apps are busy.
-- Save reminder and settings changes together in the background, keeping the app responsive
+- Reminder and settings changes save together in the background, keeping the app responsive
   while the disk is busy. Pending changes are saved before exit or Windows sign-out.
-- The calendar updates once after reminder changes, waits while hidden, and moves its today
-  marker when the day changes.
-- Repeating reminders still move to their next occurrence after years without opening the
-  app, keeping the count of missed daily reminders instead of incorrectly marking them spent.
-- Reminders saved with no repeat frequency behave consistently as one-off reminders,
-  including their type filter and occurrence count.
-- Reminder edits and imports save together. Restoring a backup stops tracking old reminders,
-  and a failed import confirmation leaves the import unapplied.
+- Hidden windows stop refreshing countdowns and the calendar. The tray updates its tooltip
+  only when it changes, and editing sounds or showing filters avoids unnecessary work.
+- Quick Reminder opens without waiting for another app that has stopped responding.
+- Alert sounds and speech start without holding up the app, and repeating alerts reuse
+  prepared speech. Dismissing or snoozing stops playback without waiting for audio cleanup.
+- When Piper's files are missing and the Windows voice also fails, the error is reported
+  without retrying that voice or saying Piper was used.
+- The calendar shows the correct days and reminders as soon as it opens, changes month or
+  resizes. Its today marker follows the date, even when clock changes skip or repeat midnight.
+- After a long time without opening Pendulum, repeating reminders move to their next time
+  and count every missed occurrence. Reminders that end after a set number stop on time.
+- Reminders saved without a repeat frequency behave as one-off reminders, including when
+  filtering the list and counting occurrences.
+- Saving a reminder without changing its displayed time keeps its exact relative deadline.
+- Quick Reminder recognises short weekday names after 24-hour times: "meet at 14:30 fri notes"
+  schedules Friday and keeps "meet notes" as the name.
+- Reminder edits and imports save together. Restoring a backup leaves no old reminders
+  waiting to be saved, and a failed import confirmation leaves the import unapplied.
+- Restoring a backup that another program has open reports the read error instead of
+  calling it an invalid backup.
+- Settings panels no longer repeat changes to the theme or Windows startup entry.
+- Once shutdown begins, Quick Reminder, the reminder editor and alert buttons stop accepting
+  changes that could no longer be saved.
+- A failed final save is logged while shutdown continues. Pendulum also tries to save pending
+  reminder and settings changes before closing after a fatal error.
+- A failed tray tooltip update is logged without interrupting you with an error dialog.
 
 ## [1.2.0] - 2026-11-02
 
@@ -304,7 +315,8 @@ Initial public release.
   mark spent otherwise) instead of getting stuck.
 - Self-contained, no-admin Windows installer.
 
-[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/Suremise/Pendulum/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Suremise/Pendulum/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Suremise/Pendulum/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Suremise/Pendulum/releases/tag/v1.0.0

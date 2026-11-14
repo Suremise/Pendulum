@@ -55,9 +55,9 @@ Copy this into the release's tracking issue or notes and tick each box. Use the 
 step 3** (or the draft's), on a PC where it's fine to install. Before you start, **back up
 `%LocalAppData%\Programs\Pendulum\Data\`** if this PC already has Pendulum.
 
-### Upgrade over v1.1.0, keeping everything
+### Upgrade over v1.2.0, keeping everything
 
-- [ ] With v1.1.0 installed and in use (reminders: one-off, weekly on chosen days, monthly, yearly,
+- [ ] With v1.2.0 installed and in use (reminders: one-off, weekly on chosen days, monthly, yearly,
       one that ends after a count; settings changed from their defaults), note the reminder count
       and a few settings.
 - [ ] Leave Pendulum running and start the new Setup: it asks to close Pendulum first. Close it
@@ -80,6 +80,10 @@ step 3** (or the draft's), on a PC where it's fine to install. Before you start,
 
 ### Using it
 
+- [ ] **While another app builds or a VM is busy:** Pendulum stays responsive when opening its
+      window, editing reminders and using Quick Reminder. Task Manager shows Normal priority
+      and no Efficiency Mode leaf for Pendulum.
+- [ ] **Calendar:** opening it, changing months and resizing shows the correct dates and reminders.
 - [ ] **The tray:** the icon shows (in the tray or its overflow), its tooltip names the next
       reminder, and its menu opens Pendulum and exits it.
 - [ ] Closing the window leaves Pendulum in the tray.
