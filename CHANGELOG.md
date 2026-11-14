@@ -7,6 +7,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- Pendulum no longer puts itself in Windows Efficiency Mode, keeping reminders and speech
+  responsive while other apps are busy.
+
 ## [1.2.0] - 2026-11-02
 
 A cleaner, more Windows-like Pendulum (a menu bar, a window that resizes and remembers where it

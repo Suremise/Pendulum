@@ -113,7 +113,9 @@ public partial class App : Application
                 Visibility = Visibility.Visible
             };
             _trayIcon.TrayLeftMouseUp += (_, __) => ShowMainWindow();
-            _trayIcon.ForceCreate();
+            // H.NotifyIcon defaults to process-wide Idle priority and EcoQoS. Reminders,
+            // audio and child speech processes need normal scheduling even while hidden.
+            _trayIcon.ForceCreate(enablesEfficiencyMode: false);
 
             // The OS reads the tooltip text at the moment it's set, not live on hover,
             // so keep it refreshed periodically rather than computing it on click/hover.
