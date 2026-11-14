@@ -1,10 +1,13 @@
 using System.Speech.Synthesis;
+using NAudio.Wave;
+using Pendulum.Core.Audio;
 
 namespace Pendulum.Core.Speech;
 
 public class SpeechService : IDisposable, ITextToSpeechEngine
 {
     private readonly SpeechSynthesizer _synth = new();
+    private readonly AudioService _audio = new();
 
     /// The names of the Windows voices installed and enabled, for Settings to offer.
     public static IReadOnlyList<string> GetVoiceNames()
@@ -37,33 +40,56 @@ public class SpeechService : IDisposable, ITextToSpeechEngine
 
     public async Task SpeakAndWaitAsync(string phrase, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(phrase))
+        var audio = await SynthesizeAsync(phrase, token).ConfigureAwait(false);
+        if (audio.Wave.Length == 0)
             return;
+        using var stream = new WaveFileReader(new MemoryStream(audio.Wave, writable: false));
+        await _audio.PlayOnceAsync(stream, audio.Volume, token).ConfigureAwait(false);
+    }
 
-        var tcs = new TaskCompletionSource();
+    public async Task<SpeechAudio> SynthesizeAsync(string phrase, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(phrase))
+            return new SpeechAudio([], 1f);
 
-        void OnCompleted(object? s, SpeakCompletedEventArgs e) => tcs.TrySetResult();
-        _synth.SpeakCompleted += OnCompleted;
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var wave = new MemoryStream();
 
-        using var registration = token.Register(() =>
+        void OnCompleted(object? s, SpeakCompletedEventArgs e)
         {
-            _synth.SpeakAsyncCancelAll();
-            tcs.TrySetResult();
-        });
-
-        _synth.SpeakAsync(phrase);
+            if (e.Error is { } error) tcs.TrySetException(error);
+            else if (e.Cancelled) tcs.TrySetCanceled();
+            else tcs.TrySetResult();
+        }
+        _synth.SpeakCompleted += OnCompleted;
 
         try
         {
-            await tcs.Task;
+            token.ThrowIfCancellationRequested();
+            _synth.SetOutputToWaveStream(wave);
+            _synth.SpeakAsync(phrase);
+            using var registration = token.Register(() => _synth.SpeakAsyncCancelAll());
+            await tcs.Task.ConfigureAwait(false);
+            token.ThrowIfCancellationRequested();
+            // SAPI applies its volume while synthesizing, so playback uses unity gain.
+            return new SpeechAudio(wave.ToArray(), 1f);
         }
         finally
         {
             _synth.SpeakCompleted -= OnCompleted;
+            _synth.SetOutputToNull();
         }
     }
 
-    public void Stop() => _synth.SpeakAsyncCancelAll();
+    public void Stop()
+    {
+        _synth.SpeakAsyncCancelAll();
+        _audio.Stop();
+    }
 
-    public void Dispose() => _synth.Dispose();
+    public void Dispose()
+    {
+        _synth.Dispose();
+        _audio.Dispose();
+    }
 }

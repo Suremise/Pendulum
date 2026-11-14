@@ -24,6 +24,19 @@ public sealed class AlertPlaybackTests : IDisposable
     public void Dispose() => _temp.Dispose();
 
     [Fact]
+    public async Task A_repeating_alert_prepares_its_phrase_once()
+    {
+        var speech = new FakeSpeech();
+        var sound = new FakeSound();
+        using var playback = new AlertPlaybackController(sound, speech);
+        playback.Start(null, AlertMode.SpeechOnly, "Dentist", repeatUntilDismissed: true);
+        await WaitUntil(() => sound.MemoryAttempts >= 3);
+        playback.Stop();
+        await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+        Assert.Equal(1, speech.Attempts);
+    }
+
+    [Fact]
     public async Task A_sound_that_fails_still_leaves_the_phrase_repeating()
     {
         var sound = new FakeSound { Fails = true };
@@ -32,7 +45,7 @@ public sealed class AlertPlaybackTests : IDisposable
         using var playback = new AlertPlaybackController(sound, speech, onProblem: problems.Enqueue);
 
         playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true);
-        await WaitUntil(() => speech.Spoken.Count >= 3);
+        await WaitUntil(() => sound.MemoryAttempts >= 3);
         playback.Stop();
         await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
 
@@ -68,11 +81,12 @@ public sealed class AlertPlaybackTests : IDisposable
         var windows = new FakeSpeech();
         var problems = new ConcurrentQueue<AlertProblem>();
         var fallbacksMade = 0;
+        var sound = new FakeSound();
         using var playback = new AlertPlaybackController(
-            new FakeSound(), piper, () => { fallbacksMade++; return windows; }, problems.Enqueue);
+            sound, piper, () => { fallbacksMade++; return windows; }, problems.Enqueue);
 
         playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true);
-        await WaitUntil(() => windows.Spoken.Count >= 3);
+        await WaitUntil(() => sound.MemoryAttempts >= 3);
         playback.Stop();
         await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
 
@@ -105,7 +119,7 @@ public sealed class AlertPlaybackTests : IDisposable
         using var playback = new AlertPlaybackController(sound, speech, onProblem: _ => throw new InvalidOperationException("handler"));
 
         playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true);
-        await WaitUntil(() => speech.Spoken.Count >= 2);
+        await WaitUntil(() => sound.MemoryAttempts >= 2);
         playback.Stop();
         await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
     }
@@ -154,11 +168,11 @@ public sealed class AlertPlaybackTests : IDisposable
         using var playback = new AlertPlaybackController(sound, speech);
 
         playback.Start(_sound, AlertMode.SoundAndSpeech, "Dentist", repeatUntilDismissed: true);
-        await WaitUntil(() => speech.Spoken.Count >= 3);
+        await WaitUntil(() => sound.MemoryAttempts >= 3);
         playback.Stop();
         await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
 
-        Assert.True(speech.Spoken.Count >= 3);
+        Assert.True(sound.MemoryAttempts >= 3);
     }
 
     private static async Task WaitUntil(Func<bool> condition)
@@ -174,6 +188,8 @@ public sealed class AlertPlaybackTests : IDisposable
     private sealed class FakeSound : IAlertSound
     {
         private int _attempts;
+        private int _memoryAttempts;
+        public int MemoryAttempts => Volatile.Read(ref _memoryAttempts);
         public bool Fails { get; init; }
         public int Attempts => Volatile.Read(ref _attempts);
 
@@ -184,6 +200,12 @@ public sealed class AlertPlaybackTests : IDisposable
         }
 
         public void Stop() { }
+
+        public Task PlayOnceAsync(WaveStream stream, float volume, CancellationToken token)
+        {
+            Interlocked.Increment(ref _memoryAttempts);
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeSpeech : ITextToSpeechEngine
@@ -193,14 +215,16 @@ public sealed class AlertPlaybackTests : IDisposable
         public int Attempts => Volatile.Read(ref _attempts);
         public ConcurrentQueue<string> Spoken { get; } = new();
 
-        public Task SpeakAndWaitAsync(string phrase, CancellationToken token)
+        public Task<SpeechAudio> SynthesizeAsync(string phrase, CancellationToken token)
         {
             Interlocked.Increment(ref _attempts);
             if (Fails)
-                return Task.FromException(new InvalidOperationException("piper failed"));
+                return Task.FromException<SpeechAudio>(new InvalidOperationException("piper failed"));
             Spoken.Enqueue(phrase);
-            return Task.CompletedTask;
+            return Task.FromResult(new SpeechAudio(WavWriter.ToBytes([0, 0], 22050), 0.5f));
         }
+
+        public async Task SpeakAndWaitAsync(string phrase, CancellationToken token) => await SynthesizeAsync(phrase, token);
 
         public void Stop() { }
         public void Dispose() { }

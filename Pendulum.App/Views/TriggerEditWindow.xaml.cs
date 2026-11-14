@@ -4,7 +4,6 @@ using Pendulum.App.Services;
 using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
-using Pendulum.Core.Speech;
 using Wpf.Ui.Controls;
 
 namespace Pendulum.App.Views;
@@ -33,8 +32,6 @@ public partial class TriggerEditWindow : FluentWindow
 
     // The Test button previews sound/speech through players of its own, never an alert's: an
     // alert may be sounding now, and closing this dialog (Save/Cancel) must not cut it off.
-    private readonly AudioService _previewAudio = new();
-    private readonly ITextToSpeechEngine _previewSpeech;
     private readonly AlertPlaybackController _previewPlayback;
 
     public TriggerTimer? Result { get; private set; }
@@ -48,17 +45,14 @@ public partial class TriggerEditWindow : FluentWindow
         Title = isNew ? Strings.Edit_NewReminder : Strings.Edit_EditReminder;
         EditorTitleBar.Title = Title;
 
-        _previewSpeech = AppServices.Instance.CreateSpeechEngine();
         _previewPlayback = new AlertPlaybackController(
-            _previewAudio,
-            _previewSpeech,
-            _previewSpeech is PiperSpeechService ? AppServices.Instance.CreateWindowsSpeechEngine : null,
+            () => new AudioService(),
+            AppServices.Instance.CaptureSpeechEngineFactory(),
+            AppServices.Instance.Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? AppServices.Instance.CaptureWindowsSpeechEngineFactory() : null,
             problem => Dispatcher.BeginInvoke(() => ShowTestProblem(problem)));
         Closed += (_, __) =>
         {
             _previewPlayback.Dispose();
-            _previewAudio.Dispose();
-            _previewSpeech.Dispose();
         };
 
         SetupTimeFormat();

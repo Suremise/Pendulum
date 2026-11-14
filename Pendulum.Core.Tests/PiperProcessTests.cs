@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using NAudio.Wave;
+using Pendulum.Core.Audio;
 using Pendulum.Core.Speech;
 
 namespace Pendulum.Core.Tests;
@@ -20,6 +22,52 @@ public sealed class PiperProcessTests : IDisposable
 
     private PiperSpeechService Piper(string exe, TimeSpan? timeout = null) =>
         new(exe, _temp.File("voice.onnx"), 1f, 1f) { Timeout = timeout ?? TimeSpan.FromSeconds(60) };
+
+    [Fact]
+    public async Task A_prepared_phrase_returns_a_WAV_in_memory_without_playing_or_writing_it()
+    {
+        // The stand-in emits real PCM, rather than the empty output used by the process tests.
+        var exe = FakePiper("powershell.exe -NoProfile -NonInteractive -Command \"$bytes = [byte[]](1,0,2,0); [Console]::OpenStandardOutput().Write($bytes,0,$bytes.Length)\"");
+        using var piper = Piper(exe);
+        var before = Directory.GetFiles(_temp.Path).Order().ToArray();
+
+        var prepared = await piper.SynthesizeAsync("Dentist", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(60));
+
+        using var wav = new WaveFileReader(new MemoryStream(prepared.Wave, writable: false));
+        Assert.Equal(22050, wav.WaveFormat.SampleRate);
+        var pcm = new byte[4];
+        Assert.Equal(4, wav.Read(pcm, 0, pcm.Length));
+        Assert.Equal(new byte[] { 1, 0, 2, 0 }, pcm);
+        Assert.Equal(before, Directory.GetFiles(_temp.Path).Order().ToArray());
+        Assert.Equal(1f, prepared.Volume);
+    }
+
+    [Fact]
+    public async Task Speaking_plays_memory_audio_and_never_hands_a_temp_WAV_path_to_the_player()
+    {
+        var exe = FakePiper("powershell.exe -NoProfile -NonInteractive -Command \"$bytes = [byte[]](1,0,2,0); [Console]::OpenStandardOutput().Write($bytes,0,$bytes.Length)\"");
+        var audio = new MemoryAudio();
+        using var piper = new PiperSpeechService(exe, _temp.File("voice.onnx"), 1f, 0.3f, audio);
+        await piper.SpeakAndWaitAsync("Dentist", CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(60));
+        Assert.Equal(1, audio.Plays);
+        Assert.Equal(0.3f, audio.Volume);
+    }
+
+    private sealed class MemoryAudio : IAlertSound
+    {
+        public int Plays { get; private set; }
+        public float Volume { get; private set; }
+        public Task PlayOnceAsync(string path, float volume, CancellationToken token) => throw new InvalidOperationException("Speech must not use a temporary file");
+        public Task PlayOnceAsync(WaveStream stream, float volume, CancellationToken token)
+        {
+            Assert.IsType<WaveFileReader>(stream);
+            Assert.Equal(4, stream.Length);
+            Plays++;
+            Volume = volume;
+            return Task.CompletedTask;
+        }
+        public void Stop() { }
+    }
 
     [Fact]
     public async Task A_piper_that_writes_a_lot_of_errors_still_finishes()

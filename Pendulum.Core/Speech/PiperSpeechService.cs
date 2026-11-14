@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Win32.SafeHandles;
+using NAudio.Wave;
 using Pendulum.Core.Audio;
 using Pendulum.Core.Resources;
 
@@ -19,23 +20,37 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
     private readonly string _modelPath;
     private readonly float _speakingRate;
     private readonly float _volume;
-    private readonly AudioService _audio = new();
+    private readonly IAlertSound _audio;
 
     /// How long piper may take to turn one phrase into audio before it's stopped. Tests set less.
     internal TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
 
     public PiperSpeechService(string executablePath, string modelPath, float speakingRate, float volume)
+        : this(executablePath, modelPath, speakingRate, volume, new AudioService()) { }
+
+    internal PiperSpeechService(string executablePath, string modelPath, float speakingRate, float volume, IAlertSound audio)
     {
         _executablePath = executablePath;
         _modelPath = modelPath;
         _speakingRate = speakingRate;
         _volume = volume;
+        _audio = audio;
     }
 
     public async Task SpeakAndWaitAsync(string phrase, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(phrase))
+        var audio = await SynthesizeAsync(phrase, token).ConfigureAwait(false);
+        if (audio.Wave.Length == 0)
             return;
+        using var stream = new WaveFileReader(new MemoryStream(audio.Wave, writable: false));
+        await _audio.PlayOnceAsync(stream, audio.Volume, token).ConfigureAwait(false);
+    }
+
+    public async Task<SpeechAudio> SynthesizeAsync(string phrase, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(phrase))
+            return new SpeechAudio([], _volume);
 
         var sampleRate = ReadSampleRate(_modelPath);
 
@@ -53,20 +68,10 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
         foreach (var arg in Arguments(_modelPath, _speakingRate))
             psi.ArgumentList.Add(arg);
 
-        var pcm = await RunPiperAsync(psi, phrase, token);
+        var pcm = await RunPiperAsync(psi, phrase, token).ConfigureAwait(false);
         if (pcm.Length == 0)
-            return;
-
-        var tempPath = Path.Combine(Path.GetTempPath(), $"pendulum-piper-{Guid.NewGuid():N}.wav");
-        await File.WriteAllBytesAsync(tempPath, WavWriter.ToBytes(pcm, sampleRate), token);
-        try
-        {
-            await _audio.PlayOnceAsync(tempPath, _volume, token);
-        }
-        finally
-        {
-            try { File.Delete(tempPath); } catch { /* best-effort cleanup */ }
-        }
+            return new SpeechAudio([], _volume);
+        return new SpeechAudio(WavWriter.ToBytes(pcm, sampleRate), _volume);
     }
 
     /// piper's arguments, each passed as it is: Windows quotes any that need it (a space, a quote).
@@ -228,5 +233,5 @@ public sealed class PiperSpeechService : ITextToSpeechEngine, IDisposable
 
     public void Stop() => _audio.Stop();
 
-    public void Dispose() => _audio.Dispose();
+    public void Dispose() => (_audio as IDisposable)?.Dispose();
 }

@@ -8,6 +8,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Alert sound and speech start away from the window thread, and repeating alerts reuse their
+  prepared speech. Dismissing or snoozing stops playback without waiting for device cleanup.
 - Hidden windows stop refreshing their reminder countdown, and unchanged tray tooltips no
   longer contact Windows Explorer. A failed tooltip update is logged without an error dialog.
 - Pendulum no longer puts itself in Windows Efficiency Mode, keeping reminders and speech

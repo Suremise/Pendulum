@@ -154,33 +154,48 @@ public sealed class AppServices
     /// configured with the current voice/rate/volume settings. Falls back to the Windows engine
     /// if Piper is selected but not actually usable yet (missing piper.exe, or no voice model
     /// chosen/present) — callers never need to check availability themselves.
-    public ITextToSpeechEngine CreateSpeechEngine()
-    {
-        if (Settings.TextToSpeechEngine == TextToSpeechEngine.Piper
-            && IsPiperExecutableAvailable
-            && DataFileName.PathInside(AppPaths.PiperModelsDirectory, Settings.PiperVoiceModelFileName) is { } modelPath)
-        {
-            if (File.Exists(modelPath))
-            {
-                // SAPI's Rate is -10 (slowest) to +10 (fastest); Piper's length_scale is the
-                // opposite shape (a multiplier where lower is faster, 1.0 is normal) — this maps
-                // the same slider onto both rather than needing a second, Piper-only control.
-                var speakingRate = 1f - (Settings.TtsRate / 20f);
-                return new PiperSpeechService(PiperExecutablePath, modelPath, speakingRate, Settings.TtsVolume / 100f);
-            }
-        }
+    public ITextToSpeechEngine CreateSpeechEngine() => CaptureSpeechEngineFactory()();
 
-        return CreateWindowsSpeechEngine();
+    /// Captures settings on the UI thread; file checks and voice/device setup happen only when
+    /// the worker needs speech. An alert keeps these settings throughout its life.
+    public Func<ITextToSpeechEngine> CaptureSpeechEngineFactory()
+    {
+        var selected = Settings.TextToSpeechEngine;
+        var executable = PiperExecutablePath;
+        var models = AppPaths.PiperModelsDirectory;
+        var modelName = Settings.PiperVoiceModelFileName;
+        var speakingRate = 1f - (Settings.TtsRate / 20f);
+        var volume = Settings.TtsVolume / 100f;
+        var windows = CaptureWindowsSpeechEngineFactory();
+        return () =>
+        {
+            if (selected == TextToSpeechEngine.Piper && File.Exists(executable)
+                && DataFileName.PathInside(models, modelName) is { } modelPath && File.Exists(modelPath))
+                return new PiperSpeechService(executable, modelPath, speakingRate, volume);
+            return windows();
+        };
     }
 
     /// The Windows voice with the current voice, rate and volume: what speaks when Piper can't.
-    public ITextToSpeechEngine CreateWindowsSpeechEngine()
+    public ITextToSpeechEngine CreateWindowsSpeechEngine() => CaptureWindowsSpeechEngineFactory()();
+
+    public Func<ITextToSpeechEngine> CaptureWindowsSpeechEngineFactory()
     {
-        var speech = new SpeechService();
-        speech.SetVoice(Settings.TtsVoiceName);
-        speech.SetRate(Settings.TtsRate);
-        speech.SetVolume(Settings.TtsVolume);
-        return speech;
+        var voice = Settings.TtsVoiceName;
+        var rate = Settings.TtsRate;
+        var volume = Settings.TtsVolume;
+        return () =>
+        {
+            var speech = new SpeechService();
+            try
+            {
+                speech.SetVoice(voice);
+                speech.SetRate(rate);
+                speech.SetVolume(volume);
+                return speech;
+            }
+            catch { speech.Dispose(); throw; }
+        };
     }
 
     private void NoteProblem<T>(string file, StoreLoad<T> load) where T : class

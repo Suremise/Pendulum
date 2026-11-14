@@ -3,7 +3,6 @@ using Pendulum.App.Views;
 using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
-using Pendulum.Core.Speech;
 
 namespace Pendulum.App.Services;
 
@@ -57,14 +56,12 @@ public static class AlertCoordinator
         // Each fired alert gets its own audio/speech stack instead of the shared AppServices
         // singletons — a shared controller's Start() stops whatever it was already playing, so
         // two reminders firing close together would silently cut each other's sound/speech off.
-        var audio = new AudioService();
-        var speech = services.CreateSpeechEngine();
         // A sound or phrase that fails never stops the alert: the rest carries on, Piper falls
         // back to the Windows voice, and the reason goes to Data\crash.log.
         var playback = new AlertPlaybackController(
-            audio,
-            speech,
-            speech is PiperSpeechService ? services.CreateWindowsSpeechEngine : null,
+            () => new AudioService(),
+            services.CaptureSpeechEngineFactory(),
+            services.Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? services.CaptureWindowsSpeechEngineFactory() : null,
             problem => CrashLog.Write($"Alert {problem.Step}{(problem.FellBackToWindowsSpeech ? " (fell back to the Windows voice)" : "")}", problem.Error));  // not user-visible
         var window = new AlertWindow(title, subtitle, canSnooze);
         var session = new Session(playback, window, soundPath, mode, phrase, repeat, volume);
@@ -73,8 +70,6 @@ public static class AlertCoordinator
         window.Closed += (_, __) =>
         {
             playback.Dispose();
-            audio.Dispose();
-            speech.Dispose();
             Apply(Queue.Close(session));
         };
         Apply(Queue.Open(session));

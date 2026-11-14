@@ -58,6 +58,25 @@ public sealed class DataFileNameUseTests : IDisposable
     }
 
     [Fact]
+    public void An_alert_captures_speech_settings_but_defers_engine_and_file_setup()
+    {
+        var settings = new AppSettings
+        {
+            TextToSpeechEngine = TextToSpeechEngine.Piper,
+            PiperVoiceModelFileName = "voice.onnx",
+        };
+        AppServices.Instance.UseSettingsForTests(settings);
+        var create = AppServices.Instance.CaptureSpeechEngineFactory();
+        settings.TextToSpeechEngine = TextToSpeechEngine.WindowsSpeechSynthesis;
+        // No files existed at capture time: checking them belongs to lazy worker setup.
+        File.WriteAllText(Path.Combine(AppPaths.PiperModelsDirectory, "piper.exe"), "");
+        File.WriteAllText(Path.Combine(AppPaths.PiperModelsDirectory, "voice.onnx"), "");
+
+        using var engine = create();
+        Assert.IsType<PiperSpeechService>(engine);
+    }
+
+    [Fact]
     public void A_plain_Piper_voice_in_PiperModels_is_used()
     {
         File.WriteAllText(Path.Combine(AppPaths.PiperModelsDirectory, "piper.exe"), "");  // never run

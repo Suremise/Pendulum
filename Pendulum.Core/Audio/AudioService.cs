@@ -1,66 +1,94 @@
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 
 namespace Pendulum.Core.Audio;
 
-/// What an alert plays its sound through: AudioService, or a fake in tests.
+/// What an alert plays its sound and prepared speech through; tests use no real device.
 public interface IAlertSound
 {
     Task PlayOnceAsync(string filePath, float volume, CancellationToken token);
+    Task PlayOnceAsync(WaveStream stream, float volume, CancellationToken token);
     void Stop();
 }
 
 public class AudioService : IAlertSound, IDisposable
 {
-    private WaveOutEvent? _output;
-    private AudioFileReader? _reader;
+    private readonly Func<IWavePlayer> _createOutput;
+    private readonly object _gate = new();
+    private IWavePlayer? _output;
+    private TaskCompletionSource? _completion;
+
+    public AudioService() : this(() => new WaveOutEvent()) { }
+
+    internal AudioService(Func<IWavePlayer> createOutput) => _createOutput = createOutput;
 
     /// Plays a file once. Throws when it can't be read or there's no output device.
     public async Task PlayOnceAsync(string filePath, float volume, CancellationToken token)
     {
-        Stop();
-
+        token.ThrowIfCancellationRequested();
         if (!File.Exists(filePath))
             return;
+        using var reader = new AudioFileReader(filePath);
+        await PlayOnceAsync(reader, volume, token).ConfigureAwait(false);
+    }
 
-        var tcs = new TaskCompletionSource();
-        // Locals, not the fields: Stop() (a dismiss, from another call) sets the fields to null
-        // while this playback is still being awaited.
-        var reader = new AudioFileReader(filePath) { Volume = Math.Clamp(volume, 0f, 1f) };
-        var output = new WaveOutEvent();
-        _reader = reader;
-        _output = output;
-        try
-        {
-            output.Init(reader);
-        }
-        catch
-        {
-            Stop();
-            throw;
-        }
-
-        void OnStopped(object? s, StoppedEventArgs e) => Finish(tcs, e);
+    /// Plays a stream from its current position, disposing it when playback finishes.
+    /// Cancellation stops this output as well as its wait, without stopping a later playback.
+    public async Task PlayOnceAsync(WaveStream stream, float volume, CancellationToken token)
+    {
+        token.ThrowIfCancellationRequested();
+        Stop();
+        using var ownedStream = stream;
+        var samples = new VolumeSampleProvider(stream.ToSampleProvider()) { Volume = Math.Clamp(volume, 0f, 1f) };
+        var output = _createOutput();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnStopped(object? sender, StoppedEventArgs e) => Finish(completion, e);
         output.PlaybackStopped += OnStopped;
-
-        using var registration = token.Register(() =>
-        {
-            tcs.TrySetResult();
-        });
-
+        CancellationTokenRegistration registration = default;
         try
         {
-            output.Play();
-            await tcs.Task;
+            lock (_gate)
+            {
+                _output = output;
+                _completion = completion;
+                output.Init(samples.ToWaveProvider());
+            }
+            registration = token.Register(() =>
+            {
+                lock (_gate)
+                {
+                    try { output.Stop(); }
+                    catch (Exception e) { completion.TrySetException(e); }
+                    completion.TrySetResult();
+                }
+            });
+            lock (_gate)
+            {
+                if (!token.IsCancellationRequested && ReferenceEquals(_output, output))
+                    output.Play();
+                else
+                    completion.TrySetResult();
+            }
+            await completion.Task.ConfigureAwait(false);
         }
         finally
         {
-            output.PlaybackStopped -= OnStopped;
+            // Never wait for a cancellation callback while holding the gate it needs.
+            registration.Dispose();
+            lock (_gate)
+            {
+                if (ReferenceEquals(_output, output))
+                {
+                    _output = null;
+                    _completion = null;
+                }
+                output.PlaybackStopped -= OnStopped;
+                output.Dispose();
+            }
         }
     }
 
-    /// Ends a playback's wait when NAudio says it stopped: normally (the end, or a stop), or
-    /// with the error NAudio hands over when the device fails mid-play, which then reaches the
-    /// alert as a sound problem.
+    /// Propagates device errors delivered by NAudio after playback has started.
     internal static void Finish(TaskCompletionSource playback, StoppedEventArgs stopped)
     {
         if (stopped.Exception is { } error)
@@ -71,15 +99,13 @@ public class AudioService : IAlertSound, IDisposable
 
     public void Stop()
     {
-        if (_output is not null)
+        lock (_gate)
         {
-            _output.Stop();
-            _output.Dispose();
+            _output?.Stop();
+            _completion?.TrySetResult();
             _output = null;
+            _completion = null;
         }
-
-        _reader?.Dispose();
-        _reader = null;
     }
 
     public void Dispose() => Stop();
