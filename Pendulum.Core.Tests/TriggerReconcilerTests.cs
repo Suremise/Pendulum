@@ -138,7 +138,7 @@ public class TriggerReconcilerTests
     {
         var settings = new AppSettings { RepeatAlertUntilDismissed = false, AutoResolveMinutes = 30 };
 
-        Assert.Equal(TimeSpan.FromMinutes(30), TriggerReconciler.AutoResolveDelay(settings));
+        Assert.Equal(TimeSpan.FromMinutes(30), settings.AutoResolveDelay);
     }
 
     [Fact]
@@ -146,7 +146,7 @@ public class TriggerReconcilerTests
     {
         var settings = new AppSettings { RepeatAlertUntilDismissed = true, AutoResolveMinutes = 30 };
 
-        Assert.Null(TriggerReconciler.AutoResolveDelay(settings));
+        Assert.Null(settings.AutoResolveDelay);
     }
 
     [Fact]
@@ -154,13 +154,13 @@ public class TriggerReconcilerTests
     {
         var settings = new AppSettings { RepeatAlertUntilDismissed = false, AutoResolveMinutes = 0 };
 
-        Assert.Null(TriggerReconciler.AutoResolveDelay(settings));
+        Assert.Null(settings.AutoResolveDelay);
     }
 
     [Fact]
     public void Auto_resolve_is_off_for_new_settings_because_alerts_repeat_by_default()
     {
-        Assert.Null(TriggerReconciler.AutoResolveDelay(new AppSettings()));
+        Assert.Null(new AppSettings().AutoResolveDelay);
     }
 
     // ---- Missed while Pendulum was closed ----
@@ -172,7 +172,7 @@ public class TriggerReconcilerTests
 
         var missed = TriggerReconciler.CatchUpMissed(new[] { t }, Now);
 
-        Assert.Equal(new[] { "call the dentist" }, missed);
+        Assert.Equal(new[] { t }, missed);
         Assert.True(t.HasFired);
         Assert.False(t.Enabled);
     }
@@ -187,7 +187,7 @@ public class TriggerReconcilerTests
 
         var missed = TriggerReconciler.CatchUpMissed(new[] { t }, Now);
 
-        Assert.Equal(new[] { "stand-up" }, missed);
+        Assert.Equal(new[] { t }, missed);
         Assert.Equal(new DateTime(2026, 6, 4, 9, 0, 0), t.TriggerAt);
         Assert.False(t.HasFired);
         Assert.True(t.Enabled);
@@ -259,7 +259,7 @@ public class TriggerReconcilerTests
 
         var missed = TriggerReconciler.CatchUpMissed(list, Now);
 
-        Assert.Equal(new[] { "a", "b" }, missed);
+        Assert.Equal(list.Take(2), missed);
         Assert.Equal(3, list.Count);
     }
 }

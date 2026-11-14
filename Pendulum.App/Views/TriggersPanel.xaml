@@ -380,11 +380,11 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="6,0,0,0">
                                             <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeFixedBrush}"
-                                                    Visibility="{Binding Recurrence, Converter={StaticResource FixedVis}}">
+                                                    Visibility="{Binding RepeatRule, Converter={StaticResource FixedVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Fixed}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                             <Border Style="{StaticResource TagBadge}" Background="Transparent" BorderBrush="{DynamicResource ControlStrongStrokeColorDefaultBrush}"
-                                                    Visibility="{Binding Recurrence, Converter={StaticResource ScheduledVis}}">
+                                                    Visibility="{Binding RepeatRule, Converter={StaticResource ScheduledVis}}">
                                                 <TextBlock Text="{x:Static res:Strings.Reminders_Scheduled}" Style="{StaticResource RowBadgeText}"/>
                                             </Border>
                                         </StackPanel>

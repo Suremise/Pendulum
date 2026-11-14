@@ -77,7 +77,7 @@ public static class AlertCoordinator
         // A non-repeating alert plays its sound/phrase once and then just sits there —
         // if nobody's at the desk to click it, resolve it the same way Dismiss would
         // (reschedule if recurring, else mark spent) instead of leaving it stuck forever.
-        if (TriggerReconciler.AutoResolveDelay(services.Settings) is { } autoResolveDelay)
+        if (services.Settings.AutoResolveDelay is { } autoResolveDelay)
         {
             var autoResolveTimer = new DispatcherTimer { Interval = autoResolveDelay };
             autoResolveTimer.Tick += (_, __) =>

@@ -154,7 +154,7 @@ public partial class TriggerEditWindow : FluentWindow
         EnabledBox.IsChecked = t.Enabled;
         DisabledHint.Visibility = t.Enabled ? Visibility.Collapsed : Visibility.Visible;
 
-        _recurrence = t.Recurrence;
+        _recurrence = t.RepeatRule;
         UpdateRecurrenceSummary();
 
         // A new reminder's: the colour fewest reminders have; a saved one's: its own.
@@ -302,7 +302,7 @@ public partial class TriggerEditWindow : FluentWindow
         // start date; a one-off goes off at its start. With the time and the repeat untouched, the
         // series keeps its anchor, and a pending snooze.
         var (anchor, firstOccurrence) = TriggerReconciler.ScheduleAfterEdit(
-            _target, _recurrence, ruleChanged: !ReferenceEquals(_recurrence, _target.Recurrence), _shownAt, scheduledAt, now);
+            _target, _recurrence, ruleChanged: !ReferenceEquals(_recurrence, _target.RepeatRule), _shownAt, scheduledAt, now);
 
         // The user asked for this to be enabled, but the date/time they set is in the past
         // (e.g. only the time was changed and the date field was left stale after midnight) —

@@ -63,7 +63,7 @@ public class ClockChangeReconcileTests
         var t = Reload(SnoozedAcrossTheFold());
 
         // Restarted at 00:56 UTC: the clock reads 01:56 BST, past 01:05 on the wall.
-        var missed = TriggerReconciler.CatchUpMissedTriggers(new[] { t }, Wall(25, 1, 56), Utc(25, 0, 56));
+        var missed = TriggerReconciler.CatchUpMissed(new[] { t }, Wall(25, 1, 56), Utc(25, 0, 56));
 
         Assert.Empty(missed);
         Assert.False(t.HasFired);
@@ -80,7 +80,7 @@ public class ClockChangeReconcileTests
         TriggerReconciler.Snooze(t, Utc(25, 0, 55), 10, Uk);
         t = Reload(t);
 
-        var missed = TriggerReconciler.CatchUpMissedTriggers(new[] { t }, Wall(25, 1, 56), Utc(25, 0, 56));
+        var missed = TriggerReconciler.CatchUpMissed(new[] { t }, Wall(25, 1, 56), Utc(25, 0, 56));
 
         Assert.Empty(missed);
         Assert.True(t.Enabled);
@@ -92,7 +92,7 @@ public class ClockChangeReconcileTests
     {
         var t = Reload(SnoozedAcrossTheFold());
 
-        var missed = TriggerReconciler.CatchUpMissedTriggers(new[] { t }, Wall(25, 1, 10), Utc(25, 1, 10));
+        var missed = TriggerReconciler.CatchUpMissed(new[] { t }, Wall(25, 1, 10), Utc(25, 1, 10));
 
         Assert.Single(missed);
         Assert.Equal(Wall(26, 1, 50), t.TriggerAt);
@@ -105,7 +105,7 @@ public class ClockChangeReconcileTests
         var t = Reload(SnoozedAcrossTheFold());
         var nyWall = DateTime.SpecifyKind(TimeZoneInfo.ConvertTimeFromUtc(Utc(25, 0, 56), NewYork), DateTimeKind.Unspecified);
 
-        var missed = TriggerReconciler.CatchUpMissedTriggers(new[] { t }, nyWall, Utc(25, 0, 56));
+        var missed = TriggerReconciler.CatchUpMissed(new[] { t }, nyWall, Utc(25, 0, 56));
 
         Assert.Empty(missed);
         Assert.Empty(Engine(nyWall, Utc(25, 0, 56), t));

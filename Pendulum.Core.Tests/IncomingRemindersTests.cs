@@ -16,7 +16,7 @@ public sealed class IncomingRemindersTests : IDisposable
     /// What import and restore do: catch up, then hand the list to the engine, which polls once.
     private static (List<TriggerTimer> CaughtUp, List<TriggerTimer> Fired) Bring(List<TriggerTimer> incoming)
     {
-        var caughtUp = TriggerReconciler.CatchUpMissedTriggers(incoming, Now);
+        var caughtUp = TriggerReconciler.CatchUpMissed(incoming, Now);
         var fired = new List<TriggerTimer>();
         using var engine = new TimerEngine(() => Now, polls: false);
         engine.TriggerFired += fired.Add;
@@ -155,6 +155,6 @@ public sealed class IncomingRemindersTests : IDisposable
             new() { Name = "y", TriggerAt = Now.AddHours(1) },
         };
 
-        Assert.Equal(new[] { "x" }, TriggerReconciler.CatchUpMissed(list, Now));
+        Assert.Equal(new[] { "x" }, TriggerReconciler.CatchUpMissed(list, Now).Select(t => t.Name));
     }
 }

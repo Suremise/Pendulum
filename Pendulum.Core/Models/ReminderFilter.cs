@@ -62,7 +62,7 @@ public sealed class ReminderFilter : INotifyPropertyChanged
         if (!string.IsNullOrWhiteSpace(Name) && t.Name.IndexOf(Name, StringComparison.OrdinalIgnoreCase) < 0)
             return false;
 
-        if (HasType && !((TypeScheduled && t.Recurrence is not null) || (TypeFixed && t.Recurrence is null)))
+        if (HasType && !((TypeScheduled && t.IsScheduled) || (TypeFixed && !t.IsScheduled)))
             return false;
 
         if (HasStatus)

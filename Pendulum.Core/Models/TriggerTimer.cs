@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Pendulum.Core.Persistence;
@@ -46,6 +47,11 @@ public partial class TriggerTimer : ObservableObject, IJsonOnDeserializing, IJso
     /// Null means this is a one-shot reminder with no repeat schedule.
     [ObservableProperty] private RecurrenceRule? recurrence;
 
+    /// The active repeat pattern. Keep Recurrence unchanged on disk, including a saved None
+    /// rule, but treat it exactly like a one-off when it has no frequency.
+    [JsonIgnore]
+    public RecurrenceRule? RepeatRule => Recurrence is { Frequency: not RecurrenceFrequency.None } ? Recurrence : null;
+
     /// Its colour, by the palette's name ("teal"): see <see cref="ReminderColors"/>. Optional:
     /// one saved without it gets a colour from its Id as it loads, and a name this version doesn't
     /// know is kept as it is.
@@ -65,7 +71,7 @@ public partial class TriggerTimer : ObservableObject, IJsonOnDeserializing, IJso
     /// Reminders list — Recurrence itself is a reference type CollectionView sorting can't
     /// compare directly. Never persisted.
     [JsonIgnore]
-    public bool IsScheduled => Recurrence is not null;
+    public bool IsScheduled => RepeatRule is not null;
 
     /// UI-only: a stable, sortable proxy for the Reminders list's three-way status badge
     /// (0=Upcoming, 1=Disabled, 2=Spent — matches the order they'd naturally read left to
@@ -113,7 +119,23 @@ public partial class TriggerTimer : ObservableObject, IJsonOnDeserializing, IJso
         Color ??= ReminderColors.Stable(Id);
     }
 
-    partial void OnRecurrenceChanged(RecurrenceRule? value) => OnPropertyChanged(nameof(IsScheduled));
+    partial void OnRecurrenceChanged(RecurrenceRule? oldValue, RecurrenceRule? newValue)
+    {
+        if (oldValue is not null) oldValue.PropertyChanged -= OnRepeatRuleChanged;
+        if (newValue is not null) newValue.PropertyChanged += OnRepeatRuleChanged;
+        NotifyRepeatRuleChanged();
+    }
+
+    private void OnRepeatRuleChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(RecurrenceRule.Frequency)) NotifyRepeatRuleChanged();
+    }
+
+    private void NotifyRepeatRuleChanged()
+    {
+        OnPropertyChanged(nameof(RepeatRule));
+        OnPropertyChanged(nameof(IsScheduled));
+    }
     partial void OnColorChanged(string? value) => OnPropertyChanged(nameof(DisplayColor));
     partial void OnIdChanged(Guid value) => OnPropertyChanged(nameof(DisplayColor));
     partial void OnHasFiredChanged(bool value) => OnPropertyChanged(nameof(StatusSortOrder));

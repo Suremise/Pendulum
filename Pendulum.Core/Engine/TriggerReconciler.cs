@@ -2,8 +2,8 @@ using Pendulum.Core.Models;
 
 namespace Pendulum.Core.Engine;
 
-/// Decides what happens to a trigger once its alert has been accounted for —
-/// whether that's a live dismiss, a snooze, or a firing discovered stale at startup.
+/// Decides when a reminder is due and how firing, dismissing, snoozing or catching up
+/// changes its state. The engine only polls and dispatches those decisions.
 public static class TriggerReconciler
 {
     /// Whether a reminder's time has come: by the real instant for a span from now (a snooze,
@@ -12,6 +12,18 @@ public static class TriggerReconciler
     /// count as gone a time the engine would still ring for, across a clock or zone change.
     public static bool HasPassed(TriggerTimer trigger, DateTime now, DateTime utcNow) =>
         trigger.DueUtc is { } dueUtc ? utcNow >= dueUtc : trigger.TriggerAt <= now;
+
+    /// An armed reminder whose time has come, by the same rule used for catch-up and editing.
+    public static bool IsDue(TriggerTimer trigger, DateTime now, DateTime utcNow) =>
+        trigger.Enabled && !trigger.HasFired && HasPassed(trigger, now, utcNow);
+
+    /// Records one firing accepted by IsDue. A snooze gives this occurrence back until it
+    /// fires again. The engine owns polling/dispatch and delegates this state change here.
+    public static void MarkFired(TriggerTimer trigger)
+    {
+        if (trigger.RepeatRule is { } rule) rule.OccurrencesSoFar++;
+        trigger.HasFired = true;
+    }
 
     /// The UTC instant of <paramref name="now"/>, when the caller didn't give one: the clock's
     /// own reckoning for DateTime.Now.
@@ -24,7 +36,7 @@ public static class TriggerReconciler
     /// not from the snooze's time, which across the clocks going back can read earlier.
     public static void AdvancePastFiring(TriggerTimer trigger, DateTime now)
     {
-        if (trigger.Recurrence is { Frequency: not RecurrenceFrequency.None } rule)
+        if (trigger.RepeatRule is { } rule)
         {
             var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
                 rule, trigger.RecurrenceAnchor, trigger.ScheduleFrom, now);
@@ -66,7 +78,7 @@ public static class TriggerReconciler
             return EnableOutcome.Enabled;
         }
 
-        if (trigger.Recurrence is not { Frequency: not RecurrenceFrequency.None } rule)
+        if (trigger.RepeatRule is not { } rule)
             return EnableOutcome.PastOneOff;
 
         var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
@@ -95,6 +107,8 @@ public static class TriggerReconciler
         TriggerTimer before, RecurrenceRule? rule, bool ruleChanged, DateTime shown, DateTime edited, DateTime now,
         DateTime? utcNow = null)
     {
+        // This parameter is the proposed pattern, not necessarily the reminder's saved one.
+        rule = rule?.Frequency == RecurrenceFrequency.None ? null : rule;
         if (!ruleChanged && edited == shown)
         {
             // Time and repeat untouched, still to come (by its instant, for a span from now):
@@ -112,18 +126,18 @@ public static class TriggerReconciler
     }
 
     /// Re-arms a fired trigger to go off again <paramref name="snoozeMinutes"/> from now.
-    /// TimerEngine counts every firing toward Recurrence.OccurrencesSoFar, but a snooze re-fires
+    /// MarkFired counts every firing toward the repeat rule, but a snooze re-fires
     /// the same occurrence rather than starting a new one, so that count is undone here and
     /// "end after N occurrences" isn't exhausted early by snoozing. The snooze is real minutes, so
     /// it's right across the clocks going back or forward (see <see cref="WallClock"/>).
     public static void Snooze(TriggerTimer trigger, DateTime now, int snoozeMinutes, TimeZoneInfo? zone = null)
     {
-        if (trigger.Recurrence is not null)
-            trigger.Recurrence.OccurrencesSoFar = Math.Max(0, trigger.Recurrence.OccurrencesSoFar - 1);
+        if (trigger.RepeatRule is { } rule)
+            rule.OccurrencesSoFar = Math.Max(0, rule.OccurrencesSoFar - 1);
 
         // The occurrence this snooze is of: the time it rang, or for a snooze of a snooze, the one
         // that first rang. A series moves on from it, not from the snooze's time.
-        var occurrence = trigger.Recurrence is { Frequency: not RecurrenceFrequency.None }
+        var occurrence = trigger.RepeatRule is not null
             ? trigger.ScheduleFrom
             : (DateTime?)null;
         var (wall, utc) = WallClock.AddRealTime(now, TimeSpan.FromMinutes(snoozeMinutes), zone);
@@ -158,28 +172,16 @@ public static class TriggerReconciler
         if (!StillRinging(trigger, firedAt))
             return false;
 
-        if (trigger.Recurrence is { Frequency: not RecurrenceFrequency.None } rule && !RecurrenceCalculator.IsExhausted(rule))
-        {
-            var from = trigger.ScheduleFrom;
-            var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(rule, trigger.RecurrenceAnchor, from, now);
-            if (next is not null)
-                rule.OccurrencesSoFar += RecurrenceCalculator.CountOccurrencesBetween(rule, trigger.RecurrenceAnchor, from, next.Value) - 1;
-        }
-
+        CreditSkippedOccurrences(trigger, now, alreadyCounted: true);
         AdvancePastFiring(trigger, now);
         return true;
     }
 
     /// Resolves every trigger that came due while the app wasn't running: a recurring one moves
-    /// on to its next future occurrence, anything else is marked spent. Returns the names of the
-    /// triggers it resolved, for the "missed while Pendulum was closed" notice.
-    public static List<string> CatchUpMissed(IEnumerable<TriggerTimer> triggers, DateTime now, DateTime? utcNow = null) =>
-        CatchUpMissedTriggers(triggers, now, utcNow).Select(t => t.Name).ToList();
-
-    /// As <see cref="CatchUpMissed"/>, returning the triggers it resolved. Also for reminders
-    /// coming in from an import or a backup, before they reach the engine, so ones already past
-    /// their time are moved on or marked spent instead of all ringing at once.
-    public static List<TriggerTimer> CatchUpMissedTriggers(IEnumerable<TriggerTimer> triggers, DateTime now, DateTime? utcNow = null)
+    /// on to its next future occurrence, anything else is marked spent. Returns the reminders
+    /// resolved, for a startup notice or an import/restore count. Before they reach the engine,
+    /// old reminders move on instead of all ringing at once.
+    public static List<TriggerTimer> CatchUpMissed(IEnumerable<TriggerTimer> triggers, DateTime now, DateTime? utcNow = null)
     {
         var missed = new List<TriggerTimer>();
         var utc = UtcOf(now, utcNow);
@@ -187,26 +189,10 @@ public static class TriggerReconciler
         foreach (var t in triggers)
         {
             var wasRinging = WasRingingWhenClosed(t);
-            if (!wasRinging && (!t.Enabled || t.HasFired || !HasPassed(t, now, utc)))
+            if (!wasRinging && !IsDue(t, now, utc))
                 continue;
 
-            if (t.Recurrence is not null)
-            {
-                // AdvancePastFiring can silently skip past several missed occurrences in one
-                // jump (e.g. the app was closed for days over a daily reminder) — count
-                // exactly how many were actually skipped instead of assuming just one, so
-                // "end after N occurrences" reminders aren't undercounted and over-fire later.
-                // One that was ringing had its own occurrence counted when it fired, so only
-                // the ones after it are added.
-                var from = t.ScheduleFrom;
-                var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(
-                    t.Recurrence, t.RecurrenceAnchor, from, now);
-                var counted = next is not null
-                    ? RecurrenceCalculator.CountOccurrencesBetween(t.Recurrence, t.RecurrenceAnchor, from, next.Value)
-                    : 1;
-                t.Recurrence.OccurrencesSoFar += wasRinging ? counted - 1 : counted;
-            }
-
+            CreditSkippedOccurrences(t, now, alreadyCounted: wasRinging);
             AdvancePastFiring(t, now);
             missed.Add(t);
         }
@@ -222,14 +208,20 @@ public static class TriggerReconciler
     private static bool WasRingingWhenClosed(TriggerTimer t) =>
         t.Enabled
         && t.HasFired
-        && t.Recurrence is { Frequency: not RecurrenceFrequency.None } rule
+        && t.RepeatRule is { } rule
         && !RecurrenceCalculator.IsExhausted(rule);
 
-    /// How long an unanswered alert waits before resolving itself as if dismissed, or null when
-    /// it never does: an alert that repeats until dismissed keeps going, and 0 minutes turns
-    /// auto-resolve off.
-    public static TimeSpan? AutoResolveDelay(AppSettings settings) =>
-        !settings.RepeatAlertUntilDismissed && settings.AutoResolveMinutes > 0
-            ? TimeSpan.FromMinutes(settings.AutoResolveMinutes)
-            : null;
+    /// Credits skipped occurrences before advancing. A live/open-at-close firing already has
+    /// its own credit; a reminder missed while closed does not. With no future occurrence,
+    /// only that due occurrence is credited, preserving the end-condition behavior.
+    private static void CreditSkippedOccurrences(TriggerTimer trigger, DateTime now, bool alreadyCounted)
+    {
+        if (trigger.RepeatRule is not { } rule) return;
+        var from = trigger.ScheduleFrom;
+        var next = RecurrenceCalculator.GetNextFutureOccurrenceWithinEndCondition(rule, trigger.RecurrenceAnchor, from, now);
+        var counted = next is not null
+            ? RecurrenceCalculator.CountOccurrencesBetween(rule, trigger.RecurrenceAnchor, from, next.Value)
+            : 1;
+        rule.OccurrencesSoFar += counted - (alreadyCounted ? 1 : 0);
+    }
 }

@@ -43,6 +43,12 @@ public partial class AppSettings : ObservableObject, IJsonOnDeserializing
     /// resolving itself (recurring reminders reschedule, one-shots move to Spent) — the same
     /// outcome as if the user had clicked Dismiss. Has no effect when RepeatAlertUntilDismissed is true.
     [ObservableProperty] private int autoResolveMinutes = 30;
+
+    /// How long an unanswered alert waits before resolving, or null when it keeps going.
+    [JsonIgnore]
+    public TimeSpan? AutoResolveDelay => !RepeatAlertUntilDismissed && AutoResolveMinutes > 0
+        ? TimeSpan.FromMinutes(AutoResolveMinutes)
+        : null;
     [ObservableProperty] private ThemeMode theme = ThemeMode.System;
     /// Off for a new install: Pendulum goes online only when the user turns this on. Settings
     /// read from a file (settings.json or a backup) that predates this default and doesn't name

@@ -86,14 +86,13 @@ public static class RecurrenceCalculator
     /// current TriggerAt, not a guessed-at full history.
     public static IEnumerable<DateTime> GetOccurrencesInRange(TriggerTimer trigger, DateTime rangeStart, DateTime rangeEnd)
     {
-        if (trigger.Recurrence is null || trigger.HasFired)
+        if (trigger.RepeatRule is not { } rule || trigger.HasFired)
         {
             if (trigger.TriggerAt >= rangeStart && trigger.TriggerAt <= rangeEnd)
                 yield return trigger.TriggerAt;
             yield break;
         }
 
-        var rule = trigger.Recurrence;
         var occurrence = trigger.TriggerAt;
         var count = rule.OccurrencesSoFar;
 
@@ -152,7 +151,7 @@ public static class RecurrenceCalculator
     /// before that, so the edit window shows 09:00 for a daily 09:00 reminder snoozed to 09:10:37.
     public static DateTime ScheduledOccurrence(TriggerTimer trigger)
     {
-        if (trigger.Recurrence is not { Frequency: not RecurrenceFrequency.None } rule)
+        if (trigger.RepeatRule is not { } rule)
             return trigger.TriggerAt;
 
         // A snooze saved since this was known: it says which occurrence it's of.

@@ -23,6 +23,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
   marker when the day changes.
 - Repeating reminders still move to their next occurrence after years without opening the
   app, keeping the count of missed daily reminders instead of incorrectly marking them spent.
+- Reminders saved with no repeat frequency behave consistently as one-off reminders,
+  including their type filter and occurrence count.
 
 ## [1.2.0] - 2026-11-02
 

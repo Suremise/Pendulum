@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
 using Pendulum.App.Views;
@@ -36,6 +37,56 @@ public sealed class ReminderFilterPanelTests : IDisposable
             Assert.Empty(Application.Current.Windows);
         });
         Assert.Equal(IntPtr.Zero, Process.GetCurrentProcess().MainWindowHandle);
+    }
+
+    [Fact]
+    public void Type_badges_treat_a_no_frequency_rule_as_fixed_and_follow_frequency_changes()
+    {
+        UiThread.Invoke(() =>
+        {
+            var rule = new RecurrenceRule { Frequency = RecurrenceFrequency.None };
+            _reminder.Recurrence = rule;
+            try
+            {
+                var panel = Build(new AppSettings());
+                Border Badge(string text) => (Border)Elements(panel).OfType<TextBlock>()
+                    .Single(t => t.Text == text && ReferenceEquals(t.DataContext, _reminder)
+                        && t.Style == panel.FindResource("RowBadgeText")).Parent;
+                var fixedBadge = Badge(Pendulum.App.Resources.Strings.Reminders_Fixed);
+                var scheduledBadge = Badge(Pendulum.App.Resources.Strings.Reminders_Scheduled);
+                Assert.Equal(Visibility.Visible, fixedBadge.Visibility);
+                Assert.Equal(Visibility.Collapsed, scheduledBadge.Visibility);
+                rule.Frequency = RecurrenceFrequency.Daily;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+                Assert.Equal(Visibility.Collapsed, fixedBadge.Visibility);
+                Assert.Equal(Visibility.Visible, scheduledBadge.Visibility);
+            }
+            finally { _reminder.Recurrence = null; }
+        });
+    }
+
+    [Fact]
+    public void Changing_a_saved_rules_frequency_updates_the_live_type_filter()
+    {
+        UiThread.Invoke(() =>
+        {
+            var rule = new RecurrenceRule { Frequency = RecurrenceFrequency.None };
+            _reminder.Recurrence = rule;
+            try
+            {
+                var panel = Build(new AppSettings { ReminderFilterTypeFixed = true });
+                panel.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+                var view = ((CollectionViewSource)panel.FindResource("SortedTriggers")).View;
+                Assert.Contains(_reminder, view.Cast<TriggerTimer>());
+                rule.Frequency = RecurrenceFrequency.Daily;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+                Assert.DoesNotContain(_reminder, view.Cast<TriggerTimer>());
+                rule.Frequency = RecurrenceFrequency.None;
+                Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
+                Assert.Contains(_reminder, view.Cast<TriggerTimer>());
+            }
+            finally { _reminder.Recurrence = null; }
+        });
     }
 
     [Fact]

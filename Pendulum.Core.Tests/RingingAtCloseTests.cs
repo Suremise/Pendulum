@@ -32,7 +32,7 @@ public class RingingAtCloseTests
 
         var missed = TriggerReconciler.CatchUpMissed(new[] { t }, new DateTime(2026, 6, 3, 12, 0, 0));
 
-        Assert.Equal(new[] { "stand-up" }, missed);
+        Assert.Equal(new[] { t }, missed);
         Assert.Equal(new DateTime(2026, 6, 4, 9, 0, 0), t.TriggerAt);
         Assert.False(t.HasFired);
         Assert.True(t.Enabled);

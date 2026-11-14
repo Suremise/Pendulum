@@ -7,8 +7,8 @@ namespace Pendulum.Core.Engine;
 /// The poll runs on a timer thread, but it only looks: everything that changes a reminder
 /// (marking it fired, counting the occurrence) and TriggerFired itself run on the thread that
 /// called <see cref="Start"/>, through its SynchronizationContext. In the app that's the UI
-/// thread, so the saves those changes cause, and the UI's own collection, are never touched
-/// from the timer thread. Nothing fires before Start, so the app subscribes first.
+/// thread, so the reconciler and UI change the same live models there, never on the timer
+/// thread. Nothing fires before Start, so the app subscribes first.
 public class TimerEngine : IDisposable
 {
     private readonly object _lock = new();
@@ -89,12 +89,7 @@ public class TimerEngine : IDisposable
         }
     }
 
-    private bool AnyDue(DateTime now, DateTime utcNow) => _triggers.Any(t => IsDue(t, now, utcNow));
-
-    /// Due by the clock on the wall, or, for a span from now (a snooze, "in 20 min"), by the real
-    /// instant it ends, which the clocks going back or forward don't move.
-    private static bool IsDue(TriggerTimer t, DateTime now, DateTime utcNow) =>
-        t.Enabled && !t.HasFired && (t.DueUtc is { } dueUtc ? utcNow >= dueUtc : t.TriggerAt <= now);
+    private bool AnyDue(DateTime now, DateTime utcNow) => _triggers.Any(t => TriggerReconciler.IsDue(t, now, utcNow));
 
     /// On Start's context: marks each reminder that is still due as fired, and raises TriggerFired
     /// for it. Each reminder is handled on its own, so a failure (a save that throws, a handler
@@ -109,7 +104,7 @@ public class TimerEngine : IDisposable
                 var now = _clock();
                 var utcNow = _utcClock();
                 // Checked again here: a poll posted earlier may already have fired them.
-                due = _triggers.Where(t => IsDue(t, now, utcNow)).ToList();
+                due = _triggers.Where(t => TriggerReconciler.IsDue(t, now, utcNow)).ToList();
             }
         }
         catch (Exception ex)
@@ -122,14 +117,12 @@ public class TimerEngine : IDisposable
         {
             try
             {
-                if (t.Recurrence is not null)
-                    t.Recurrence.OccurrencesSoFar++;
-                t.HasFired = true;
+                TriggerReconciler.MarkFired(t);
             }
             catch (Exception ex)
             {
-                // Marking it fired set the value before its change handlers ran: one of them
-                // (the save) failed, but the alert still goes off.
+                // A change handler can fail after setting a model's value. Report the failure,
+                // but still deliver this firing's alert.
                 Report(ex);
             }
 

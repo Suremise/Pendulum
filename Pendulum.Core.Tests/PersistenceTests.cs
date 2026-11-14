@@ -673,7 +673,7 @@ public sealed class PersistenceTests : IDisposable
         var missed = Engine.TriggerReconciler.CatchUpMissed(reminders, new DateTime(2026, 11, 1, 12, 0, 0));
 
         Assert.Equal(ReleaseFixtures.Reminders(release), reminders.Count);
-        Assert.Contains("Call the dentist", missed);
+        Assert.Contains(missed, t => t.Name == "Call the dentist");
         Assert.True(reminders.Single(t => t.Name == "Call the dentist").HasFired);
         var standUp = reminders.Single(t => t.Name == "Stand-up");
         Assert.True(standUp.TriggerAt > new DateTime(2026, 11, 1, 12, 0, 0));

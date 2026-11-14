@@ -95,7 +95,7 @@ public sealed class AppServices
         var triggersLoad = TriggerRepository.LoadWithOutcome();
         var loaded = triggersLoad.Value ?? new List<TriggerTimer>();
         NoteProblem(AppPaths.TriggersFile, triggersLoad);
-        var missed = TriggerReconciler.CatchUpMissed(loaded, now);
+        var missed = TriggerReconciler.CatchUpMissed(loaded, now).Select(t => t.Name).ToList();
 
         foreach (var t in loaded)
         {
@@ -266,7 +266,7 @@ public sealed class AppServices
     {
         var imported = TriggerRepository.LoadFrom(path);
         // Before any reaches the engine: ones already past their time move on, or are spent.
-        var caughtUp = TriggerReconciler.CatchUpMissedTriggers(imported, DateTime.Now).ToHashSet();
+        var caughtUp = TriggerReconciler.CatchUpMissed(imported, DateTime.Now).ToHashSet();
         int added = 0, replaced = 0, skipped = 0, caughtUpTaken = 0;
 
         foreach (var t in imported)
@@ -310,7 +310,7 @@ public sealed class AppServices
 
         // Before any reaches the engine: ones already past their time move on, or are spent,
         // instead of all ringing at once.
-        caughtUp = TriggerReconciler.CatchUpMissedTriggers(backup.Triggers, DateTime.Now).Count;
+        caughtUp = TriggerReconciler.CatchUpMissed(backup.Triggers, DateTime.Now).Count;
 
         // Build the full replacement in memory and persist once at the end, instead of wiping
         // triggers.json to empty and then saving again after every single re-added item — a
