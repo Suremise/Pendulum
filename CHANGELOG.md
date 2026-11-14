@@ -8,6 +8,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Quick Reminder no longer shares the foreground app's input queue when opening, so a hung
+  app cannot hold up Pendulum's focus request.
 - Alert sound and speech start away from the window thread, and repeating alerts reuse their
   prepared speech. Dismissing or snoozing stops playback without waiting for device cleanup.
 - Hidden windows stop refreshing their reminder countdown, and unchanged tray tooltips no

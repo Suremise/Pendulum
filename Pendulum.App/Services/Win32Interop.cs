@@ -110,34 +110,11 @@ internal static class Win32Interop
         return areas;
     }
 
-    [DllImport("kernel32.dll")]
-    private static extern uint GetCurrentThreadId();
-
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr lpdwProcessId);
-
-    [DllImport("user32.dll")]
-    private static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
-
-    /// Forces a window to the foreground even when Pendulum's process didn't already own
-    /// input focus (Windows normally refuses SetForegroundWindow in that case). Needed for
-    /// the quick-add popup, which is summoned by a global hotkey while some other app has
-    /// focus — without this trick the popup would appear on top but not actually receive
-    /// keystrokes until the user clicked into it.
-    public static void ForceForegroundWindow(IntPtr hwnd)
-    {
-        var foregroundWindow = GetForegroundWindow();
-        var foregroundThread = GetWindowThreadProcessId(foregroundWindow, IntPtr.Zero);
-        var currentThread = GetCurrentThreadId();
-
-        if (foregroundThread != currentThread)
-            AttachThreadInput(currentThread, foregroundThread, true);
-
-        SetForegroundWindow(hwnd);
-
-        if (foregroundThread != currentThread)
-            AttachThreadInput(currentThread, foregroundThread, false);
-    }
+    /// A registered hotkey grants foreground activation permission. Request it for our window
+    /// without joining the foreground app's input queue, which may be hung. Windows can still
+    /// deny activation (for example while a menu is active); leave that decision to Windows.
+    public static bool TryBringToForeground(IntPtr hwnd) =>
+        hwnd != IntPtr.Zero && SetForegroundWindow(hwnd);
 
     /// Reasserts the always-on-top flag. Called periodically for windows
     /// that must stay visible over other topmost apps/games.

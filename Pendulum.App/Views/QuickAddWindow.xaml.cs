@@ -23,9 +23,9 @@ public partial class QuickAddWindow : FluentWindow
         InitializeComponent();
         Loaded += (_, __) =>
         {
-            // Summoned by a global hotkey, so some other app usually owns focus — force
-            // this window to the foreground so keystrokes land in the input box immediately.
-            Win32Interop.ForceForegroundWindow(new WindowInteropHelper(this).Handle);
+            // Use the registered hotkey's activation permission without sharing another app's
+            // input queue. Focus stays within our own window if Windows denies activation.
+            Win32Interop.TryBringToForeground(new WindowInteropHelper(this).Handle);
             Keyboard.Focus(InputBox);
 
             if (AppServices.Instance.Settings.QuickAddAutoListen)

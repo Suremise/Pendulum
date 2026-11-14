@@ -143,7 +143,9 @@ public partial class App : Application
 
             _hotkeyManager = new HotkeyManager();
             _hotkeyManager.Attach(mainWindow);
-            _hotkeyManager.Pressed += () => Dispatcher.BeginInvoke(ShowQuickAdd);
+            // WM_HOTKEY arrives on this UI thread with foreground activation permission.
+            // Open/request activation in its handler, without deferring it behind other work.
+            _hotkeyManager.Pressed += ShowQuickAdd;
             _hotkey = new HotkeyBinding(_hotkeyManager);
             ApplyHotkeySetting(atStartup: true);
             AppServices.Instance.Settings.PropertyChanged += (_, args) =>
@@ -226,10 +228,9 @@ public partial class App : Application
             // still gets delivered and queued through ShowDialog's nested message pump, so a
             // second press used to spawn a second overlapping, both-Topmost window fighting
             // the first for focus/Z-order instead of doing anything useful). Refocus the existing
-            // one using the same foreground-lock workaround QuickAddWindow's own Loaded handler
-            // uses — plain Activate() can be silently ignored by Windows here, since this hotkey
-            // handler's process doesn't already own foreground input focus.
-            Win32Interop.ForceForegroundWindow(new WindowInteropHelper(_quickAddWindow).Handle);
+            // one using the hotkey's foreground activation permission, as the Loaded handler
+            // does on its first opening. Never share the other app's input queue.
+            Win32Interop.TryBringToForeground(new WindowInteropHelper(_quickAddWindow).Handle);
             Keyboard.Focus(_quickAddWindow.InputBox);
             return;
         }
