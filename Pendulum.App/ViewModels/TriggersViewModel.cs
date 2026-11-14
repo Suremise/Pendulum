@@ -2,10 +2,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
-using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Services;
@@ -14,6 +12,8 @@ namespace Pendulum.App.ViewModels;
 
 public partial class TriggersViewModel : ObservableObject
 {
+    private readonly IDialogs _dialogs;
+
     private ReminderStore Store => AppServices.Instance.Reminders;
     public ReadOnlyObservableCollection<TriggerTimer> Triggers => Store.Items;
 
@@ -86,8 +86,11 @@ public partial class TriggersViewModel : ObservableObject
     /// Triggers collection, selection state, and bulk actions are all unaffected by filtering.
     public bool PassesFilter(TriggerTimer t) => Filter.Matches(t);
 
-    public TriggersViewModel()
+    public TriggersViewModel() : this(WpfDialogs.Instance) { }
+
+    public TriggersViewModel(IDialogs dialogs)
     {
+        _dialogs = dialogs;
         Filter = new ReminderFilter(AppServices.Instance.Settings);
         Filter.Changed += (_, _) =>
         {
@@ -133,11 +136,10 @@ public partial class TriggersViewModel : ObservableObject
     {
         var draft = NewDraft(AppServices.Instance.Settings);
 
-        var dialog = new TriggerEditWindow(draft, isNew: true) { Owner = Application.Current.MainWindow };
-        if (dialog.ShowDialog() == true && dialog.Result is not null)
+        if (_dialogs.EditReminder(draft, isNew: true) is { } result)
         {
-            AppServices.Instance.AddTrigger(dialog.Result);
-            SelectedTrigger = dialog.Result;
+            AppServices.Instance.AddTrigger(result);
+            SelectedTrigger = result;
         }
     }
 
@@ -148,8 +150,7 @@ public partial class TriggersViewModel : ObservableObject
         if (trigger is null)
             return;
 
-        var dialog = new TriggerEditWindow(trigger, isNew: false) { Owner = Application.Current.MainWindow };
-        dialog.ShowDialog();
+        _dialogs.EditReminder(trigger);
     }
 
     [RelayCommand]
@@ -159,14 +160,7 @@ public partial class TriggersViewModel : ObservableObject
         if (trigger is null)
             return;
 
-        var result = MessageBox.Show(
-            Application.Current.MainWindow!,
-            string.Format(Strings.Reminders_ConfirmDelete, trigger.Name),
-            Strings.App_Name,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (result == MessageBoxResult.Yes)
+        if (_dialogs.Confirm(string.Format(Strings.Reminders_ConfirmDelete, trigger.Name)))
             AppServices.Instance.RemoveTrigger(trigger);
     }
 
@@ -187,7 +181,7 @@ public partial class TriggersViewModel : ObservableObject
         if (!AppServices.Instance.Update(trigger, () => outcome = TriggerReconciler.Enable(trigger, DateTime.Now))) return;
         var message = EnableMessage(outcome, trigger);
         if (message is not null)
-            MessageBox.Show(Application.Current.MainWindow!, message, Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Information);
+            _dialogs.Inform(message);
     }
 
     /// What to tell the user after turning a reminder back on, or null when it simply went on.
@@ -211,14 +205,7 @@ public partial class TriggersViewModel : ObservableObject
         if (selected.Count == 0)
             return;
 
-        var result = MessageBox.Show(
-            Application.Current.MainWindow!,
-            string.Format(Strings.Reminders_ConfirmDeleteSelected, selected.Count),
-            Strings.App_Name,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result != MessageBoxResult.Yes)
+        if (!_dialogs.Confirm(string.Format(Strings.Reminders_ConfirmDeleteSelected, selected.Count), warning: true))
             return;
 
         AppServices.Instance.RemoveTriggers(selected);
@@ -250,75 +237,38 @@ public partial class TriggersViewModel : ObservableObject
 
     private void ExportReminders(List<TriggerTimer> selected)
     {
-        var dialog = new SaveFileDialog
-        {
-            Filter = Strings.Dialog_RemindersFilter,
-            FileName = $"pendulum-reminders-{DateTime.Now:yyyy-MM-dd}.json",
-            Title = Strings.Dialog_ExportRemindersTitle
-        };
-
-        if (dialog.ShowDialog() != true)
+        var path = _dialogs.PickSaveFile(Strings.Dialog_ExportRemindersTitle, Strings.Dialog_RemindersFilter,
+            $"pendulum-reminders-{DateTime.Now:yyyy-MM-dd}.json"); // not user-visible: suggested file name
+        if (path is null)
             return;
 
-        AppServices.Instance.ExportTriggers(dialog.FileName, selected);
+        AppServices.Instance.ExportTriggers(path, selected);
         IsSelecting = false;
-
-        MessageBox.Show(
-            Application.Current.MainWindow!,
-            string.Format(Strings.Reminders_Exported, selected.Count, System.IO.Path.GetFileName(dialog.FileName)),
-            Strings.App_Name,
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        _dialogs.Inform(string.Format(Strings.Reminders_Exported, selected.Count, System.IO.Path.GetFileName(path)));
     }
 
     [RelayCommand]
     private void Import()
     {
-        var dialog = new OpenFileDialog
-        {
-            Filter = Strings.Dialog_RemindersFilter,
-            Title = Strings.Dialog_ImportRemindersTitle
-        };
-
-        if (dialog.ShowDialog() != true)
+        var path = _dialogs.PickOpenFile(Strings.Dialog_ImportRemindersTitle, Strings.Dialog_RemindersFilter);
+        if (path is null)
             return;
 
         ImportResult result;
         try
         {
-            result = AppServices.Instance.ImportTriggersMerge(dialog.FileName, name =>
-                MessageBox.Show(
-                    Application.Current.MainWindow!,
-                    string.Format(Strings.Reminders_ConfirmReplace, name),
-                    Strings.App_Name,
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Question) == MessageBoxResult.Yes);
+            result = AppServices.Instance.ImportTriggersMerge(path, name =>
+                _dialogs.Confirm(string.Format(Strings.Reminders_ConfirmReplace, name)));
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                Application.Current.MainWindow!,
-                string.Format(Strings.Reminders_CouldNotImport, ex.Message),
-                Strings.App_Name,
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            _dialogs.Warn(string.Format(Strings.Reminders_CouldNotImport, ex.Message), error: true);
             return;
         }
 
-        var summary = string.Format(Strings.Reminders_Imported, result.Added + result.Replaced);
-        if (result.Replaced > 0)
-            summary += string.Format(Strings.Reminders_ImportedReplaced, result.Replaced);
-        if (result.Skipped > 0)
-            summary += string.Format(Strings.Reminders_ImportedSkipped, result.Skipped);
-        summary += ".";
-        if (result.CaughtUp > 0)
-            summary += string.Format(Strings.Reminders_ImportedCaughtUp, result.CaughtUp);
-
-        MessageBox.Show(
-            Application.Current.MainWindow!,
-            summary,
-            Strings.App_Name,
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        _dialogs.Inform(string.Format(Strings.Reminders_Imported, result.Added + result.Replaced,
+            result.Replaced > 0 ? string.Format(Strings.Reminders_ImportedReplaced, result.Replaced) : string.Empty,
+            result.Skipped > 0 ? string.Format(Strings.Reminders_ImportedSkipped, result.Skipped) : string.Empty,
+            result.CaughtUp > 0 ? string.Format(Strings.Reminders_ImportedCaughtUp, result.CaughtUp) : string.Empty));
     }
 }

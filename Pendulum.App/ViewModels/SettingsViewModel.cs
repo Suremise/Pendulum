@@ -1,12 +1,9 @@
 using System.Diagnostics;
 using System.IO;
-using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
-using Pendulum.App.Views;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
 using Pendulum.Core.Speech;
@@ -17,6 +14,8 @@ namespace Pendulum.App.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    private readonly IDialogs _dialogs;
+
     public AppSettings Settings => AppServices.Instance.Settings;
 
     [ObservableProperty] private List<string> voiceNames = new();
@@ -54,8 +53,11 @@ public partial class SettingsViewModel : ObservableObject
         set => Settings.Use24HourTime = value == 1;
     }
 
-    public SettingsViewModel()
+    public SettingsViewModel() : this(WpfDialogs.Instance) { }
+
+    public SettingsViewModel(IDialogs dialogs)
     {
+        _dialogs = dialogs;
         VoiceNames = SpeechService.GetVoiceNames().ToList();
 
         if (string.IsNullOrEmpty(Settings.TtsVoiceName) && VoiceNames.Count > 0)
@@ -159,16 +161,11 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void AddSound()
     {
-        var dialog = new OpenFileDialog
+        var path = _dialogs.PickOpenFile(Strings.Dialog_AddSoundTitle, Strings.Dialog_AudioFilter);
+        if (path is not null)
         {
-            Filter = Strings.Dialog_AudioFilter,
-            Title = Strings.Dialog_AddSoundTitle
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            var destination = Path.Combine(AppPaths.SoundsDirectory, Path.GetFileName(dialog.FileName));
-            File.Copy(dialog.FileName, destination, overwrite: true);
+            var destination = Path.Combine(AppPaths.SoundsDirectory, Path.GetFileName(path));
+            File.Copy(path, destination, overwrite: true);
             RefreshSoundFiles();
         }
     }
@@ -184,12 +181,7 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             CrashLog.Write("TestVoice", ex);  // not user-visible
-            MessageBox.Show(
-                Application.Current.MainWindow!,
-                string.Format(Strings.Settings_TestVoiceFailed, ex.Message),
-                Strings.App_Name,
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            _dialogs.Warn(string.Format(Strings.Settings_TestVoiceFailed, ex.Message));
         }
         finally
         {
@@ -200,95 +192,52 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void ExportBackup()
     {
-        var dialog = new SaveFileDialog
-        {
-            Filter = Strings.Dialog_BackupFilter,
-            FileName = $"pendulum-backup-{DateTime.Now:yyyy-MM-dd}.json",
-            Title = Strings.Dialog_ExportBackupTitle
-        };
-
-        if (dialog.ShowDialog() != true)
+        var path = _dialogs.PickSaveFile(Strings.Dialog_ExportBackupTitle, Strings.Dialog_BackupFilter,
+            $"pendulum-backup-{DateTime.Now:yyyy-MM-dd}.json"); // not user-visible: suggested file name
+        if (path is null)
             return;
 
-        AppServices.Instance.ExportBackup(dialog.FileName);
-        MessageBox.Show(
-            Application.Current.MainWindow!,
-            string.Format(Strings.Backup_Done, AppServices.Instance.Triggers.Count, Path.GetFileName(dialog.FileName)),
-            Strings.App_Name,
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        AppServices.Instance.ExportBackup(path);
+        _dialogs.Inform(string.Format(Strings.Backup_Done, AppServices.Instance.Triggers.Count, Path.GetFileName(path)));
     }
 
     [RelayCommand]
     private void RestoreBackup()
     {
-        var dialog = new OpenFileDialog
-        {
-            Filter = Strings.Dialog_BackupFilter,
-            Title = Strings.Dialog_RestoreBackupTitle
-        };
-
-        if (dialog.ShowDialog() != true)
-            return;
-
-        var confirm = MessageBox.Show(
-            Application.Current.MainWindow!,
-            Strings.Backup_ConfirmRestore,
-            Strings.App_Name,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (confirm != MessageBoxResult.Yes)
+        var path = _dialogs.PickOpenFile(Strings.Dialog_RestoreBackupTitle, Strings.Dialog_BackupFilter);
+        if (path is null || !_dialogs.Confirm(Strings.Backup_ConfirmRestore, warning: true))
             return;
 
         AppBackup backup;
         int caughtUp;
         try
         {
-            backup = AppServices.Instance.RestoreBackup(dialog.FileName, out caughtUp);
+            backup = AppServices.Instance.RestoreBackup(path, out caughtUp);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
-                Application.Current.MainWindow!,
-                string.Format(Strings.Backup_CouldNotRead, ex.Message),
-                Strings.App_Name,
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            _dialogs.Warn(string.Format(Strings.Backup_CouldNotRead, ex.Message), error: true);
             return;
         }
 
         if (backup.Settings is not null)
             ApplySettingsFrom(backup.Settings);
 
-        MessageBox.Show(
-            Application.Current.MainWindow!,
-            string.Format(Strings.Backup_Restored, backup.Triggers.Count)
-                + (caughtUp > 0 ? string.Format(Strings.Backup_RestoredCaughtUp, caughtUp) : ""),
-            Strings.App_Name,
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        _dialogs.Inform(string.Format(Strings.Backup_Restored, backup.Triggers.Count)
+            + (caughtUp > 0 ? string.Format(Strings.Backup_RestoredCaughtUp, caughtUp) : string.Empty));
     }
 
     [RelayCommand]
     private void ChangeHotkey()
     {
-        var dialog = new HotkeyCaptureWindow(Settings.QuickAddHotkeyGesture) { Owner = Application.Current.MainWindow };
-        if (dialog.ShowDialog() == true && dialog.Result is not null)
-            Settings.QuickAddHotkeyGesture = dialog.Result;
+        if (_dialogs.EditHotkey(Settings.QuickAddHotkeyGesture) is { } result)
+            Settings.QuickAddHotkeyGesture = result;
     }
 
     [RelayCommand]
     private void ResetToDefaults()
     {
-        var result = MessageBox.Show(
-            Application.Current.MainWindow!,
-            Strings.Settings_ConfirmReset,
-            Strings.App_Name,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning);
-
-        if (result != MessageBoxResult.Yes)
+        if (!_dialogs.Confirm(Strings.Settings_ConfirmReset, warning: true))
             return;
 
         var defaults = new AppSettings();

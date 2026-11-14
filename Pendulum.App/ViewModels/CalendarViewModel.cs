@@ -6,7 +6,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
-using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Services;
@@ -16,6 +15,7 @@ namespace Pendulum.App.ViewModels;
 public partial class CalendarViewModel : ObservableObject
 {
     private readonly ReminderStore _store;
+    private readonly IDialogs _dialogs;
     private ReadOnlyObservableCollection<TriggerTimer> Triggers => _store.Items;
     private readonly Func<DateTime> _today;
     private readonly Action<Action> _post;
@@ -81,14 +81,17 @@ public partial class CalendarViewModel : ObservableObject
         }
     }
 
-    public CalendarViewModel() : this(AppServices.Instance.Reminders, () => DateTime.Today,
-        action => Application.Current.Dispatcher.BeginInvoke(action, DispatcherPriority.Background))
+    public CalendarViewModel() : this(WpfDialogs.Instance) { }
+
+    public CalendarViewModel(IDialogs dialogs) : this(AppServices.Instance.Reminders, () => DateTime.Today,
+        action => Application.Current.Dispatcher.BeginInvoke(action, DispatcherPriority.Background), dialogs)
     {
     }
 
-    internal CalendarViewModel(ReminderStore store, Func<DateTime> today, Action<Action> post)
+    internal CalendarViewModel(ReminderStore store, Func<DateTime> today, Action<Action> post, IDialogs? dialogs = null)
     {
         _store = store;
+        _dialogs = dialogs ?? WpfDialogs.Instance;
         _today = today;
         _post = post;
         _lastToday = today().Date;
@@ -164,8 +167,7 @@ public partial class CalendarViewModel : ObservableObject
         if (trigger is null)
             return;
 
-        var dialog = new TriggerEditWindow(trigger, isNew: false) { Owner = Application.Current.MainWindow };
-        dialog.ShowDialog();
+        _dialogs.EditReminder(trigger);
     }
 
     private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)

@@ -65,9 +65,6 @@ public partial class TriggersPanel : UserControl
                 };
             }
         };
-
-        EditRow = t => (DataContext as TriggersViewModel)?.EditCommand.Execute(t);
-        DeleteRow = t => (DataContext as TriggersViewModel)?.DeleteCommand.Execute(t);
     }
 
     private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
@@ -88,11 +85,6 @@ public partial class TriggersPanel : UserControl
 
     // ---- Rows: double-click or Enter edits, Delete deletes, a right-click menu offers both ----
 
-    /// What editing and deleting a row do: the view model's commands (each opens a window of its
-    /// own, the editor or a confirmation). The tests put recorders here instead.
-    internal Action<TriggerTimer> EditRow { get; set; }
-    internal Action<TriggerTimer> DeleteRow { get; set; }
-
     private TriggersViewModel? ViewModel => DataContext as TriggersViewModel;
 
     private void Row_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -110,7 +102,7 @@ public partial class TriggersPanel : UserControl
         for (var d = clicked; d is not null && d != row; d = VisualTreeHelper.GetParent(d) ?? LogicalTreeHelper.GetParent(d))
             if (d is ButtonBase)
                 return false;
-        EditRow(reminder);
+        ViewModel?.EditCommand.Execute(reminder);
         return true;
     }
 
@@ -131,11 +123,11 @@ public partial class TriggersPanel : UserControl
             return false;
 
         if (key == Key.Enter)
-            EditRow(reminder);
+            ViewModel?.EditCommand.Execute(reminder);
         else if (ViewModel is { IsSelecting: true, HasSelection: true } vm)
             vm.DeleteSelectedCommand.Execute(null);
         else
-            DeleteRow(reminder);
+            ViewModel?.DeleteCommand.Execute(reminder);
         return true;
     }
 
@@ -167,7 +159,7 @@ public partial class TriggersPanel : UserControl
     private void RowEdit_Click(object sender, RoutedEventArgs e)
     {
         if (MenuReminder(sender) is { } reminder)
-            EditRow(reminder);
+            ViewModel?.EditCommand.Execute(reminder);
     }
 
     private void RowToggle_Click(object sender, RoutedEventArgs e)
@@ -179,7 +171,7 @@ public partial class TriggersPanel : UserControl
     private void RowDelete_Click(object sender, RoutedEventArgs e)
     {
         if (MenuReminder(sender) is { } reminder)
-            DeleteRow(reminder);
+            ViewModel?.DeleteCommand.Execute(reminder);
     }
 
     // ---- Columns: Name takes the spare width, the others fit their widest content ----

@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
+using Pendulum.App.ViewModels;
 using Pendulum.Core.Models;
 
 namespace Pendulum.App.Tests;
@@ -200,10 +201,8 @@ public sealed class RemindersListTests : IDisposable
     {
         var (edited, deleted, onButton, inFilterBox) = WithPanel(1200, p =>
         {
-            var edits = new List<TriggerTimer>();
-            var deletes = new List<TriggerTimer>();
-            p.EditRow = edits.Add;
-            p.DeleteRow = deletes.Add;
+            var dialogs = new FakeDialogs();
+            p.DataContext = new TriggersViewModel(dialogs);
             var dentist = _reminders[0];
             var row = Descendants(List(p)).OfType<ListViewItem>().Single(r => r.DataContext == dentist);
             var nameText = Descendants(row).OfType<TextBlock>().First(t => t.Text == dentist.Name);
@@ -215,11 +214,11 @@ public sealed class RemindersListTests : IDisposable
             p.RowKey(Key.Delete, nameText);
             var filterBox = Descendants(List(p)).OfType<TextBox>().First();   // the filter row's name box
             var fromFilterBox = p.RowKey(Key.Delete, filterBox);
-            return (edits, deletes, buttonOpens, fromFilterBox);
+            return (dialogs.Edits.Select(e => e.Reminder).ToList(), dialogs.Confirmations.Select(c => c.Message).ToList(), buttonOpens, fromFilterBox);
         });
 
         Assert.Equal([_reminders[0], _reminders[0]], edited);
-        Assert.Equal([_reminders[0]], deleted);
+        Assert.Equal([string.Format(Strings.Reminders_ConfirmDelete, _reminders[0].Name)], deleted);
         Assert.False(onButton);
         Assert.False(inFilterBox);
     }
@@ -229,10 +228,8 @@ public sealed class RemindersListTests : IDisposable
     {
         var (headers, gestures, turnOnShown, edited, deleted, turnedOff, rowName, toggleName) = WithPanel(1200, p =>
         {
-            var edits = new List<TriggerTimer>();
-            var deletes = new List<TriggerTimer>();
-            p.EditRow = edits.Add;
-            p.DeleteRow = deletes.Add;
+            var dialogs = new FakeDialogs();
+            p.DataContext = new TriggersViewModel(dialogs);
             var dentist = _reminders[0];
             var row = Descendants(List(p)).OfType<ListViewItem>().Single(r => r.DataContext == dentist);
             p.PrepareRowMenu(row);   // as the menu opens
@@ -243,7 +240,7 @@ public sealed class RemindersListTests : IDisposable
             var off = !dentist.Enabled;
             dentist.Enabled = true;
             return (items.Select(i => (string)i.Header).ToList(), items.Select(i => i.InputGestureText).ToList(),
-                items[2].Visibility, edits, deletes, off,
+                items[2].Visibility, dialogs.Edits.Select(e => e.Reminder).ToList(), dialogs.Confirmations.Select(c => c.Message).ToList(), off,
                 UIElementAutomationPeer.CreatePeerForElement(row).GetName(),
                 UIElementAutomationPeer.CreatePeerForElement(Descendants(row).OfType<Button>().Single()).GetName());
         });
@@ -252,7 +249,7 @@ public sealed class RemindersListTests : IDisposable
         Assert.Equal(["Enter", "", "", "Del"], gestures);
         Assert.Equal(Visibility.Collapsed, turnOnShown);   // it's on: only "Turn off" shows
         Assert.Equal([_reminders[0]], edited);
-        Assert.Equal([_reminders[0]], deleted);
+        Assert.Equal([string.Format(Strings.Reminders_ConfirmDelete, _reminders[0].Name)], deleted);
         Assert.True(turnedOff);
         Assert.Equal("Dentist", rowName);
         Assert.Equal(Strings.Reminders_Disable, toggleName);
