@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Editing sounds or showing filters no longer repeats the work of sizing every date.
+- A failed final save is logged without interrupting the rest of shutdown or leaving save timers running.
 - Pendulum attempts to save pending reminder and settings changes before a fatal error on its window thread.
 - The calendar's today marker updates on time when clock changes skip or repeat midnight.
 - Long gaps between uses now count every missed weekly, monthly and yearly reminder, so series that end after a set number stop on time.

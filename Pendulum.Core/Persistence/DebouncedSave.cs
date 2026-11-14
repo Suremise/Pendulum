@@ -119,8 +119,11 @@ public sealed class DebouncedSave<T> : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        Flush();
-        lock (_gate) _disposed = true;
-        _timer.Dispose();
+        try { Flush(); }
+        finally
+        {
+            lock (_gate) _disposed = true;
+            _timer.Dispose();
+        }
     }
 }

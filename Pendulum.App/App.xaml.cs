@@ -296,25 +296,31 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         IsExiting = true;
-        Microsoft.Win32.SystemEvents.TimeChanged -= OnSystemTimeChanged;
-        Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         try
         {
+            ShutdownCleanup.Run(CrashLog.Write,
+                ("Exit.TimeChanged", () => Microsoft.Win32.SystemEvents.TimeChanged -= OnSystemTimeChanged), // not user-visible: log context
+                ("Exit.PowerModeChanged", () => Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged)); // not user-visible: log context
             if (_singleInstance?.IsPrimary == true)
             {
                 try
                 {
-                    _settingsReactions?.Dispose();
-                    _hotkeyManager?.Dispose();
-                    _trayIcon?.Dispose();
+                    ShutdownCleanup.Run(CrashLog.Write,
+                        ("Exit.SettingsReactions", () => _settingsReactions?.Dispose()), // not user-visible: log context
+                        ("Exit.Hotkey", () => _hotkeyManager?.Dispose()), // not user-visible: log context
+                        ("Exit.Tray", () => _trayIcon?.Dispose())); // not user-visible: log context
                 }
                 finally { AppServices.Instance.Shutdown(); }
             }
         }
         finally
         {
-            _singleInstance?.Dispose();
-            base.OnExit(e);
+            try
+            {
+                ShutdownCleanup.Run(CrashLog.Write,
+                    ("Exit.SingleInstance", () => _singleInstance?.Dispose())); // not user-visible: log context
+            }
+            finally { base.OnExit(e); }
         }
     }
 }

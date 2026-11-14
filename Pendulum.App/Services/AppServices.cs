@@ -350,10 +350,22 @@ public sealed class AppServices
 
     public void Shutdown()
     {
-        Engine.Dispose();
-        Reminders.RemindersChanged -= OnRemindersChanged;
-        Reminders.Dispose();
-        try { _settingsSave.Dispose(); }
-        finally { _triggersSave.Dispose(); }
+        try
+        {
+            ShutdownCleanup.Run(CrashLog.Write,
+                ("Shutdown.Engine", Engine.Dispose), // not user-visible: log context
+                ("Shutdown.Reminders", () => // not user-visible: log context
+                {
+                    Reminders.RemindersChanged -= OnRemindersChanged;
+                    Reminders.Dispose();
+                }
+            ));
+        }
+        finally
+        {
+            ShutdownCleanup.Run(CrashLog.Write,
+                ("Shutdown.SettingsSave", _settingsSave.Dispose), // not user-visible: log context
+                ("Shutdown.RemindersSave", _triggersSave.Dispose)); // not user-visible: log context
+        }
     }
 }

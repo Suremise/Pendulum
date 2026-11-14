@@ -117,11 +117,47 @@ public sealed class DebouncedSaveTests
         Assert.Equal(1, writes);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Failed_final_snapshot_or_write_still_disposes_the_timer_and_rejects_later_changes(bool snapshotFails)
+    {
+        var clock = new SaveClock();
+        var posted = new Queue<Action>();
+        var failing = true;
+        var captures = 0;
+        var save = new DebouncedSave<int>(() =>
+        {
+            captures++;
+            if (failing && snapshotFails) throw new IOException("snapshot failed");
+            return 42;
+        }, _ => { if (failing) throw new IOException("write failed"); }, posted.Enqueue, _ => { }, clock);
+        try
+        {
+            save.MarkDirty();
+            clock.Fire();
+            Assert.Throws<IOException>(save.Dispose);
+            Assert.Equal(1, clock.Disposals);
+            var captured = captures;
+            Assert.Single(posted)();
+            Assert.Equal(captured, captures);
+            Assert.Throws<ObjectDisposedException>(save.MarkDirty);
+            save.Dispose(); // A failed final save must not make cleanup run twice.
+            Assert.Equal(1, clock.Disposals);
+        }
+        finally
+        {
+            failing = false;
+            save.Dispose();
+        }
+    }
+
     // A manually fired timer: tests advance the quiet period without sleeping.
     private sealed class SaveClock : TimeProvider
     {
         private Action? _tick;
         private long _timestamp;
+        public int Disposals;
         public override long TimestampFrequency => TimeSpan.TicksPerSecond;
         public override long GetTimestamp() => _timestamp;
         public void Fire(bool advance = true)
@@ -132,12 +168,12 @@ public sealed class DebouncedSaveTests
         public override ITimer CreateTimer(TimerCallback callback, object? state, TimeSpan dueTime, TimeSpan period)
         {
             _tick = () => callback(state);
-            return new TestTimer();
+            return new TestTimer(this);
         }
-        private sealed class TestTimer : ITimer
+        private sealed class TestTimer(SaveClock clock) : ITimer
         {
             public bool Change(TimeSpan dueTime, TimeSpan period) => true;
-            public void Dispose() { }
+            public void Dispose() => clock.Disposals++;
             public ValueTask DisposeAsync() => ValueTask.CompletedTask;
         }
     }
