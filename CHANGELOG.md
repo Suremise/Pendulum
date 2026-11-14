@@ -7,6 +7,10 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Right-click a day in the calendar and choose **Add reminder** to add one on that day: the
+  editor opens with the day's date and 00:00:00, ready to change.
+
 ## [1.2.1] - 2026-11-14
 
 Pendulum stays responsive while other apps are busy, with fixes to saving, alerts, the calendar

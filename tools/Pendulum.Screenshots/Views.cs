@@ -36,6 +36,7 @@ internal static class Views
         ("01-badge-filters.png", "Type, mode and status filter options (laid out without opening popups)", BadgeFilters),
         ("02-calendar.png", "Calendar: a busy month, each reminder in its own colour", () => MainWindowShot(tab: 1)),
         ("02-calendar-small.png", "Calendar in the smallest window (820 × 560): \"+N more\" beside the day's number", () => MainWindowShot(tab: 1, 820, 560)),
+        ("02-calendar-day-menu.png", "Calendar: a day's menu, Add reminder (laid out without opening it)", CalendarDayMenu),
         ("03-settings.png", "Settings", Settings),
         ("03-settings-alerts.png", "Settings: alerts", () => SettingsSection(1)),
         ("03-settings-voice.png", "Settings: Windows speech", () => SettingsSection(2)),
@@ -119,7 +120,47 @@ internal static class Views
         }
     }
 
-    private static FrameworkElement MainWindowShot(int tab, double width = 1100, double height = 720)
+    private static FrameworkElement MainWindowShot(int tab, double width = 1100, double height = 720) =>
+        Framed(MainWindowContent(tab, width, height));
+
+    /// The calendar with a day's context menu (Add reminder) over that day's cell, where
+    /// right-clicking it opens it: the menu is laid out in memory with the cell as its placement
+    /// target, never opened, and drawn on a layer above the calendar (a context menu can't have a
+    /// parent, so the layer holds a picture of it).
+    private static FrameworkElement CalendarDayMenu()
+    {
+        var host = MainWindowContent(tab: 1, 1100, 720);
+        var content = (FrameworkElement)host.Child;
+        var cells = Descendants(content).OfType<Border>().Where(b => b.ContextMenu is not null && b.DataContext is CalendarDayCell).ToList();
+        var cell = cells.FirstOrDefault(b => ((CalendarDayCell)b.DataContext).Date == DateTime.Today.AddDays(3)) ?? cells[0];
+        var at = cell.TransformToAncestor(content).Transform(new Point(cell.ActualWidth / 2, cell.ActualHeight / 2));
+        var menu = cell.ContextMenu;
+        menu.PlacementTarget = cell;
+        menu.DataContext = cell.DataContext;
+        menu.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        menu.Arrange(new Rect(menu.DesiredSize));
+        menu.UpdateLayout();
+        System.Windows.Threading.Dispatcher.CurrentDispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
+        menu.UpdateLayout();
+        var item = menu.Items.OfType<System.Windows.Controls.MenuItem>().Single();
+        if (!ReferenceEquals(item.CommandParameter, cell.DataContext))
+            throw new InvalidOperationException("The day's menu isn't bound to its day."); // not user-visible: renderer validation
+
+        var picture = new Image { Source = Draw(menu), Stretch = Stretch.None };
+        var layer = new Canvas();
+        Canvas.SetLeft(picture, at.X);
+        Canvas.SetTop(picture, at.Y);
+        layer.Children.Add(picture);
+        host.Child = null;
+        var stack = new Grid();
+        stack.Children.Add(content);
+        stack.Children.Add(layer);
+        host.Child = stack;
+        Layout(host);
+        return Framed(host);
+    }
+
+    private static Border MainWindowContent(int tab, double width, double height)
     {
         var window = new MainWindow();
         var host = Detach(window, width, height);
@@ -133,7 +174,7 @@ internal static class Views
         foreach (var calendar in Descendants(host).OfType<CalendarPanel>())
             (calendar.DataContext as CalendarViewModel)?.RefreshForDisplay();
         Layout(host);
-        return Framed(host);
+        return host;
     }
 
     private static FrameworkElement BadgeValues()

@@ -50,6 +50,7 @@ This replaces all your current settings and reminders. This cannot be undone.</v
   <data name="Backup_NotValid" xml:space="preserve"><value>That file isn't a valid Pendulum backup.</value></data>
   <data name="Backup_Restored" xml:space="preserve"><value>Restored settings and {0} reminder(s).</value><comment>{0}: how many reminders.</comment></data>
   <data name="Backup_RestoredCaughtUp" xml:space="preserve"><value> {0} of them were already past their time, so they were moved on to their next time, or marked spent, without ringing.</value><comment>Follows Backup_Restored. {0}: how many reminders.</comment></data>
+  <data name="Calendar_AddReminder" xml:space="preserve"><value>Add reminder</value><comment>CalendarPanel.xaml, a day cell's context menu</comment></data>
   <data name="Calendar_Calendar" xml:space="preserve"><value>Calendar</value><comment>CalendarPanel.xaml, Text</comment></data>
   <data name="Calendar_OneReminder" xml:space="preserve"><value>1 reminder</value><comment>Calendar: beside a day's number when the window is too small for its reminders' names</comment></data>
   <data name="Calendar_RemindersFormat" xml:space="preserve"><value>{0} reminders</value><comment>Calendar: beside a day's number when the window is too small for its reminders' names. {0} is how many (2 or more)</comment></data>

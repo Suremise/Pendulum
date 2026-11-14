@@ -3,6 +3,7 @@ using System.Windows;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
+using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
 
@@ -261,6 +262,57 @@ public sealed class DialogCommandTests : IDisposable
         new CalendarViewModel(dialogs).EditReminderCommand.Execute(reminder);
         Assert.Equal(new[] { true, true, false, false }, dialogs.Edits.Select(e => e.IsNew));
         Assert.All(dialogs.Edits.Skip(2), edit => Assert.Same(reminder, edit.Reminder));
+    });
+
+    /// A day cell's Add reminder: the same new-reminder editor, on the cell's own date (here a day
+    /// of the month before, shown in the grid) at 00:00:00; Cancel adds nothing, and Save adds it
+    /// on that day, where the calendar shows it.
+    [Fact]
+    public void Calendar_add_reminder_opens_the_new_reminder_editor_on_the_cell_s_date_at_midnight() => UiThread.Invoke(() =>
+    {
+        AppServices.Instance.UseSettingsForTests(new AppSettings { LaunchOnWindowsStartup = false, DefaultSoundFileName = "chime.wav" });
+        var dialogs = new FakeDialogs();
+        var calendar = new CalendarViewModel(AppServices.Instance.Reminders, () => new DateTime(2090, 4, 10, 15, 20, 45), action => action(), dialogs);
+        calendar.SetVisible(true);
+        var day = calendar.Days.First(d => !d.IsCurrentMonth);
+        Assert.Equal(3, day.Date.Month);
+
+        calendar.AddReminderCommand.Execute(day);   // then Cancel
+
+        var (cancelled, isNew) = Assert.Single(dialogs.Edits);
+        Assert.True(isNew);
+        Assert.Equal(day.Date.Date, cancelled.TriggerAt);
+        Assert.Equal(day.Date.Date, cancelled.RecurrenceAnchor);
+        Assert.Equal(Strings.Reminders_NewReminderName, cancelled.Name);
+        Assert.Equal("chime.wav", cancelled.SoundFileName);
+        Assert.Empty(AppServices.Instance.Triggers);
+
+        foreach (var use24 in new[] { true, false })
+        {
+            var editor = new EditorViewModel(cancelled, isNew: true, use24, [], "teal");
+            Assert.Equal(day.Date.Date, editor.Date);
+            Assert.Equal(use24 ? "00" : "12", editor.Hour);
+            Assert.Equal(0, editor.AmPmIndex);
+            Assert.Equal("00", editor.Minute);
+            Assert.Equal("00", editor.Second);
+        }
+
+        // Save, after changing the time to 09:30, as the editor's Save applies it.
+        dialogs.OnEdit = () =>
+        {
+            var draft = dialogs.Edits[^1].Reminder;
+            var editor = new EditorViewModel(draft, isNew: true, use24HourTime: true, [], "teal") { Hour = "09", Minute = "30" };
+            var now = new DateTime(2090, 1, 1);
+            TriggerReconciler.ApplyEdit(draft, editor.CreateDraft(now), now);
+            dialogs.EditResult = draft;
+        };
+        calendar.AddReminderCommand.Execute(day);
+
+        var saved = Assert.Single(AppServices.Instance.Triggers);
+        Assert.Same(dialogs.Edits[^1].Reminder, saved);
+        Assert.Equal(day.Date.AddHours(9).AddMinutes(30), saved.TriggerAt);
+        Assert.Contains(saved, calendar.Days.Single(d => d.Date == day.Date).Reminders);
+        Assert.Equal(1, calendar.Days.Sum(d => d.Reminders.Count));
     });
 
     public void Dispose()

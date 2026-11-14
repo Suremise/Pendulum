@@ -180,6 +180,17 @@ public partial class CalendarViewModel : ObservableObject
         _dialogs.EditReminder(trigger);
     }
 
+    /// A day cell's context menu, Add reminder: the same editor as adding one anywhere else, on
+    /// that cell's own date (a day of the month before or after too) at 00:00:00.
+    [RelayCommand]
+    private void AddReminder(CalendarDayCell? cell)
+    {
+        if (cell is null)
+            return;
+
+        TriggersViewModel.AddNew(AppServices.Instance, _dialogs, cell.Date);
+    }
+
     private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
         if (e.MembershipChanged || e.Properties.Overlaps([nameof(TriggerTimer.TriggerAt), nameof(TriggerTimer.RecurrenceAnchor),

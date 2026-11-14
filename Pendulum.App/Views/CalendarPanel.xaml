@@ -24,8 +24,19 @@
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
         </Style>
 
+        <!-- A day cell's menu: Add reminder, for the cell's own date. A context menu is outside
+             the cell's visual tree, so the calendar's view model comes through the cell's Tag. -->
+        <ContextMenu x:Key="DayCellMenu" x:Shared="False">
+            <MenuItem Header="{x:Static res:Strings.Calendar_AddReminder}"
+                      Command="{Binding PlacementTarget.Tag.AddReminderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                      CommandParameter="{Binding}"/>
+        </ContextMenu>
+
         <DataTemplate x:Key="DayCellTemplate">
-            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0.6" Padding="6,3">
+            <!-- Transparent, so a right-click anywhere in the cell opens its menu, not only on its text. -->
+            <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="0.6" Padding="6,3"
+                    Background="Transparent" ContextMenu="{StaticResource DayCellMenu}"
+                    Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <!-- The day's number, then its chips, then "+N more" for those that don't fit
                      (CalendarDayCell.Lines). A cell too short for even one line under the number
                      (a small window) shows "+N more" beside the number instead. -->

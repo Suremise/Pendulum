@@ -178,22 +178,38 @@ public partial class TriggersViewModel : ObservableObject
     }
 
     /// A new reminder, before the user edits it: its name from the resources (the model's own
-    /// default is only for a saved reminder with no name), and the default sound.
-    internal static TriggerTimer NewDraft(AppSettings settings) => new()
+    /// default is only for a saved reminder with no name), and the default sound. Given a day (the
+    /// calendar's Add reminder), it starts at 00:00:00 that day; otherwise at the current time.
+    internal static TriggerTimer NewDraft(AppSettings settings, DateTime? day = null)
     {
-        Name = Strings.Reminders_NewReminderName,
-        SoundFileName = settings.DefaultSoundFileName,
-    };
+        var draft = new TriggerTimer
+        {
+            Name = Strings.Reminders_NewReminderName,
+            SoundFileName = settings.DefaultSoundFileName,
+        };
+        if (day is { } d)
+        {
+            draft.TriggerAt = d.Date;
+            draft.RecurrenceAnchor = d.Date;
+        }
+        return draft;
+    }
+
+    /// The one way a new reminder is added, from the list, the menu and the calendar: the editor
+    /// on a draft, and the reminder added only after Save. Returns it, or null when not added.
+    internal static TriggerTimer? AddNew(AppServices services, IDialogs dialogs, DateTime? day = null)
+    {
+        if (services.IsShuttingDown) return null;
+        var draft = NewDraft(services.Settings, day);
+        return dialogs.EditReminder(draft, isNew: true) is { } result && services.TryAddTrigger(result) ? result : null;
+    }
 
     [RelayCommand]
     private void Add() => Add(AppServices.Instance);
 
     internal void Add(AppServices services)
     {
-        if (services.IsShuttingDown) return;
-        var draft = NewDraft(services.Settings);
-
-        if (_dialogs.EditReminder(draft, isNew: true) is { } result && services.TryAddTrigger(result))
+        if (AddNew(services, _dialogs) is { } result)
         {
             SelectedTrigger = result;
         }

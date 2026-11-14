@@ -157,6 +157,65 @@ public sealed class CalendarCellTests : IDisposable
         Assert.Empty(wrong);
     }
 
+    /// Every day's cell, those of the months before and after too, has a context menu of one
+    /// item, Add reminder, bound to the calendar's command for that cell; nothing else in the
+    /// calendar (the weekday headers, the month bar) offers it. The menu is laid out in memory
+    /// with its cell as the placement target, as opening it would, never shown.
+    [Fact]
+    public void Each_day_cell_and_only_a_day_cell_offers_add_reminder()
+    {
+        var problems = UiThread.Invoke(() => InMainWindow(1200, 800, calendar =>
+        {
+            var found = new List<string>();
+            var vm = (CalendarViewModel)calendar.DataContext;
+            if (!vm.Days.Any(d => !d.IsCurrentMonth))
+                found.Add("no days of another month in the grid");
+            for (var i = 0; i < vm.Days.Count; i++)
+            {
+                var day = vm.Days[i];
+                var container = (FrameworkElement)calendar.DayGrid.ItemContainerGenerator.ContainerFromIndex(i);
+                var cells = Descendants(container).OfType<FrameworkElement>().Where(e => e.ContextMenu is not null).ToList();
+                if (cells.Count != 1 || cells[0] is not Border { Background: not null } cell)
+                {
+                    found.Add($"{day.Date:d MMM}: {cells.Count} elements with a menu");
+                    continue;
+                }
+
+                var menu = cell.ContextMenu;
+                menu.PlacementTarget = cell;
+                menu.DataContext = cell.DataContext;
+                menu.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+                menu.Arrange(new Rect(menu.DesiredSize));
+                menu.UpdateLayout();
+                var item = Assert.IsType<MenuItem>(Assert.Single(menu.Items));
+                if ((string)item.Header != Strings.Calendar_AddReminder)
+                    found.Add($"{day.Date:d MMM}: menu says \"{item.Header}\"");
+                if (!ReferenceEquals(item.Command, vm.AddReminderCommand) || !ReferenceEquals(item.CommandParameter, day))
+                    found.Add($"{day.Date:d MMM}: Add reminder isn't bound to this day");
+            }
+
+            // Outside the day grid (the weekday headers, the month bar, the calendar itself), no
+            // menu offers Add reminder. The month and year boxes keep their own text menu.
+            foreach (var element in Descendants(calendar).OfType<FrameworkElement>().Prepend(calendar))
+                if (OffersAddReminder(element) && !IsInside(element, calendar.DayGrid))
+                    found.Add($"{element.GetType().Name} \"{element.Name}\" outside the days offers Add reminder");
+            return found;
+        }));
+
+        Assert.True(problems.Count == 0, string.Join("\n", problems));
+    }
+
+    private static bool OffersAddReminder(FrameworkElement element) =>
+        element.ContextMenu?.Items.OfType<MenuItem>().Any(i => Equals(i.Header, Strings.Calendar_AddReminder)) == true;
+
+    private static bool IsInside(DependencyObject element, DependencyObject ancestor)
+    {
+        for (var d = element; d is not null; d = VisualTreeHelper.GetParent(d))
+            if (d == ancestor)
+                return true;
+        return false;
+    }
+
     [Theory]
     [InlineData(2, 3, 2, 0)]   // fewer than fit: all shown
     [InlineData(3, 3, 3, 0)]   // exactly as many as fit: all shown
