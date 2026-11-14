@@ -1,12 +1,6 @@
-using System.Reflection;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using H.NotifyIcon;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.Views;
@@ -19,15 +13,8 @@ namespace Pendulum.App;
 
 public partial class App : Application
 {
-    private const string MutexName = "Pendulum.SingleInstance.Mutex";  // not user-visible: a system object's name
-    private const string WakeEventName = "Pendulum.WakeExisting.Event";  // not user-visible
-
-    private Mutex? _singleInstanceMutex;
-    private bool _ownsMutex;
-    private EventWaitHandle? _wakeEvent;
-    private TaskbarIcon? _trayIcon;
-    private TrayTooltipUpdater? _trayTooltipUpdater;
-    private DispatcherTimer? _trayTooltipTimer;
+    private SingleInstance? _singleInstance;
+    private TrayIcon? _trayIcon;
     private HotkeyManager? _hotkeyManager;
     private HotkeyBinding? _hotkey;
     private SettingsReactions? _settingsReactions;
@@ -37,7 +24,39 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        RegisterErrorHandlers();
+        try
+        {
+            _singleInstance = new SingleInstance(() => Dispatcher.BeginInvoke(ShowMainWindow));
+            if (!_singleInstance.IsPrimary)
+            {
+                Shutdown();
+                return;
+            }
+            var missed = InitializeServices();
+            SubscribeToSystemEvents();
+            _settingsReactions = new SettingsReactions(
+                AppServices.Instance.Settings, AppThemeManager.Apply, StartupRegistration.SetEnabled,
+                () => ApplyHotkeySetting(atStartup: false));
+            _trayIcon = new TrayIcon(ShowMainWindow, ExitApplication, () => _hotkey?.Active);
+            var window = CreateMainWindow();
+            RegisterQuickReminderHotkey(window);
+            ShowStartupNotices(missed);
+            if (AppServices.Instance.Settings.CheckForUpdatesOnStartup)
+                _ = CheckForUpdateAsync(window);
+        }
+        catch (Exception ex)
+        {
+            CrashLog.Write("OnStartup", ex);
+            MessageBox.Show(
+                string.Format(Strings.App_FailedToStart, ex.Message),
+                Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown();
+        }
+    }
 
+    private void RegisterErrorHandlers()
+    {
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
             if (args.ExceptionObject is Exception ex)
@@ -56,126 +75,59 @@ public partial class App : Application
             CrashLog.Write("UnobservedTaskException", args.Exception);
             args.SetObserved();
         };
-
-        _singleInstanceMutex = new Mutex(true, MutexName, out var createdNew);
-        _ownsMutex = createdNew;
-        if (!createdNew)
-        {
-            // Another instance is already running (likely hidden in the tray) — wake it instead of silently exiting.
-            try
-            {
-                using var existingWakeEvent = EventWaitHandle.OpenExisting(WakeEventName);
-                existingWakeEvent.Set();
-            }
-            catch (WaitHandleCannotBeOpenedException)
-            {
-                // the running instance hasn't finished starting up yet; nothing more we can do here.
-            }
-            Shutdown();
-            return;
-        }
-
-        _wakeEvent = new EventWaitHandle(false, EventResetMode.AutoReset, WakeEventName);
-        var wakeThread = new Thread(() =>
-        {
-            while (true)
-            {
-                _wakeEvent.WaitOne();
-                Dispatcher.BeginInvoke(ShowMainWindow);
-            }
-        })
-        { IsBackground = true };
-        wakeThread.Start();
-
-        try
-        {
-            var missed = AppServices.Instance.Initialize();
-            AppServices.Instance.Engine.TriggerFired += OnTriggerFired;
-            AppServices.Instance.Engine.TickFailed += ex => CrashLog.Write("TimerEngine.Tick", ex);
-            // Only now, with the handlers in place, and on this (the UI) thread, which the engine
-            // fires reminders on, so their saves and the reminders list never run elsewhere.
-            AppServices.Instance.Engine.Start();
-
-            // DateTime.Now keeps the time zone it first read until told otherwise: a laptop that
-            // changes zone (or a user who changes it) would otherwise ring reminders by the old one
-            // until Pendulum restarts.
-            Microsoft.Win32.SystemEvents.TimeChanged += OnSystemTimeChanged;
-            Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
-
-            _settingsReactions = new SettingsReactions(
-                AppServices.Instance.Settings,
-                AppThemeManager.Apply,
-                StartupRegistration.SetEnabled,
-                () => ApplyHotkeySetting(atStartup: false));
-
-            var iconUri = new Uri("pack://application:,,,/Resources/tray.ico", UriKind.Absolute);
-            var iconImage = new BitmapImage(iconUri);
-
-            _trayIcon = new TaskbarIcon
-            {
-                ToolTipText = Strings.App_Name,
-                IconSource = iconImage,
-                ContextMenu = BuildTrayMenu(),
-                Visibility = Visibility.Visible
-            };
-            _trayIcon.TrayLeftMouseUp += (_, __) => ShowMainWindow();
-            // H.NotifyIcon defaults to process-wide Idle priority and EcoQoS. Reminders,
-            // audio and child speech processes need normal scheduling even while hidden.
-            _trayIcon.ForceCreate(enablesEfficiencyMode: false);
-            _trayTooltipUpdater = new TrayTooltipUpdater(
-                text => _trayIcon.ToolTipText = text,
-                ex => CrashLog.Write("TrayTooltip.Update", ex)); // not user-visible: log context
-
-            // The OS reads the tooltip text at the moment it's set, not live on hover,
-            // so keep it refreshed periodically rather than computing it on click/hover.
-            UpdateTrayTooltip();
-            _trayTooltipTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
-            _trayTooltipTimer.Tick += (_, __) => UpdateTrayTooltip();
-            _trayTooltipTimer.Start();
-
-            var mainWindow = new MainWindow();
-            MainWindow = mainWindow;
-            mainWindow.RestorePlacement();
-
-            // Force the window's handle to exist (needed for hotkey registration) without
-            // making it visible, so "Start minimized" can skip Show() entirely and launch
-            // straight into the tray instead of flashing the window open first. The first
-            // launch after any install or update shows it regardless, so it's visibly clear
-            // the install worked — after that it reverts to whatever Start minimized says.
-            new WindowInteropHelper(mainWindow).EnsureHandle();
-            if (!AppServices.Instance.Settings.StartMinimized || AppServices.Instance.IsFirstLaunch || AppServices.Instance.JustInstalledOrUpdated)
-                mainWindow.Show();
-
-            _hotkeyManager = new HotkeyManager();
-            _hotkeyManager.Attach(mainWindow);
-            // WM_HOTKEY arrives on this UI thread with foreground activation permission.
-            // Open/request activation in its handler, without deferring it behind other work.
-            _hotkeyManager.Pressed += ShowQuickAdd;
-            _hotkey = new HotkeyBinding(_hotkeyManager);
-            ApplyHotkeySetting(atStartup: true);
-
-            if (missed.Count > 0)
-                NotifyMissedReminders(missed);
-
-            if (AppServices.Instance.DataFileNotices.Count > 0)
-                ShowDataFileNotices(AppServices.Instance.DataFileNotices);
-
-            if (AppServices.Instance.Settings.CheckForUpdatesOnStartup)
-                _ = CheckForUpdateAsync(mainWindow);
-        }
-        catch (Exception ex)
-        {
-            CrashLog.Write("OnStartup", ex);
-            MessageBox.Show(
-                string.Format(Strings.App_FailedToStart, ex.Message),
-                Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown();
-        }
     }
 
-    private void UpdateTrayTooltip()
+    private List<string> InitializeServices()
     {
-        _trayTooltipUpdater?.Update(TrayTooltip.Build(ReminderStatus.GetNextReminderSummary(), _hotkey?.Active));
+        var missed = AppServices.Instance.Initialize();
+        AppServices.Instance.Engine.TriggerFired += OnTriggerFired;
+        AppServices.Instance.Engine.TickFailed += ex => CrashLog.Write("TimerEngine.Tick", ex);
+        // Start on the UI thread with handlers in place: reminder changes/saves stay on it.
+        AppServices.Instance.Engine.Start();
+        return missed;
+    }
+
+    private static void SubscribeToSystemEvents()
+    {
+        // Modern .NET always gives SystemEvents its own broadcast thread. Subscribe off the
+        // dispatcher too: its event registration captures SynchronizationContext and would
+        // otherwise synchronously send these callbacks back to our UI thread.
+        Task.Run(() =>
+        {
+            Microsoft.Win32.SystemEvents.TimeChanged += OnSystemTimeChanged;
+            Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
+        }).GetAwaiter().GetResult();
+    }
+
+    private MainWindow CreateMainWindow()
+    {
+        var window = new MainWindow();
+        MainWindow = window;
+        window.RestorePlacement();
+        // Create the handle for hotkeys without showing a start-minimized window. First launch
+        // and the first start after installing still show it, so the install is visibly clear.
+        new WindowInteropHelper(window).EnsureHandle();
+        if (!AppServices.Instance.Settings.StartMinimized || AppServices.Instance.IsFirstLaunch || AppServices.Instance.JustInstalledOrUpdated)
+            window.Show();
+        return window;
+    }
+
+    private void RegisterQuickReminderHotkey(MainWindow window)
+    {
+        _hotkeyManager = new HotkeyManager();
+        _hotkeyManager.Attach(window);
+        // WM_HOTKEY arrives on this UI thread with foreground activation permission.
+        _hotkeyManager.Pressed += ShowQuickAdd;
+        _hotkey = new HotkeyBinding(_hotkeyManager);
+        ApplyHotkeySetting(atStartup: true);
+    }
+
+    private void ShowStartupNotices(List<string> missed)
+    {
+        if (missed.Count > 0)
+            _trayIcon?.NotifyMissedReminders(missed);
+        if (AppServices.Instance.DataFileNotices.Count > 0)
+            ShowDataFileNotices(AppServices.Instance.DataFileNotices);
     }
 
     /// Holds the Quick Reminder shortcut the settings name, and says so when another app has it:
@@ -196,7 +148,7 @@ public partial class App : Application
             settings.QuickAddHotkeyGesture = _hotkey.Active!;
 
         // The tooltip names the shortcut held now: changed, kept, turned off or none at all.
-        UpdateTrayTooltip();
+        _trayIcon?.RefreshTooltip();
 
         var message = outcome switch
         {
@@ -212,7 +164,7 @@ public partial class App : Application
         // At startup (or sign-in) from the tray, which takes no focus; from Settings, where the
         // user just chose it, as a message.
         if (atStartup)
-            _trayIcon?.ShowNotification(Strings.App_Name, message);
+            _trayIcon?.ShowNotification(message);
         else
             MessageBox.Show(MainWindow!, message, Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
@@ -253,7 +205,7 @@ public partial class App : Application
             return;
 
         settings.HasShownTrayMinimizeHint = true;
-        _trayIcon?.ShowNotification(Strings.App_Name, Strings.Tray_StillRunning);
+        _trayIcon?.ShowNotification(Strings.Tray_StillRunning);
     }
 
     /// Says, once, which data files were damaged, what Pendulum used instead, and where the
@@ -266,23 +218,11 @@ public partial class App : Application
         MessageBox.Show(string.Join("\n\n", lines), Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
-    private void NotifyMissedReminders(List<string> missed)
-    {
-        var message = missed.Count switch
-        {
-            1 => string.Format(Strings.Tray_MissedOne, missed[0]),
-            <= 3 => string.Format(Strings.Tray_MissedFew, string.Join(Strings.List_Separator, missed)),
-            _ => string.Format(Strings.Tray_MissedMany, missed.Count)
-        };
-
-        _trayIcon?.ShowNotification(Strings.App_Name, message);
-    }
-
     private static async Task CheckForUpdateAsync(MainWindow mainWindow)
     {
         try
         {
-            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+            var currentVersion = AppVersion.Current;
             var newerVersion = await UpdateCheckService.CheckForNewerVersionAsync(AppServices.Instance.Settings, currentVersion, CancellationToken.None);
             if (newerVersion is not null)
                 await mainWindow.Dispatcher.BeginInvoke(() => mainWindow.ShowUpdateAvailable(newerVersion));
@@ -323,24 +263,9 @@ public partial class App : Application
         });
     }
 
-    private ContextMenu BuildTrayMenu()
-    {
-        var openItem = new MenuItem { Header = Strings.Tray_Open };
-        openItem.Click += (_, __) => ShowMainWindow();
-
-        var exitItem = new MenuItem { Header = Strings.Tray_Exit };
-        exitItem.Click += (_, __) => ExitApplication();
-
-        var menu = new ContextMenu();
-        menu.Items.Add(openItem);
-        menu.Items.Add(new Separator());
-        menu.Items.Add(exitItem);
-        return menu;
-    }
-
     internal void ShowMainWindow()
     {
-        if (MainWindow is null)
+        if (IsExiting || MainWindow is null)
             return;
 
         MainWindow.Show();
@@ -359,7 +284,7 @@ public partial class App : Application
 
     protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
     {
-        if (_ownsMutex)
+        if (_singleInstance?.IsPrimary == true)
             AppServices.Instance.FlushPendingSaves();
         base.OnSessionEnding(e);
     }
@@ -372,19 +297,26 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        // SystemEvents' handlers are static: detach them, or they outlive the app's objects.
+        IsExiting = true;
         Microsoft.Win32.SystemEvents.TimeChanged -= OnSystemTimeChanged;
         Microsoft.Win32.SystemEvents.PowerModeChanged -= OnPowerModeChanged;
-
-        if (_ownsMutex)
+        try
         {
-            _settingsReactions?.Dispose();
-            _trayTooltipTimer?.Stop();
-            _hotkeyManager?.Dispose();
-            _trayIcon?.Dispose();
-            AppServices.Instance.Shutdown();
-            _singleInstanceMutex?.ReleaseMutex();
+            if (_singleInstance?.IsPrimary == true)
+            {
+                try
+                {
+                    _settingsReactions?.Dispose();
+                    _hotkeyManager?.Dispose();
+                    _trayIcon?.Dispose();
+                }
+                finally { AppServices.Instance.Shutdown(); }
+            }
         }
-        base.OnExit(e);
+        finally
+        {
+            _singleInstance?.Dispose();
+            base.OnExit(e);
+        }
     }
 }

@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -86,7 +85,7 @@ public partial class MainWindow : FluentWindow
     /// Help > Check for updates…: asks GitHub now and says what it found.
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
-        var running = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0);
+        var running = AppVersion.Current;
         var runningText = running.ToString(3);
         CheckForUpdatesMenuItem.IsEnabled = false;
         try

@@ -39,11 +39,10 @@ public sealed class AboutFacts
     public static AboutFacts Gather()
     {
         var assembly = Assembly.GetExecutingAssembly();
-        var version = assembly.GetName().Version;
 
         return new AboutFacts
         {
-            Version = version is null ? Unknown : $"{version.Major}.{version.Minor}.{version.Build}",
+            Version = AppVersion.Current.ToString(3),
             Built = BuiltAt(assembly),
             DotNet = Environment.Version.ToString(),
             Windows = WindowsVersion(),

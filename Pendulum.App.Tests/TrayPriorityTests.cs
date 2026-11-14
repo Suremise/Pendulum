@@ -10,7 +10,7 @@ public sealed class TrayPriorityTests
     [Fact]
     public void Creating_the_tray_icon_explicitly_leaves_efficiency_mode_off()
     {
-        var source = File.ReadAllText(Path.Combine(RepoRoot(), "Pendulum.App", "App.xaml.cs"));
+        var source = File.ReadAllText(Path.Combine(RepoRoot(), "Pendulum.App", "Services", "TrayIcon.cs"));
         source = Regex.Replace(source, @"//[^\r\n]*|/\*[\s\S]*?\*/", "");
         var calls = Regex.Matches(source, @"\b_trayIcon\.ForceCreate\s*\(([^)]*)\)");
 
