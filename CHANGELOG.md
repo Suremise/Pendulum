@@ -7,6 +7,17 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-11-14
+
+Add a reminder straight from a calendar day, and a shorter header in the main window.
+
+**Not signed yet:** Windows SmartScreen may warn the first time you run the installer or the exe
+("Windows protected your PC"). Check the download against the release's `SHA256SUMS.txt` first
+(`sha256sum -c SHA256SUMS.txt --ignore-missing`, or compare `Get-FileHash <file>` with it), and
+if it matches, choose **More info**, then **Run anyway**.
+
+Installing it over 1.2.1 keeps your reminders, settings and downloaded voices and speech models.
+
 ### Added
 - Right-click a day in the calendar and choose **Add reminder** to add one on that day: the
   editor opens with the day's date and 00:00:00, ready to change.
@@ -321,7 +332,8 @@ Initial public release.
   mark spent otherwise) instead of getting stuck.
 - Self-contained, no-admin Windows installer.
 
-[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Suremise/Pendulum/compare/v1.2.2...HEAD
+[1.2.2]: https://github.com/Suremise/Pendulum/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/Suremise/Pendulum/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/Suremise/Pendulum/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Suremise/Pendulum/compare/v1.0.0...v1.1.0

@@ -55,9 +55,9 @@ Copy this into the release's tracking issue or notes and tick each box. Use the 
 step 3** (or the draft's), on a PC where it's fine to install. Before you start, **back up
 `%LocalAppData%\Programs\Pendulum\Data\`** if this PC already has Pendulum.
 
-### Upgrade over v1.2.0, keeping everything
+### Upgrade over v1.2.1, keeping everything
 
-- [ ] With v1.2.0 installed and in use (reminders: one-off, weekly on chosen days, monthly, yearly,
+- [ ] With v1.2.1 installed and in use (reminders: one-off, weekly on chosen days, monthly, yearly,
       one that ends after a count; settings changed from their defaults), note the reminder count
       and a few settings.
 - [ ] Leave Pendulum running and start the new Setup: it asks to close Pendulum first. Close it
