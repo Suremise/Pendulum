@@ -35,16 +35,13 @@ Installing it over 1.2.0 keeps your reminders, settings and downloaded voices an
   resizes. Its today marker follows the date, even when clock changes skip or repeat midnight.
 - After a long time without opening Pendulum, repeating reminders move to their next time
   and count every missed occurrence. Reminders that end after a set number stop on time.
-- Reminders saved without a repeat frequency behave as one-off reminders, including when
-  filtering the list and counting occurrences.
-- Saving a reminder without changing its displayed time keeps its exact relative deadline.
+- A reminder from an edited or imported file with no repeat pattern now behaves as a one-off.
+- Saving a snoozed or "in 20 minutes" reminder without changing its time no longer moves it.
 - Quick Reminder recognises short weekday names after 24-hour times: "meet at 14:30 fri notes"
   schedules Friday and keeps "meet notes" as the name.
-- Reminder edits and imports save together. Restoring a backup leaves no old reminders
-  waiting to be saved, and a failed import confirmation leaves the import unapplied.
+- An import that's interrupted part way leaves your reminders as they were.
 - Restoring a backup that another program has open reports the read error instead of
   calling it an invalid backup.
-- Settings panels no longer repeat changes to the theme or Windows startup entry.
 - Once shutdown begins, Quick Reminder, the reminder editor and alert buttons stop accepting
   changes that could no longer be saved.
 - A failed final save is logged while shutdown continues. Pendulum also tries to save pending
