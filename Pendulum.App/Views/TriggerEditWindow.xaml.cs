@@ -324,29 +324,39 @@ public partial class TriggerEditWindow : FluentWindow
 
         _previewPlayback.Stop();
 
-        _target.Name = NameBox.Text.Trim();
-        _target.RecurrenceAnchor = anchor;
-        _target.Recurrence = _recurrence;
-        _target.Mode = mode;
-        _target.SoundFileName = soundFile;
-        _target.Phrase = phrase;
-        _target.Volume = volume;
-        if (_colourChosen || _target.Color is null)
-            _target.Color = _colour;
+        void Apply()
+        {
+            _target.Name = NameBox.Text.Trim();
+            _target.RecurrenceAnchor = anchor;
+            _target.Recurrence = _recurrence;
+            _target.Mode = mode;
+            _target.SoundFileName = soundFile;
+            _target.Phrase = phrase;
+            _target.Volume = volume;
+            if (_colourChosen || _target.Color is null)
+                _target.Color = _colour;
 
-        if (firstOccurrence is not null)
-        {
-            // A future start time, or a recurring schedule that still has a future occurrence.
-            _target.TriggerAt = firstOccurrence.Value;
-            _target.HasFired = false;
-            _target.Enabled = enabledByUser;
+            if (firstOccurrence is not null)
+            {
+                // A future start time, or a recurring schedule that still has a future occurrence.
+                _target.TriggerAt = firstOccurrence.Value;
+                _target.HasFired = false;
+                _target.Enabled = enabledByUser;
+            }
+            else
+            {
+                // A one-shot reminder in the past, or a recurring schedule with nothing left to fire.
+                _target.TriggerAt = scheduledAt;
+                _target.HasFired = true;
+                _target.Enabled = false;
+            }
         }
-        else
+
+        if (_isNew) Apply();
+        else if (!AppServices.Instance.Update(_target, Apply))
         {
-            // A one-shot reminder in the past, or a recurring schedule with nothing left to fire.
-            _target.TriggerAt = scheduledAt;
-            _target.HasFired = true;
-            _target.Enabled = false;
+            DialogResult = false;
+            return;
         }
 
         Result = _target;

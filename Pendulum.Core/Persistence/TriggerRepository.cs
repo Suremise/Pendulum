@@ -6,14 +6,19 @@ namespace Pendulum.Core.Persistence;
 
 public class TriggerRepository
 {
+    private readonly string? _path;
+    public TriggerRepository() { }
+    public TriggerRepository(string path) => _path = path;
+    public string FilePath => _path ?? AppPaths.TriggersFile;
+
     public List<TriggerTimer> Load() => LoadWithOutcome().Value ?? new List<TriggerTimer>();
 
     /// The reminders and how loading them went (set aside, or recovered from the save before).
     /// Throws StoreUnreadableException when the file can't be read at all.
-    public StoreLoad<List<TriggerTimer>> LoadWithOutcome() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(AppPaths.TriggersFile);
+    public StoreLoad<List<TriggerTimer>> LoadWithOutcome() => JsonStore.LoadWithOutcome<List<TriggerTimer>>(FilePath);
 
     public void Save(IEnumerable<TriggerTimer> timers) =>
-        JsonStore.Save(AppPaths.TriggersFile, timers.ToList());
+        JsonStore.Save(FilePath, timers.ToList());
 
     /// Reads reminders from a file the user chose to import. The file is never moved or changed.
     /// A sound that isn't a plain file name in Sounds\ is dropped: that reminder plays none.

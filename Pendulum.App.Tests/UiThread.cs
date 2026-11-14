@@ -27,6 +27,7 @@ public static class UiThread
         var thread = new Thread(() =>
         {
             var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+            Pendulum.App.Services.AppServices.Instance.UseRemindersForTests();
             app.Resources.MergedDictionaries.Add(new ThemesDictionary { Theme = ApplicationTheme.Light });
             app.Resources.MergedDictionaries.Add(new ControlsDictionary());
             dispatcher = Dispatcher.CurrentDispatcher;

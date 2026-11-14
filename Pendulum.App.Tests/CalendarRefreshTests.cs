@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+using Pendulum.Core.Services;
 using System.Windows.Threading;
 using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
@@ -13,7 +13,7 @@ public sealed class CalendarRefreshTests
     public void The_real_dispatcher_coalesces_a_firing_before_replacing_the_bound_list() => UiThread.Invoke(() =>
     {
         var trigger = new TriggerTimer { Recurrence = new() };
-        AppServices.Instance.Triggers.Add(trigger);
+        AppServices.Instance.Reminders.Add(trigger);
         var vm = new CalendarViewModel();
         try
         {
@@ -30,7 +30,7 @@ public sealed class CalendarRefreshTests
         finally
         {
             vm.SetVisible(false);
-            AppServices.Instance.Triggers.Remove(trigger);
+            AppServices.Instance.Reminders.Remove(trigger);
         }
     });
 
@@ -38,7 +38,7 @@ public sealed class CalendarRefreshTests
     public void Date_indexing_keeps_occurrences_on_both_edges_and_every_day_between() => UiThread.Invoke(() =>
     {
         var today = new DateTime(2026, 11, 14);
-        var triggers = new ObservableCollection<TriggerTimer>();
+        using var triggers = new ReminderStore();
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
@@ -65,7 +65,7 @@ public sealed class CalendarRefreshTests
     {
         var today = new DateTime(2026, 11, 14);
         var trigger = new TriggerTimer { TriggerAt = today.AddHours(9), RecurrenceAnchor = today, Recurrence = new() };
-        var triggers = new ObservableCollection<TriggerTimer> { trigger };
+        using var triggers = new ReminderStore([trigger]);
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
@@ -93,7 +93,7 @@ public sealed class CalendarRefreshTests
         var today = new DateTime(2026, 11, 14);
         var trigger = new TriggerTimer { TriggerAt = today, RecurrenceAnchor = today };
         var posted = new Queue<Action>();
-        var vm = new CalendarViewModel(new() { trigger }, () => today, posted.Enqueue);
+        var vm = new CalendarViewModel(new ReminderStore([trigger]), () => today, posted.Enqueue);
         vm.RefreshForDisplay();
         posted.Dequeue()();
         var initial = vm.Days;
@@ -145,7 +145,7 @@ public sealed class CalendarRefreshTests
         var today = new DateTime(2026, 11, 14);
         var oldRule = new RecurrenceRule();
         var trigger = new TriggerTimer { Recurrence = oldRule };
-        var triggers = new ObservableCollection<TriggerTimer> { trigger };
+        using var triggers = new ReminderStore([trigger]);
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
@@ -154,7 +154,7 @@ public sealed class CalendarRefreshTests
         posted.Dequeue()();
         oldRule.OccurrencesSoFar++;
         Assert.Empty(posted);
-        triggers.Clear();
+        triggers.ReplaceAll([]);
         posted.Dequeue()();
         trigger.Name = "Removed";
         trigger.Recurrence.OccurrencesSoFar++;
@@ -165,7 +165,7 @@ public sealed class CalendarRefreshTests
     public void A_calendar_that_has_not_been_displayed_does_not_build_when_a_reminder_fires() => UiThread.Invoke(() =>
     {
         var trigger = new TriggerTimer { Recurrence = new() };
-        AppServices.Instance.Triggers.Add(trigger);
+        AppServices.Instance.Reminders.Add(trigger);
         try
         {
             var vm = new CalendarViewModel();
@@ -173,6 +173,6 @@ public sealed class CalendarRefreshTests
             trigger.HasFired = true;
             Assert.Empty(vm.Days);
         }
-        finally { AppServices.Instance.Triggers.Remove(trigger); }
+        finally { AppServices.Instance.Reminders.Remove(trigger); }
     });
 }

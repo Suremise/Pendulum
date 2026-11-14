@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using Pendulum.Core.Models;
 using Pendulum.Core.Services;
 
@@ -18,7 +17,7 @@ public sealed class NextReminderTrackerTests
         disabled.Enabled = false;
         var spent = Reminder(-1);
         spent.HasFired = true;
-        ObservableCollection<TriggerTimer> reminders = [second, first, disabled, spent];
+        using var reminders = new ReminderStore([second, first, disabled, spent]);
         using var tracker = new NextReminderTracker(reminders);
         Assert.Same(first, tracker.Next);
 
@@ -37,9 +36,9 @@ public sealed class NextReminderTrackerTests
         reminders.Remove(first);
         Assert.Same(second, tracker.Next);
         var replacement = Reminder(1);
-        reminders[0] = replacement;
+        reminders.ReplaceAll([replacement, disabled, spent]);
         Assert.Same(replacement, tracker.Next);
-        reminders.Clear();
+        reminders.ReplaceAll([]);
         Assert.Null(tracker.Next);
         reminders.Add(first);
         Assert.Same(first, tracker.Next);
@@ -50,7 +49,7 @@ public sealed class NextReminderTrackerTests
     {
         var first = Reminder(1);
         var second = Reminder(1);
-        ObservableCollection<TriggerTimer> reminders = [first, second];
+        using var reminders = new ReminderStore([first, second]);
         using var tracker = new NextReminderTracker(reminders);
         Assert.Same(first, tracker.Next);
         reminders.Move(1, 0);
@@ -62,7 +61,7 @@ public sealed class NextReminderTrackerTests
     {
         var next = Reminder(1);
         var later = Reminder(2);
-        ObservableCollection<TriggerTimer> reminders = [next, later];
+        using var reminders = new ReminderStore([next, later]);
         using var tracker = new NextReminderTracker(reminders);
         var updates = 0;
         tracker.Changed += () => updates++;
@@ -73,6 +72,12 @@ public sealed class NextReminderTrackerTests
         next.Color = "teal";
         later.Name = "later";
         Assert.Equal(0, updates);
+        reminders.ChangeTogether(() =>
+        {
+            next.Color = "sage";
+            later.Name = "another later name";
+        });
+        Assert.Equal(0, updates);
         next.Name = "renamed";
         Assert.Equal(1, updates);
     }
@@ -82,12 +87,12 @@ public sealed class NextReminderTrackerTests
     {
         var first = Reminder(1);
         var second = Reminder(2);
-        ObservableCollection<TriggerTimer> reminders = [first, second];
+        using var reminders = new ReminderStore([first, second]);
         using var tracker = new NextReminderTracker(reminders);
         var updates = 0;
         tracker.Changed += () => updates++;
         reminders.Remove(first);
-        reminders.Clear();
+        reminders.ReplaceAll([]);
         updates = 0;
         first.TriggerAt = Now;
         second.TriggerAt = Now;
@@ -104,9 +109,9 @@ public sealed class NextReminderTrackerTests
     public void Removing_one_duplicate_keeps_watching_the_remaining_entry()
     {
         var next = Reminder(1);
-        ObservableCollection<TriggerTimer> reminders = [next, next];
+        using var reminders = new ReminderStore([next, next]);
         using var tracker = new NextReminderTracker(reminders);
-        reminders.RemoveAt(0);
+        reminders.Remove(next);
         next.Enabled = false;
         Assert.Null(tracker.Next);
     }

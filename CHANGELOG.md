@@ -25,6 +25,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
   app, keeping the count of missed daily reminders instead of incorrectly marking them spent.
 - Reminders saved with no repeat frequency behave consistently as one-off reminders,
   including their type filter and occurrence count.
+- Reminder edits and imports save together. Restoring a backup stops tracking old reminders,
+  and a failed import confirmation leaves the import unapplied.
 
 ## [1.2.0] - 2026-11-02
 

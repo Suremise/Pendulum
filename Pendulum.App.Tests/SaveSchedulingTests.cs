@@ -54,24 +54,25 @@ public sealed class SaveSchedulingTests
                 {
                     trigger.HasFired = true;
                     trigger.Recurrence.OccurrencesSoFar = 1;
-                    TriggerReconciler.Snooze(trigger, at, 5, TimeZoneInfo.Utc);
-                    services.RefreshTriggers(); // the alert callback does this too
+                    services.Update(trigger, () => TriggerReconciler.Snooze(trigger, at, 5, TimeZoneInfo.Utc));
                 }
                 else
                 {
-                    // The properties applied by the editor's Save, followed by its caller.
-                    trigger.Name = "Edited";
-                    trigger.RecurrenceAnchor = at.AddDays(1);
-                    trigger.Recurrence = null;
-                    trigger.Mode = AlertMode.SoundAndSpeech;
-                    trigger.SoundFileName = "bell.wav";
-                    trigger.Phrase = "A reminder";
-                    trigger.Volume = 30;
-                    trigger.Color = "teal";
-                    trigger.TriggerAt = at.AddDays(1);
-                    trigger.HasFired = false;
-                    trigger.Enabled = false;
-                    services.RefreshTriggers();
+                    // The properties applied by the editor's Save, in one owned update.
+                    services.Update(trigger, () =>
+                    {
+                        trigger.Name = "Edited";
+                        trigger.RecurrenceAnchor = at.AddDays(1);
+                        trigger.Recurrence = null;
+                        trigger.Mode = AlertMode.SoundAndSpeech;
+                        trigger.SoundFileName = "bell.wav";
+                        trigger.Phrase = "A reminder";
+                        trigger.Volume = 30;
+                        trigger.Color = "teal";
+                        trigger.TriggerAt = at.AddDays(1);
+                        trigger.HasFired = false;
+                        trigger.Enabled = false;
+                    });
                 }
                 Assert.Equal(0, writes);
                 clock.Fire();

@@ -83,7 +83,7 @@ internal static class Views
         foreach (var (name, hour) in new[] { ("School run", 8), ("Parcel collection", 13), ("Pick up prescription", 16) })
         {
             var at = busy.AddHours(hour);
-            AppServices.Instance.Triggers.Add(new TriggerTimer
+            AppServices.Instance.Reminders.Add(new TriggerTimer
             {
                 Name = name,
                 TriggerAt = at,

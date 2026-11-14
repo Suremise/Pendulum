@@ -45,7 +45,7 @@ public sealed class CalendarCellTests : IDisposable
         {
             AppServices.Instance.UseSettingsForTests(new AppSettings());
             foreach (var r in _reminders)
-                AppServices.Instance.Triggers.Add(r);
+                AppServices.Instance.Reminders.Add(r);
         });
     }
 
@@ -54,7 +54,7 @@ public sealed class CalendarCellTests : IDisposable
         UiThread.Invoke(() =>
         {
             foreach (var r in _reminders)
-                AppServices.Instance.Triggers.Remove(r);
+                AppServices.Instance.Reminders.Remove(r);
             Assert.Empty(Application.Current.Windows);
         });
         Assert.Equal(IntPtr.Zero, Process.GetCurrentProcess().MainWindowHandle);

@@ -32,7 +32,7 @@ public sealed class RemindersListTests : IDisposable
     public RemindersListTests() => UiThread.Invoke(() =>
     {
         foreach (var r in _reminders)
-            AppServices.Instance.Triggers.Add(r);
+            AppServices.Instance.Reminders.Add(r);
     });
 
     public void Dispose()
@@ -40,7 +40,7 @@ public sealed class RemindersListTests : IDisposable
         UiThread.Invoke(() =>
         {
             foreach (var r in _reminders)
-                AppServices.Instance.Triggers.Remove(r);
+                AppServices.Instance.Reminders.Remove(r);
             Assert.Empty(Application.Current.Windows);
         });
         Assert.Equal(IntPtr.Zero, Process.GetCurrentProcess().MainWindowHandle);
@@ -166,12 +166,12 @@ public sealed class RemindersListTests : IDisposable
             var shown = sound.Width;
 
             // A reminder taken out of the list is no longer watched: its changes refit nothing.
-            AppServices.Instance.Triggers.Remove(dentist);
+            AppServices.Instance.Reminders.Remove(dentist);
             Resize(p, 1400);
             var removed = p.FittedWidth(sound);
             dentist.SoundFileName = "an even longer name for a sound file.wav";
             Resize(p, 1400);
-            AppServices.Instance.Triggers.Add(dentist);
+            AppServices.Instance.Reminders.Add(dentist);
             return (was, widened, shown, (removed, p.FittedWidth(sound)));
         });
         dentist.SoundFileName = "chime.wav";

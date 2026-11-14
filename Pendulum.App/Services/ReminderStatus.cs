@@ -8,7 +8,7 @@ namespace Pendulum.App.Services;
 /// status bar and the tray icon's tooltip, using the same cached next reminder.
 public static class ReminderStatus
 {
-    private static readonly NextReminderTracker Tracker = new(AppServices.Instance.Triggers);
+    private static readonly NextReminderTracker Tracker = new(AppServices.Instance.Reminders);
 
     public static event Action Changed
     {

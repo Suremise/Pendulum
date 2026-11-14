@@ -27,13 +27,13 @@ public sealed class ReminderFilterPanelTests : IDisposable
     private readonly TriggerTimer _reminder = new() { Name = "Dentist", TriggerAt = new DateTime(2026, 3, 10, 9, 0, 0) };
 
     // The list (and its column headers, where the filters are) shows only with a reminder in it.
-    public ReminderFilterPanelTests() => UiThread.Invoke(() => AppServices.Instance.Triggers.Add(_reminder));
+    public ReminderFilterPanelTests() => UiThread.Invoke(() => AppServices.Instance.Reminders.Add(_reminder));
 
     public void Dispose()
     {
         UiThread.Invoke(() =>
         {
-            AppServices.Instance.Triggers.Remove(_reminder);
+            AppServices.Instance.Reminders.Remove(_reminder);
             Assert.Empty(Application.Current.Windows);
         });
         Assert.Equal(IntPtr.Zero, Process.GetCurrentProcess().MainWindowHandle);

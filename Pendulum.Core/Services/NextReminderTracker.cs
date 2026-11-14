@@ -1,6 +1,3 @@
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using Pendulum.Core.Models;
 
 namespace Pendulum.Core.Services;
@@ -9,65 +6,43 @@ namespace Pendulum.Core.Services;
 /// only membership or scheduling changes recompute it. Owned and read on the caller's thread.
 public sealed class NextReminderTracker : IDisposable
 {
-    private readonly ObservableCollection<TriggerTimer> _reminders;
-    private readonly HashSet<TriggerTimer> _watched = [];
+    private readonly ReminderStore _store;
+    private string? _nextName;
 
     public TriggerTimer? Next { get; private set; }
     public event Action? Changed;
 
-    public NextReminderTracker(ObservableCollection<TriggerTimer> reminders)
+    public NextReminderTracker(ReminderStore store)
     {
-        _reminders = reminders;
-        _reminders.CollectionChanged += OnCollectionChanged;
-        Rewire();
+        _store = store;
+        _store.RemindersChanged += OnRemindersChanged;
         Recompute();
     }
 
-    private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        Rewire();
-        Recompute();
-    }
-
-    private void Rewire()
-    {
-        var current = _reminders.ToHashSet();
-        foreach (var old in _watched.Except(current).ToList())
-        {
-            old.PropertyChanged -= OnReminderChanged;
-            _watched.Remove(old);
-        }
-        foreach (var added in current.Except(_watched).ToList())
-        {
-            added.PropertyChanged += OnReminderChanged;
-            _watched.Add(added);
-        }
-    }
-
-    private void OnReminderChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (string.IsNullOrEmpty(e.PropertyName)
-            || e.PropertyName is nameof(TriggerTimer.Enabled) or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.TriggerAt))
+        if (e.MembershipChanged || e.Properties.Overlaps([nameof(TriggerTimer.Enabled), nameof(TriggerTimer.HasFired), nameof(TriggerTimer.TriggerAt)]))
             Recompute();
-        else if (ReferenceEquals(sender, Next) && e.PropertyName == nameof(TriggerTimer.Name))
+        else if (e.Properties.Contains(nameof(TriggerTimer.Name)) && Next?.Name != _nextName)
+        {
+            _nextName = Next?.Name;
             Changed?.Invoke();
+        }
     }
 
     private void Recompute()
     {
         TriggerTimer? next = null;
-        foreach (var reminder in _reminders)
+        foreach (var reminder in _store.Items)
             if (reminder.Enabled && !reminder.HasFired && (next is null || reminder.TriggerAt < next.TriggerAt))
                 next = reminder;
         Next = next;
+        _nextName = next?.Name;
         Changed?.Invoke();
     }
 
     public void Dispose()
     {
-        _reminders.CollectionChanged -= OnCollectionChanged;
-        foreach (var reminder in _watched)
-            reminder.PropertyChanged -= OnReminderChanged;
-        _watched.Clear();
+        _store.RemindersChanged -= OnRemindersChanged;
     }
 }

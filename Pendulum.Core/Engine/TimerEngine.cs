@@ -15,6 +15,7 @@ public class TimerEngine : IDisposable
     private readonly Func<DateTime> _clock;
     private readonly Func<DateTime> _utcClock;
     private readonly bool _polls;
+    private readonly Action<Action> _changeTogether;
     private System.Threading.Timer? _timer;
     private SynchronizationContext? _context;
     private bool _started;
@@ -23,17 +24,25 @@ public class TimerEngine : IDisposable
     public event Action<TriggerTimer>? TriggerFired;
     public event Action<Exception>? TickFailed;
 
+    // For batch integration tests: distinguish one engine refresh from repeated equal copies.
+    internal int TriggerSetCount { get; private set; }
+
     public TimerEngine() : this(() => DateTime.Now, polls: true, () => DateTime.UtcNow)
+    {
+    }
+
+    public TimerEngine(Action<Action> changeTogether) : this(() => DateTime.Now, true, () => DateTime.UtcNow, changeTogether)
     {
     }
 
     /// For tests: the clock the engine reads instead of DateTime.Now, and whether Start begins
     /// polling on its own. Without polling, nothing is checked until <see cref="CheckDue"/>.
-    internal TimerEngine(Func<DateTime> clock, bool polls, Func<DateTime>? utcClock = null)
+    internal TimerEngine(Func<DateTime> clock, bool polls, Func<DateTime>? utcClock = null, Action<Action>? changeTogether = null)
     {
         _clock = clock;
         _utcClock = utcClock ?? (() => WallClock.ToUtc(clock(), TimeZoneInfo.Local));
         _polls = polls;
+        _changeTogether = changeTogether ?? (change => change());
     }
 
     /// Starts firing reminders, on the calling thread's SynchronizationContext (the UI thread's,
@@ -60,6 +69,7 @@ public class TimerEngine : IDisposable
         lock (_lock)
         {
             _triggers = triggers.ToList();
+            TriggerSetCount++;
         }
     }
 
@@ -117,7 +127,7 @@ public class TimerEngine : IDisposable
         {
             try
             {
-                TriggerReconciler.MarkFired(t);
+                _changeTogether(() => TriggerReconciler.MarkFired(t));
             }
             catch (Exception ex)
             {

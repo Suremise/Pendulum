@@ -12,6 +12,7 @@ using Pendulum.App.Resources;
 using Pendulum.App.Services;
 using Pendulum.App.ViewModels;
 using Pendulum.Core.Models;
+using Pendulum.Core.Services;
 
 namespace Pendulum.App.Views;
 
@@ -50,11 +51,8 @@ public partial class TriggersPanel : UserControl
             };
             if (DataContext is TriggersViewModel vm)
             {
-                // The longest sound's name: as reminders come and go, and as one's sound is changed
-                // (an edit changes the reminder in place).
-                foreach (var reminder in vm.Triggers)
-                    Watch(reminder);
-                vm.Triggers.CollectionChanged += Reminders_CollectionChanged;
+                WeakEventManager<ReminderStore, RemindersChangedEventArgs>.AddHandler(AppServices.Instance.Reminders,
+                    nameof(ReminderStore.RemindersChanged), OnRemindersChanged);
                 vm.Filter.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(ReminderFilter.RowVisible))    // the headers' dropdowns
@@ -72,36 +70,10 @@ public partial class TriggersPanel : UserControl
         DeleteRow = t => (DataContext as TriggersViewModel)?.DeleteCommand.Execute(t);
     }
 
-    // The reminders whose sound is watched: every one in the list, each once.
-    private readonly HashSet<TriggerTimer> _watched = new();
-
-    private void Watch(TriggerTimer reminder)
+    private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        if (_watched.Add(reminder))
-            reminder.PropertyChanged += Reminder_PropertyChanged;
-    }
-
-    private void Unwatch(TriggerTimer reminder)
-    {
-        if (_watched.Remove(reminder))
-            reminder.PropertyChanged -= Reminder_PropertyChanged;
-    }
-
-    private void Reminders_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        // Compared with the list as it is now, so a reset (Restore, Import) is handled as well as
-        // an add or a remove.
-        var current = ViewModel?.Triggers.ToHashSet() ?? [];
-        foreach (var gone in _watched.Where(r => !current.Contains(r)).ToList())
-            Unwatch(gone);
-        foreach (var reminder in current)
-            Watch(reminder);
-        FitColumns();
-    }
-
-    private void Reminder_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(TriggerTimer.SoundFileName) && !_refitQueued)
+        if (e.MembershipChanged) { FitColumns(); return; }
+        if (e.Properties.Contains(nameof(TriggerTimer.SoundFileName)) && !_refitQueued)
         {
             _refitQueued = true;
             Dispatcher.BeginInvoke(() =>

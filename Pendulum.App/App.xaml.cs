@@ -251,13 +251,11 @@ public partial class App : Application
                 volumePercent: trigger.Volume,
                 onSnooze: () =>
                 {
-                    if (TriggerReconciler.Snooze(trigger, firedAt, DateTime.Now, services.Settings.SnoozeMinutes))
-                        services.RefreshTriggers();
+                    services.Update(trigger, () => TriggerReconciler.Snooze(trigger, firedAt, DateTime.Now, services.Settings.SnoozeMinutes));
                 },
                 onDismiss: () =>
                 {
-                    if (TriggerReconciler.Dismiss(trigger, firedAt, DateTime.Now))
-                        services.RefreshTriggers();
+                    services.Update(trigger, () => TriggerReconciler.Dismiss(trigger, firedAt, DateTime.Now));
                 });
         });
     }

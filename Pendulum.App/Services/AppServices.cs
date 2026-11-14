@@ -6,6 +6,7 @@ using Pendulum.App.Resources;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
+using Pendulum.Core.Services;
 using Pendulum.Core.Speech;
 
 namespace Pendulum.App.Services;
@@ -18,13 +19,14 @@ public readonly record struct ImportResult(int Added, int Replaced, int Skipped,
 /// Deliberately simple (no DI container) given the app's size.
 public sealed class AppServices
 {
-    public static AppServices Instance { get; } = new();
+    public static AppServices Instance { get; } = new(persistReminders: false);
 
-    public TriggerRepository TriggerRepository { get; } = new();
+    public TriggerRepository TriggerRepository { get; }
     public SettingsRepository SettingsRepository { get; } = new();
-    public TimerEngine Engine { get; } = new();
+    public TimerEngine Engine { get; }
 
-    public ObservableCollection<TriggerTimer> Triggers { get; } = new();
+    public ReminderStore Reminders { get; } = new();
+    public ReadOnlyObservableCollection<TriggerTimer> Triggers => Reminders.Items;
     public AppSettings Settings { get; private set; } = new();
 
     /// Data files that couldn't be read as they were at startup: each was set aside, and either
@@ -33,6 +35,10 @@ public sealed class AppServices
 
     private readonly DebouncedSave<(string Path, JsonElement Value)> _settingsSave;
     private readonly DebouncedSave<(string Path, JsonElement Value)> _triggersSave;
+    private bool _persistReminders;
+
+    /// Explicit opt-out for the in-memory UI tests and renderer. Never called by the app.
+    internal void UseRemindersForTests() => _persistReminders = false;
 
     /// For tests only: settings loaded from a test's own file, without Initialize (which reads
     /// the app's Data\ and can write the Run key). With saveOnChange, each change saves as in the
@@ -56,15 +62,20 @@ public sealed class AppServices
     /// updating to a new version visibly confirms the install worked.
     public bool JustInstalledOrUpdated { get; private set; }
 
-    internal AppServices(Action<string, JsonElement>? write = null, TimeProvider? timeProvider = null)
+    internal AppServices(Action<string, JsonElement>? write = null, TimeProvider? timeProvider = null,
+        TriggerRepository? triggerRepository = null, bool persistReminders = true)
     {
+        TriggerRepository = triggerRepository ?? new();
+        Engine = new(Reminders.ChangeTogether);
+        _persistReminders = persistReminders;
         write ??= (path, value) => JsonStore.Save(path, value);
         void Dispatch(Action action) => Application.Current.Dispatcher.BeginInvoke(action);
         void Report(Exception error) => CrashLog.Write("Save", error);
         _settingsSave = new(() => (AppPaths.SettingsFile, JsonSerializer.SerializeToElement(Settings)),
             snapshot => write(snapshot.Path, snapshot.Value), Dispatch, Report, timeProvider);
-        _triggersSave = new(() => (AppPaths.TriggersFile, JsonSerializer.SerializeToElement(Triggers.ToList())),
+        _triggersSave = new(() => (TriggerRepository.FilePath, JsonSerializer.SerializeToElement(Triggers.ToList())),
             snapshot => write(snapshot.Path, snapshot.Value), Dispatch, Report, timeProvider);
+        Reminders.RemindersChanged += OnRemindersChanged;
     }
 
     /// Loads settings and triggers, silently reconciling anything that was due while the
@@ -72,6 +83,7 @@ public sealed class AppServices
     /// of replaying a stale alert. Returns the names of triggers that were reconciled this way.
     public List<string> Initialize()
     {
+        _persistReminders = false;
         AppPaths.EnsureDirectories();
 
         IsFirstLaunch = !File.Exists(AppPaths.SettingsFile);
@@ -94,26 +106,20 @@ public sealed class AppServices
         var now = DateTime.Now;
         var triggersLoad = TriggerRepository.LoadWithOutcome();
         var loaded = triggersLoad.Value ?? new List<TriggerTimer>();
-        NoteProblem(AppPaths.TriggersFile, triggersLoad);
+        NoteProblem(TriggerRepository.FilePath, triggersLoad);
         var missed = TriggerReconciler.CatchUpMissed(loaded, now).Select(t => t.Name).ToList();
-
-        foreach (var t in loaded)
-        {
-            WireItem(t);
-            Triggers.Add(t);
-        }
 
         var removedSpent = 0;
         if (Settings.AutoDeleteSpentAfterDays > 0)
         {
             var cutoff = now.AddDays(-Settings.AutoDeleteSpentAfterDays);
-            var stale = Triggers.Where(t => t.HasFired && t.TriggerAt < cutoff).ToList();
-            foreach (var t in stale)
-                Triggers.Remove(t);
-            removedSpent = stale.Count;
+            removedSpent = loaded.RemoveAll(t => t.HasFired && t.TriggerAt < cutoff);
         }
 
-        Engine.SetTriggers(Triggers);
+        Reminders.ReplaceAll(loaded, markDirty: false);
+        // Missing, clean and recovered/set-aside files all complete initialization. An
+        // unrecoverable read throws before here, leaving persistence disabled.
+        _persistReminders = true;
         if (missed.Count > 0 || removedSpent > 0)
             _triggersSave.MarkDirty();
 
@@ -204,47 +210,17 @@ public sealed class AppServices
             DataFileNotices.Add(new DataFileNotice(file, load.Outcome, load.SetAsidePath));
     }
 
-    private void WireItem(TriggerTimer t) => t.PropertyChanged += (_, e) =>
+    private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        // Only persisted properties change the file. Derived status/colour notifications and
-        // bulk selection must not duplicate the real change's save and engine refresh.
-        if (e.PropertyName is nameof(TriggerTimer.Id) or nameof(TriggerTimer.Name)
-            or nameof(TriggerTimer.TriggerAt) or nameof(TriggerTimer.DueUtc)
-            or nameof(TriggerTimer.SnoozedOccurrence) or nameof(TriggerTimer.Enabled)
-            or nameof(TriggerTimer.Mode) or nameof(TriggerTimer.SoundFileName)
-            or nameof(TriggerTimer.Phrase) or nameof(TriggerTimer.Volume)
-            or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.RecurrenceAnchor)
-            or nameof(TriggerTimer.Recurrence) or nameof(TriggerTimer.Color))
-            RefreshTriggers();
-    };
-
-    public void AddTrigger(TriggerTimer t)
-    {
-        // A new reminder without a colour takes the one fewest reminders have.
-        t.Color ??= ReminderColors.ForNew(Triggers);
-        WireItem(t);
-        Triggers.Add(t);
-        RefreshTriggers();
+        if (e.MembershipChanged || e.Persisted) Engine.SetTriggers(Triggers);
+        if (e.Persisted && _persistReminders) _triggersSave.MarkDirty();
     }
 
-    public void RemoveTrigger(TriggerTimer t)
-    {
-        Triggers.Remove(t);
-        RefreshTriggers();
-    }
-
-    public void RemoveTriggers(IEnumerable<TriggerTimer> items)
-    {
-        foreach (var t in items.ToList())
-            Triggers.Remove(t);
-        RefreshTriggers();
-    }
-
-    public void RefreshTriggers()
-    {
-        Engine.SetTriggers(Triggers);
-        _triggersSave.MarkDirty();
-    }
+    public void AddTrigger(TriggerTimer t) => Reminders.Add(t);
+    public void RemoveTrigger(TriggerTimer t) => Reminders.Remove(t);
+    public void RemoveTriggers(IEnumerable<TriggerTimer> items) => Reminders.RemoveRange(items);
+    public void ChangeRemindersTogether(Action change) => Reminders.ChangeTogether(change);
+    public bool Update(TriggerTimer reminder, Action change) => Reminders.Update(reminder, change);
 
     /// The full path of a sound in Sounds\, or empty for none. A name that isn't a plain file
     /// name there (a full or network path, or "..") is never used: it plays no sound.
@@ -265,28 +241,30 @@ public sealed class AppServices
     public ImportResult ImportTriggersMerge(string path, Func<string, bool> confirmReplace)
     {
         var imported = TriggerRepository.LoadFrom(path);
-        // Before any reaches the engine: ones already past their time move on, or are spent.
-        var caughtUp = TriggerReconciler.CatchUpMissed(imported, DateTime.Now).ToHashSet();
-        int added = 0, replaced = 0, skipped = 0, caughtUpTaken = 0;
+        // Collect decisions first. Prompts can pump the UI, so they must not expose a partially
+        // imported list to a pending save or overwrite independent live changes on return.
+        var preview = Triggers.ToList();
+        var accepted = new List<(TriggerTimer Item, TriggerTimer? Replaced)>();
+        int added = 0, replaced = 0, skipped = 0;
 
         foreach (var t in imported)
         {
-            var existing = Triggers.FirstOrDefault(x => string.Equals(x.Name, t.Name, StringComparison.OrdinalIgnoreCase));
+            var existing = preview.FirstOrDefault(x => string.Equals(x.Name, t.Name, StringComparison.OrdinalIgnoreCase));
 
             if (existing is null)
             {
                 t.Id = Guid.NewGuid();
-                AddTrigger(t);
+                preview.Add(t);
+                accepted.Add((t, null));
                 added++;
-                if (caughtUp.Contains(t)) caughtUpTaken++;
             }
             else if (confirmReplace(t.Name))
             {
-                RemoveTrigger(existing);
+                preview.Remove(existing);
                 t.Id = Guid.NewGuid();
-                AddTrigger(t);
+                preview.Add(t);
+                accepted.Add((t, existing));
                 replaced++;
-                if (caughtUp.Contains(t)) caughtUpTaken++;
             }
             else
             {
@@ -294,7 +272,20 @@ public sealed class AppServices
             }
         }
 
-        return new ImportResult(added, replaced, skipped, caughtUpTaken);
+        var caughtUp = TriggerReconciler.CatchUpMissed(imported, DateTime.Now).ToHashSet();
+        if (accepted.Count > 0)
+            ChangeRemindersTogether(() =>
+            {
+                var committed = Triggers.ToList();
+                foreach (var decision in accepted)
+                {
+                    var matched = committed.FindIndex(item => ReferenceEquals(item, decision.Replaced));
+                    if (matched >= 0) committed.RemoveAt(matched);
+                    committed.Add(decision.Item);
+                }
+                Reminders.ReplaceAll(committed, preserveExisting: true);
+            });
+        return new ImportResult(added, replaced, skipped, accepted.Count(d => caughtUp.Contains(d.Item)));
     }
 
     /// Exports settings and reminders together, for moving the whole app to another computer.
@@ -320,13 +311,7 @@ public sealed class AppServices
         foreach (var t in backup.Triggers)
             t.Id = Guid.NewGuid();
 
-        Triggers.Clear();
-        foreach (var t in backup.Triggers)
-        {
-            WireItem(t);
-            Triggers.Add(t);
-        }
-        RefreshTriggers();
+        Reminders.ReplaceAll(backup.Triggers);
 
         return backup;
     }
@@ -341,6 +326,8 @@ public sealed class AppServices
     public void Shutdown()
     {
         Engine.Dispose();
+        Reminders.RemindersChanged -= OnRemindersChanged;
+        Reminders.Dispose();
         try { _settingsSave.Dispose(); }
         finally { _triggersSave.Dispose(); }
     }

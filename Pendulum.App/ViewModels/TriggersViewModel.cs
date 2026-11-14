@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,12 +8,14 @@ using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Services;
 
 namespace Pendulum.App.ViewModels;
 
 public partial class TriggersViewModel : ObservableObject
 {
-    public ObservableCollection<TriggerTimer> Triggers => AppServices.Instance.Triggers;
+    private ReminderStore Store => AppServices.Instance.Reminders;
+    public ReadOnlyObservableCollection<TriggerTimer> Triggers => Store.Items;
 
     public bool HasTriggers => Triggers.Count > 0;
     public bool HasSelection => Triggers.Any(t => t.IsSelectedForBulk);
@@ -98,32 +98,13 @@ public partial class TriggersViewModel : ObservableObject
             OnPropertyChanged(nameof(ModeFilterSummary));
         };
 
-        Triggers.CollectionChanged += OnTriggersCollectionChanged;
-        foreach (var t in Triggers)
-            t.PropertyChanged += OnTriggerPropertyChanged;
+        WeakEventManager<ReminderStore, RemindersChangedEventArgs>.AddHandler(Store, nameof(ReminderStore.RemindersChanged), OnRemindersChanged);
     }
 
-    private void OnTriggersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        OnPropertyChanged(nameof(HasTriggers));
-
-        // Deleting selected items removes them from Triggers entirely rather than clearing
-        // their IsSelectedForBulk flag, so OnTriggerPropertyChanged never fires for them —
-        // without this, HasSelection (and the bulk Delete button's "active" styling bound to
-        // it) stays stuck on whatever it was before the deletion.
-        OnPropertyChanged(nameof(HasSelection));
-
-        if (e.OldItems is not null)
-            foreach (TriggerTimer t in e.OldItems)
-                t.PropertyChanged -= OnTriggerPropertyChanged;
-        if (e.NewItems is not null)
-            foreach (TriggerTimer t in e.NewItems)
-                t.PropertyChanged += OnTriggerPropertyChanged;
-    }
-
-    private void OnTriggerPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(TriggerTimer.IsSelectedForBulk))
+        if (e.MembershipChanged) OnPropertyChanged(nameof(HasTriggers));
+        if (e.MembershipChanged || e.Properties.Contains(nameof(TriggerTimer.IsSelectedForBulk)))
             OnPropertyChanged(nameof(HasSelection));
     }
 
@@ -132,8 +113,10 @@ public partial class TriggersViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectToggleLabel));
         if (!value)
         {
-            foreach (var t in Triggers)
-                t.IsSelectedForBulk = false;
+            Store.ChangeTogether(() =>
+            {
+                foreach (var t in Triggers) t.IsSelectedForBulk = false;
+            });
         }
     }
 
@@ -166,8 +149,7 @@ public partial class TriggersViewModel : ObservableObject
             return;
 
         var dialog = new TriggerEditWindow(trigger, isNew: false) { Owner = Application.Current.MainWindow };
-        if (dialog.ShowDialog() == true)
-            AppServices.Instance.RefreshTriggers();
+        dialog.ShowDialog();
     }
 
     [RelayCommand]
@@ -196,12 +178,14 @@ public partial class TriggersViewModel : ObservableObject
 
         if (trigger.Enabled)
         {
-            trigger.Enabled = false;
+            AppServices.Instance.Update(trigger, () => trigger.Enabled = false);
             return;
         }
 
         // Back on: never for a time that went by while it was off.
-        var message = EnableMessage(TriggerReconciler.Enable(trigger, DateTime.Now), trigger);
+        var outcome = TriggerReconciler.EnableOutcome.Enabled;
+        if (!AppServices.Instance.Update(trigger, () => outcome = TriggerReconciler.Enable(trigger, DateTime.Now))) return;
+        var message = EnableMessage(outcome, trigger);
         if (message is not null)
             MessageBox.Show(Application.Current.MainWindow!, message, Strings.App_Name, MessageBoxButton.OK, MessageBoxImage.Information);
     }

@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Threading;
@@ -11,12 +9,14 @@ using Pendulum.App.Services;
 using Pendulum.App.Views;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
+using Pendulum.Core.Services;
 
 namespace Pendulum.App.ViewModels;
 
 public partial class CalendarViewModel : ObservableObject
 {
-    private readonly ObservableCollection<TriggerTimer> Triggers;
+    private readonly ReminderStore _store;
+    private ReadOnlyObservableCollection<TriggerTimer> Triggers => _store.Items;
     private readonly Func<DateTime> _today;
     private readonly Action<Action> _post;
     private DateTime _lastToday;
@@ -81,30 +81,20 @@ public partial class CalendarViewModel : ObservableObject
         }
     }
 
-    // Tracks which RecurrenceRule instance is currently subscribed per trigger, so that when
-    // TriggerTimer.Recurrence is replaced (e.g. via the Repeat dialog) we can unsubscribe the
-    // specific old instance — by the time the PropertyChanged event fires, t.Recurrence already
-    // holds the new value, so there's no other way to reach the one we need to detach from.
-    private readonly Dictionary<TriggerTimer, RecurrenceRule?> _wiredRecurrence = new();
-
-    public CalendarViewModel() : this(AppServices.Instance.Triggers, () => DateTime.Today,
+    public CalendarViewModel() : this(AppServices.Instance.Reminders, () => DateTime.Today,
         action => Application.Current.Dispatcher.BeginInvoke(action, DispatcherPriority.Background))
     {
     }
 
-    internal CalendarViewModel(ObservableCollection<TriggerTimer> triggers, Func<DateTime> today, Action<Action> post)
+    internal CalendarViewModel(ReminderStore store, Func<DateTime> today, Action<Action> post)
     {
-        Triggers = triggers;
+        _store = store;
         _today = today;
         _post = post;
         _lastToday = today().Date;
         displayedMonth = new DateTime(_lastToday.Year, _lastToday.Month, 1);
 
-        // Views can be unloaded and loaded again with the same view model. Weak subscriptions
-        // let a closed window's calendar go away without keeping it alive through the store.
-        CollectionChangedEventManager.AddHandler(Triggers, OnTriggersCollectionChanged);
-        foreach (var t in Triggers)
-            Wire(t);
+        WeakEventManager<ReminderStore, RemindersChangedEventArgs>.AddHandler(_store, nameof(ReminderStore.RemindersChanged), OnRemindersChanged);
     }
 
     partial void OnDisplayedMonthChanged(DateTime value)
@@ -175,68 +165,15 @@ public partial class CalendarViewModel : ObservableObject
             return;
 
         var dialog = new TriggerEditWindow(trigger, isNew: false) { Owner = Application.Current.MainWindow };
-        if (dialog.ShowDialog() == true)
-            AppServices.Instance.RefreshTriggers();
+        dialog.ShowDialog();
     }
 
-    private void OnTriggersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnRemindersChanged(object? sender, RemindersChangedEventArgs e)
     {
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            foreach (var t in _wiredRecurrence.Keys.ToList()) Unwire(t);
-            foreach (var t in Triggers) Wire(t);
-        }
-        if (e.OldItems is not null)
-            foreach (TriggerTimer t in e.OldItems)
-                Unwire(t);
-        if (e.NewItems is not null)
-            foreach (TriggerTimer t in e.NewItems)
-                Wire(t);
-
-        MarkDirty();
-    }
-
-    private void Wire(TriggerTimer t)
-    {
-        PropertyChangedEventManager.AddHandler(t, OnTriggerPropertyChanged, string.Empty);
-        _wiredRecurrence[t] = t.Recurrence;
-        if (t.Recurrence is not null)
-            PropertyChangedEventManager.AddHandler(t.Recurrence, OnRecurrencePropertyChanged, string.Empty);
-    }
-
-    private void Unwire(TriggerTimer t)
-    {
-        PropertyChangedEventManager.RemoveHandler(t, OnTriggerPropertyChanged, string.Empty);
-        if (_wiredRecurrence.TryGetValue(t, out var rule) && rule is not null)
-            PropertyChangedEventManager.RemoveHandler(rule, OnRecurrencePropertyChanged, string.Empty);
-        _wiredRecurrence.Remove(t);
-    }
-
-    private void OnTriggerPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (sender is not TriggerTimer t)
-            return;
-
-        if (e.PropertyName == nameof(TriggerTimer.Recurrence))
-        {
-            if (_wiredRecurrence.TryGetValue(t, out var oldRule) && oldRule is not null)
-                PropertyChangedEventManager.RemoveHandler(oldRule, OnRecurrencePropertyChanged, string.Empty);
-            _wiredRecurrence[t] = t.Recurrence;
-            if (t.Recurrence is not null)
-                PropertyChangedEventManager.AddHandler(t.Recurrence, OnRecurrencePropertyChanged, string.Empty);
-        }
-
-        if (e.PropertyName is nameof(TriggerTimer.TriggerAt) or nameof(TriggerTimer.RecurrenceAnchor)
-            or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.Enabled) or nameof(TriggerTimer.Name)
-            or nameof(TriggerTimer.Recurrence))
-        {
+        if (e.MembershipChanged || e.Properties.Overlaps([nameof(TriggerTimer.TriggerAt), nameof(TriggerTimer.RecurrenceAnchor),
+            nameof(TriggerTimer.HasFired), nameof(TriggerTimer.Enabled), nameof(TriggerTimer.Name), nameof(TriggerTimer.Recurrence)]))
             MarkDirty();
-        }
     }
-
-    // TimerEngine and user edits both change reminders on the UI thread. Posting once at
-    // Background priority coalesces the whole operation instead of rebuilding per property.
-    private void OnRecurrencePropertyChanged(object? sender, PropertyChangedEventArgs e) => MarkDirty();
 
     private void RebuildGrid()
     {
