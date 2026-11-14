@@ -69,9 +69,7 @@ public partial class RecurrenceWindow : FluentWindow
         // "The [which] [kind]": the rule's own, or for a new or day-number rule, the start date's
         // place in its month ("the third Wednesday"; "the last" in the month's final seven days).
         var relative = rule.MonthDayRule == MonthDayRule.RelativeDay;
-        var which = relative ? rule.WeekOfMonth
-            : _anchor.Day + 7 > DateTime.DaysInMonth(_anchor.Year, _anchor.Month) ? WeekOfMonth.Last
-            : (WeekOfMonth)((_anchor.Day - 1) / 7 + 1);
+        var which = relative ? rule.WeekOfMonth : RecurrenceCalculator.WeekInMonth(_anchor);
         var kind = relative ? rule.RelativeDay : (RelativeDay)(int)_anchor.DayOfWeek;
         MonthlyWhichBox.SelectedIndex = YearlyWhichBox.SelectedIndex = Array.FindIndex(WhichChoices, c => c.Value == which);
         MonthlyKindBox.SelectedIndex = YearlyKindBox.SelectedIndex = Array.FindIndex(KindChoices, c => c.Value == kind);

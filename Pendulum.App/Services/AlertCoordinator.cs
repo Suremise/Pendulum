@@ -1,6 +1,5 @@
 using System.Windows.Threading;
 using Pendulum.App.Views;
-using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 
@@ -57,10 +56,7 @@ public static class AlertCoordinator
         // two reminders firing close together would silently cut each other's sound/speech off.
         // A sound or phrase that fails never stops the alert: the rest carries on, Piper falls
         // back to the Windows voice, and the reason goes to Data\crash.log.
-        var playback = new AlertPlaybackController(
-            () => new AudioService(),
-            services.CaptureSpeechEngineFactory(),
-            services.Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? services.CaptureWindowsSpeechEngineFactory() : null,
+        var playback = services.CreatePlayback(
             problem => CrashLog.Write($"Alert {problem.Step}{(problem.FellBackToWindowsSpeech ? " (fell back to the Windows voice)" : "")}", problem.Error));  // not user-visible
         var window = new AlertWindow(title, subtitle);
         var session = new Session(playback, window, soundPath, mode, phrase, repeat, volume);

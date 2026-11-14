@@ -262,11 +262,13 @@ public static class Program
     internal static Border Detach(Window window, double width, double height, Brush? background = null, Thickness margin = default)
     {
         var content = (UIElement)window.Content;
+        var dataContext = window.DataContext;
         window.Content = null;
 
         // A Fluent window's own background is the Mica Windows draws behind it: here, the theme's.
         var fill = background ?? (Brush)Application.Current.Resources["ApplicationBackgroundBrush"]; // not user-visible: a resource key
-        var inner = new Border { Child = content, Background = fill == Brushes.Transparent ? null : fill };
+        // Preserve the window's binding source as well as its resources when reparenting.
+        var inner = new Border { DataContext = dataContext, Child = content, Background = fill == Brushes.Transparent ? null : fill };
         // Resources the window held (its styles) stay reachable from the content.
         inner.Resources.MergedDictionaries.Add(window.Resources);
         // What the window passed down to its content: the theme's text colour (the menu bar, the

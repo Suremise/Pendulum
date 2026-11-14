@@ -8,6 +8,11 @@ namespace Pendulum.Core.Engine;
 /// "recurring appointment" pattern: a fixed anchor date/time plus a repeat rule.
 public static class RecurrenceCalculator
 {
+    /// The date's ordinal weekday in its month; the final seven days always mean "last".
+    public static WeekOfMonth WeekInMonth(DateTime date) =>
+        date.Day + 7 > DateTime.DaysInMonth(date.Year, date.Month) ? WeekOfMonth.Last
+        : (WeekOfMonth)((date.Day - 1) / 7 + 1);
+
     private const int MaxIterations = 2000;
 
     /// The next scheduled occurrence strictly after <paramref name="after"/>, following

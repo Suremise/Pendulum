@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Windows;
 using Pendulum.App.Resources;
+using Pendulum.Core.Audio;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
@@ -161,6 +162,12 @@ public sealed class AppServices
     /// if Piper is selected but not actually usable yet (missing piper.exe, or no voice model
     /// chosen/present) — callers never need to check availability themselves.
     public ITextToSpeechEngine CreateSpeechEngine() => CaptureSpeechEngineFactory()();
+
+    /// One owned, lazy playback stack for either an alert or an editor preview.
+    public AlertPlaybackController CreatePlayback(Action<AlertProblem> onProblem) => new(
+        () => new AudioService(), CaptureSpeechEngineFactory(),
+        Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? CaptureWindowsSpeechEngineFactory() : null,
+        onProblem);
 
     /// Captures settings on the UI thread; file checks and voice/device setup happen only when
     /// the worker needs speech. An alert keeps these settings throughout its life.

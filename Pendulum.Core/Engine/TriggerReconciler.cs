@@ -125,6 +125,30 @@ public static class TriggerReconciler
             : edited > now ? edited : null);
     }
 
+    /// Previews a draft using the same scheduling decision ApplyEdit will use.
+    public static (DateTime Anchor, DateTime? Next) ScheduleAfterEdit(
+        TriggerTimer target, TriggerEditDraft draft, DateTime now, DateTime? utcNow = null) =>
+        ScheduleAfterEdit(target, draft.Recurrence, !ReferenceEquals(draft.Recurrence, target.RepeatRule),
+            draft.ShownAt, draft.ScheduledAt, now, utcNow);
+
+    /// Applies an accepted draft. The caller batches this through its reminder store; a new
+    /// reminder can be edited before it joins that store. Untouched times keep pending snoozes.
+    public static void ApplyEdit(TriggerTimer target, TriggerEditDraft draft, DateTime now, DateTime? utcNow = null)
+    {
+        var (anchor, next) = ScheduleAfterEdit(target, draft, now, utcNow);
+        target.Name = draft.Name.Trim();
+        target.RecurrenceAnchor = anchor;
+        target.Recurrence = draft.Recurrence;
+        target.Mode = draft.Mode;
+        target.SoundFileName = draft.SoundFileName;
+        target.Phrase = draft.Phrase;
+        target.Volume = Math.Clamp(draft.Volume, 0, 100);
+        if (draft.ColorChosen || target.Color is null) target.Color = draft.Color;
+        target.TriggerAt = next ?? draft.ScheduledAt;
+        target.HasFired = next is null;
+        target.Enabled = next is not null && draft.Enabled;
+    }
+
     /// Re-arms a fired trigger to go off again <paramref name="snoozeMinutes"/> from now.
     /// MarkFired counts every firing toward the repeat rule, but a snooze re-fires
     /// the same occurrence rather than starting a new one, so that count is undone here and

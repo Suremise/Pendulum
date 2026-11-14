@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Restoring a backup that another program has open now reports the read error instead of calling it an invalid backup.
+- Saving a reminder without changing its displayed time keeps its exact relative deadline.
 - Settings panels no longer repeat changes to the theme or Windows startup entry.
 - Quick Reminder no longer shares the foreground app's input queue when opening, so a hung
   app cannot hold up Pendulum's focus request.

@@ -1,7 +1,9 @@
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using Pendulum.App.Resources;
 using Pendulum.App.Services;
-using Pendulum.Core.Audio;
+using Pendulum.App.ViewModels;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
 using Wpf.Ui.Controls;
@@ -10,262 +12,67 @@ namespace Pendulum.App.Views;
 
 public partial class TriggerEditWindow : FluentWindow
 {
-    private static readonly (AlertMode Mode, string Label)[] AlertTypeOptions =
-    {
-        (AlertMode.SoundOnly, Strings.Edit_SoundOnly),
-        (AlertMode.SoundAndSpeech, Strings.Edit_SoundAndSpeech),
-        (AlertMode.SpeechOnly, Strings.Edit_SpeechOnly),
-    };
-
     private readonly TriggerTimer _target;
-    private readonly bool _use24Hour;
-    private readonly bool _isNew;
-    private bool _isLoading;
-
-    /// The colour chosen in the swatches, and whether the user chose it (otherwise a colour from a
-    /// later version that this one doesn't know is kept as it is).
-    private string _colour = ReminderColors.AssignOrder[0];
-    private bool _colourChosen;
-    private RecurrenceRule? _recurrence;
-    // The date and time the window loaded, so Save can tell whether the user changed them.
-    private DateTime _shownAt;
-
-    // The Test button previews sound/speech through players of its own, never an alert's: an
-    // alert may be sounding now, and closing this dialog (Save/Cancel) must not cut it off.
     private readonly AlertPlaybackController _previewPlayback;
-
+    public EditorViewModel Editor { get; }
     public TriggerTimer? Result { get; private set; }
 
     public TriggerEditWindow(TriggerTimer target, bool isNew)
     {
         InitializeComponent();
         _target = target;
-        _use24Hour = AppServices.Instance.Settings.Use24HourTime;
-        _isNew = isNew;
+        var services = AppServices.Instance;
+        var colour = isNew && target.Color is null ? ReminderColors.ForNew(services.Triggers) : ReminderColors.Effective(target);
+        Editor = new EditorViewModel(target, isNew, services.Settings.Use24HourTime, services.GetAvailableSoundFiles(), colour);
+        DataContext = Editor;
         Title = isNew ? Strings.Edit_NewReminder : Strings.Edit_EditReminder;
         EditorTitleBar.Title = Title;
+        AmPmSpacerColumn.Width = new GridLength(Editor.Use24HourTime ? 0 : 8);
+        AmPmColumn.Width = new GridLength(Editor.Use24HourTime ? 0 : 76);
+        BuildColourChoices();
 
-        _previewPlayback = new AlertPlaybackController(
-            () => new AudioService(),
-            AppServices.Instance.CaptureSpeechEngineFactory(),
-            AppServices.Instance.Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? AppServices.Instance.CaptureWindowsSpeechEngineFactory() : null,
-            problem => Dispatcher.BeginInvoke(() => ShowTestProblem(problem)));
-        Closed += (_, __) =>
+        _previewPlayback = services.CreatePlayback(problem => Dispatcher.BeginInvoke(() => ShowTestProblem(problem)));
+        Editor.PropertyChanged += OnEditorChanged;
+        Closed += (_, _) =>
         {
+            Editor.PropertyChanged -= OnEditorChanged;
             _previewPlayback.Dispose();
         };
+    }
 
-        SetupTimeFormat();
-        for (int m = 0; m < 60; m++)
-            MinuteBox.Items.Add(m.ToString("00"));
-        for (int s = 0; s < 60; s++)
-            SecondBox.Items.Add(s.ToString("00"));
-        AmPmBox.Items.Add(Strings.Edit_Am);
-        AmPmBox.Items.Add(Strings.Edit_Pm);
-
-        foreach (var option in AlertTypeOptions)
-            AlertTypeBox.Items.Add(option.Label);
-
-        SoundBox.Items.Add(Strings.Edit_NoSound);
-        foreach (var f in AppServices.Instance.GetAvailableSoundFiles())
-            SoundBox.Items.Add(f);
-
+    private void BuildColourChoices()
+    {
         foreach (var name in ReminderColors.All)
         {
-            var swatch = new System.Windows.Controls.RadioButton
+            var swatch = new RadioButton
             {
                 Style = (Style)FindResource("ColourSwatch"), // not user-visible: a resource key
                 GroupName = nameof(ColourChoices),
                 Tag = name,
                 ToolTip = ReminderColorNames.Display(name),
+                IsChecked = name == Editor.Colour,
             };
             System.Windows.Automation.AutomationProperties.SetName(swatch, ReminderColorNames.Display(name));
-            swatch.Checked += (_, _) => ShowColour(name, chosen: !_isLoading);
+            swatch.Checked += (_, _) => Editor.ChooseColour(name);
             ColourChoices.Children.Add(swatch);
         }
-
-        LoadFrom(target);
     }
 
-    private void ShowColour(string name, bool chosen)
+    private void OnEditorChanged(object? sender, PropertyChangedEventArgs e)
     {
-        _colour = name;
-        _colourChosen |= chosen;
-        ColourNameText.Text = ReminderColorNames.Display(name);
-    }
-
-    private void SetupTimeFormat()
-    {
-        HourBox.Items.Clear();
-
-        if (_use24Hour)
-        {
-            for (int h = 0; h <= 23; h++)
-                HourBox.Items.Add(h.ToString("00"));
-
-            AmPmBox.Visibility = Visibility.Collapsed;
-            AmPmSpacerColumn.Width = new GridLength(0);
-            AmPmColumn.Width = new GridLength(0);
-        }
-        else
-        {
-            for (int h = 1; h <= 12; h++)
-                HourBox.Items.Add(h.ToString());
-
-            AmPmBox.Visibility = Visibility.Visible;
-            AmPmSpacerColumn.Width = new GridLength(8);
-            AmPmColumn.Width = new GridLength(76);
-        }
-    }
-
-    private void LoadFrom(TriggerTimer t)
-    {
-        _isLoading = true;
-
-        NameBox.Text = t.Name;
-
-        // Its scheduled occurrence: for a snoozed repeating reminder that's the pattern's time, not
-        // the snooze's, so saving it unchanged doesn't move the daily time to the snooze time.
-        var dt = RecurrenceCalculator.ScheduledOccurrence(t);
-        _shownAt = dt;
-        DatePickerControl.SelectedDate = dt.Date;
-        MinuteBox.SelectedItem = dt.Minute.ToString("00");
-        SecondBox.SelectedItem = dt.Second.ToString("00");
-
-        if (_use24Hour)
-        {
-            HourBox.SelectedItem = dt.Hour.ToString("00");
-        }
-        else
-        {
-            int hour12 = dt.Hour % 12;
-            if (hour12 == 0) hour12 = 12;
-            HourBox.SelectedItem = hour12.ToString();
-            AmPmBox.SelectedIndex = dt.Hour >= 12 ? 1 : 0;  // AM, then PM
-        }
-
-        var optionIndex = Array.FindIndex(AlertTypeOptions, o => o.Mode == t.Mode);
-        AlertTypeBox.SelectedIndex = optionIndex >= 0 ? optionIndex : 0;
-
-        SoundBox.SelectedIndex = string.IsNullOrEmpty(t.SoundFileName) ? 0 : SoundBox.Items.IndexOf(t.SoundFileName);
-        PhraseBox.Text = t.Phrase ?? string.Empty;
-        VolumeSlider.Value = t.Volume;
-        VolumeValueText.Text = t.Volume.ToString();
-        EnabledBox.IsChecked = t.Enabled;
-        DisabledHint.Visibility = t.Enabled ? Visibility.Collapsed : Visibility.Visible;
-
-        _recurrence = t.RepeatRule;
-        UpdateRecurrenceSummary();
-
-        // A new reminder's: the colour fewest reminders have; a saved one's: its own.
-        var colour = _isNew && t.Color is null ? ReminderColors.ForNew(AppServices.Instance.Triggers) : ReminderColors.Effective(t);
-        foreach (var swatch in ColourChoices.Children.OfType<System.Windows.Controls.RadioButton>())
-            swatch.IsChecked = (string)swatch.Tag == colour;
-        ShowColour(colour, chosen: false);
-
-        _isLoading = false;
-        UpdateModeDependentUi();
-    }
-
-    private void UpdateRecurrenceSummary()
-    {
-        if (_recurrence is null)
-        {
-            RecurrenceSummaryText.Text = Strings.Edit_DoesNotRepeat;
-            RecurrenceNotice.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            RecurrenceSummaryText.Text = RecurrenceCalculator.Describe(_recurrence);
-            RecurrenceNotice.Visibility = Visibility.Visible;
-        }
+        if (e.PropertyName == nameof(Editor.Colour))
+            foreach (var swatch in ColourChoices.Children.OfType<RadioButton>())
+                swatch.IsChecked = (string)swatch.Tag == Editor.Colour;
     }
 
     private void RepeatButton_Click(object sender, RoutedEventArgs e)
     {
-        var anchor = _recurrence is not null ? _target.RecurrenceAnchor : BuildDateTime();
-        var dialog = new RecurrenceWindow(anchor, _recurrence) { Owner = this };
-        if (dialog.ShowDialog() == true)
-        {
-            _recurrence = dialog.Result;
-            UpdateRecurrenceSummary();
-        }
+        var anchor = Editor.Repeats ? _target.RecurrenceAnchor : Editor.ScheduledAt(DateTime.Now);
+        var dialog = new RecurrenceWindow(anchor, Editor.Recurrence) { Owner = this };
+        if (dialog.ShowDialog() == true) Editor.Recurrence = dialog.Result;
     }
 
-    private AlertMode CurrentMode =>
-        AlertTypeOptions[Math.Max(AlertTypeBox.SelectedIndex, 0)].Mode;
-
-    private void AlertTypeBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (_isLoading)
-            return;
-
-        UpdateModeDependentUi();
-
-        bool speaks = CurrentMode is AlertMode.SoundAndSpeech or AlertMode.SpeechOnly;
-        if (_isNew && speaks && string.IsNullOrWhiteSpace(PhraseBox.Text))
-            PhraseBox.Text = NameBox.Text;
-    }
-
-    private void UpdateModeDependentUi()
-    {
-        var mode = CurrentMode;
-
-        bool speaks = mode is AlertMode.SoundAndSpeech or AlertMode.SpeechOnly;
-        PhraseBox.IsEnabled = speaks;
-        PhraseLabel.Opacity = speaks ? 1.0 : 0.5;
-
-        bool playsSound = mode is AlertMode.SoundOnly or AlertMode.SoundAndSpeech;
-        SoundBox.IsEnabled = playsSound;
-        SoundLabel.Opacity = playsSound ? 1.0 : 0.5;
-        VolumeSlider.IsEnabled = playsSound;
-        VolumeLabel.Opacity = playsSound ? 1.0 : 0.5;
-        VolumeValueText.Opacity = playsSound ? 1.0 : 0.5;
-    }
-
-    private void EnabledBox_CheckedChanged(object sender, RoutedEventArgs e)
-    {
-        if (DisabledHint is not null)
-            DisabledHint.Visibility = EnabledBox.IsChecked == true ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (VolumeValueText is not null)
-            VolumeValueText.Text = ((int)e.NewValue).ToString();
-    }
-
-    private DateTime BuildDateTime()
-    {
-        var date = DatePickerControl.SelectedDate ?? DateTime.Today;
-        int minute = int.Parse((string)(MinuteBox.SelectedItem ?? "0"));
-        int second = int.Parse((string)(SecondBox.SelectedItem ?? "0"));
-
-        int hour24;
-        if (_use24Hour)
-        {
-            hour24 = int.Parse((string)(HourBox.SelectedItem ?? "0"));
-        }
-        else
-        {
-            int hour = int.Parse((string)(HourBox.SelectedItem ?? "12"));
-            bool isPm = AmPmBox.SelectedIndex == 1;
-            hour24 = hour % 12;
-            if (isPm) hour24 += 12;
-        }
-
-        return new DateTime(date.Year, date.Month, date.Day, hour24, minute, second);
-    }
-
-    private (string? soundFile, AlertMode mode, string? phrase, int volume) BuildAlertSettings()
-    {
-        // The first item is "no sound", in the user's language; the others are file names.
-        string? soundFile = SoundBox.SelectedIndex <= 0 ? null : SoundBox.SelectedItem as string;
-        var phrase = PhraseBox.Text;
-        return (soundFile, CurrentMode, phrase, (int)VolumeSlider.Value);
-    }
-
-    /// Test tells the user what didn't play, and why, rather than staying silent.
+    /// Test tells the user what did not play, without changing the live reminder.
     private void ShowTestProblem(AlertProblem problem)
     {
         var message = problem switch
@@ -279,86 +86,37 @@ public partial class TriggerEditWindow : FluentWindow
 
     private void TestButton_Click(object sender, RoutedEventArgs e)
     {
-        var (soundFile, mode, phrase, volume) = BuildAlertSettings();
-        var soundPath = AppServices.Instance.ResolveSoundPath(soundFile);
-        _previewPlayback.Start(soundPath, mode, phrase, repeatUntilDismissed: false, volume: volume / 100f);
+        var draft = Editor.CreateDraft(DateTime.Now);
+        _previewPlayback.Start(AppServices.Instance.ResolveSoundPath(draft.SoundFileName), draft.Mode, draft.Phrase,
+            repeatUntilDismissed: false, volume: draft.Volume / 100f);
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(NameBox.Text))
+        if (string.IsNullOrWhiteSpace(Editor.Name))
         {
             System.Windows.MessageBox.Show(this, Strings.Edit_NameRequired, Strings.App_Name, System.Windows.MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-
-        var (soundFile, mode, phrase, volume) = BuildAlertSettings();
-
-        var scheduledAt = BuildDateTime();
         var now = DateTime.Now;
-        var enabledByUser = EnabledBox.IsChecked == true;
-
-        // A repeating reminder first goes off on its pattern (Outlook's way), which may be after the
-        // start date; a one-off goes off at its start. With the time and the repeat untouched, the
-        // series keeps its anchor, and a pending snooze.
-        var (anchor, firstOccurrence) = TriggerReconciler.ScheduleAfterEdit(
-            _target, _recurrence, ruleChanged: !ReferenceEquals(_recurrence, _target.RepeatRule), _shownAt, scheduledAt, now);
-
-        // The user asked for this to be enabled, but the date/time they set is in the past
-        // (e.g. only the time was changed and the date field was left stale after midnight) —
-        // ask before quietly overriding their choice, rather than saving as Spent and leaving
-        // them to hunt through the list to fix it.
-        if (firstOccurrence is null && enabledByUser)
+        var draft = Editor.CreateDraft(now);
+        var (_, next) = TriggerReconciler.ScheduleAfterEdit(_target, draft, now);
+        if (next is null && draft.Enabled)
         {
-            var choice = System.Windows.MessageBox.Show(
-                this,
-                string.Format(Strings.Edit_PastDate, DisplayFormat.DateAndTime(scheduledAt)),
-                Strings.App_Name,
-                System.Windows.MessageBoxButton.YesNo,
-                MessageBoxImage.Warning,
-                System.Windows.MessageBoxResult.No);
-
-            if (choice == System.Windows.MessageBoxResult.No)
-                return;
+            var choice = System.Windows.MessageBox.Show(this,
+                string.Format(Strings.Edit_PastDate, DisplayFormat.DateAndTime(draft.ScheduledAt)), Strings.App_Name,
+                System.Windows.MessageBoxButton.YesNo, MessageBoxImage.Warning, System.Windows.MessageBoxResult.No);
+            if (choice == System.Windows.MessageBoxResult.No) return;
         }
 
         _previewPlayback.Stop();
-
-        void Apply()
-        {
-            _target.Name = NameBox.Text.Trim();
-            _target.RecurrenceAnchor = anchor;
-            _target.Recurrence = _recurrence;
-            _target.Mode = mode;
-            _target.SoundFileName = soundFile;
-            _target.Phrase = phrase;
-            _target.Volume = volume;
-            if (_colourChosen || _target.Color is null)
-                _target.Color = _colour;
-
-            if (firstOccurrence is not null)
-            {
-                // A future start time, or a recurring schedule that still has a future occurrence.
-                _target.TriggerAt = firstOccurrence.Value;
-                _target.HasFired = false;
-                _target.Enabled = enabledByUser;
-            }
-            else
-            {
-                // A one-shot reminder in the past, or a recurring schedule with nothing left to fire.
-                _target.TriggerAt = scheduledAt;
-                _target.HasFired = true;
-                _target.Enabled = false;
-            }
-        }
-
-        if (_isNew) Apply();
+        void Apply() => TriggerReconciler.ApplyEdit(_target, draft, now);
+        if (Editor.IsNew) Apply();
         else if (!AppServices.Instance.Update(_target, Apply))
         {
             DialogResult = false;
             return;
         }
-
         Result = _target;
         DialogResult = true;
     }
