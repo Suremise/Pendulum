@@ -9,11 +9,18 @@ namespace Pendulum.App.Services;
 /// own Data\ folder. StartupEntry decides when this copy may change it.
 public static class StartupRegistration
 {
+    // Tests intercept the operation before any real registry access.
+    internal static Action<bool>? SetEnabledOverride { get; set; }
     private static StartupEntry Entry => new(new RunValueStore(), Environment.ProcessPath ?? string.Empty);
 
     /// The user turned the setting on or off.
     public static void SetEnabled(bool enabled)
     {
+        if (SetEnabledOverride is { } setEnabled)
+        {
+            setEnabled(enabled);
+            return;
+        }
         if (!string.IsNullOrEmpty(Environment.ProcessPath))
             Entry.SetEnabled(enabled);
     }

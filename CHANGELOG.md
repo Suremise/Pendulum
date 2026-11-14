@@ -8,6 +8,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Settings panels no longer repeat changes to the theme or Windows startup entry.
 - Quick Reminder no longer shares the foreground app's input queue when opening, so a hung
   app cannot hold up Pendulum's focus request.
 - Alert sound and speech start away from the window thread, and repeating alerts reuse their

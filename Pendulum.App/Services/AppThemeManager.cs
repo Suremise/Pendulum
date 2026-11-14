@@ -149,8 +149,16 @@ internal static class AppThemeManager
     internal const string AlertTitle = "#FFFFFF";
     internal const string AlertSubtitle = "#EBD3DC";
 
+    // Tests can observe a request without changing the host's theme or reading system settings.
+    internal static Action<ThemeMode>? ApplyOverride { get; set; }
+
     public static void Apply(ThemeMode mode)
     {
+        if (ApplyOverride is { } apply)
+        {
+            apply(mode);
+            return;
+        }
         var theme = mode switch
         {
             ThemeMode.Light => ApplicationTheme.Light,

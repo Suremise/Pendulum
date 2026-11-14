@@ -30,6 +30,7 @@ public partial class App : Application
     private DispatcherTimer? _trayTooltipTimer;
     private HotkeyManager? _hotkeyManager;
     private HotkeyBinding? _hotkey;
+    private SettingsReactions? _settingsReactions;
     private QuickAddWindow? _quickAddWindow;
     internal bool IsExiting { get; private set; }
 
@@ -101,7 +102,11 @@ public partial class App : Application
             Microsoft.Win32.SystemEvents.TimeChanged += OnSystemTimeChanged;
             Microsoft.Win32.SystemEvents.PowerModeChanged += OnPowerModeChanged;
 
-            AppThemeManager.Apply(AppServices.Instance.Settings.Theme);
+            _settingsReactions = new SettingsReactions(
+                AppServices.Instance.Settings,
+                AppThemeManager.Apply,
+                StartupRegistration.SetEnabled,
+                () => ApplyHotkeySetting(atStartup: false));
 
             var iconUri = new Uri("pack://application:,,,/Resources/tray.ico", UriKind.Absolute);
             var iconImage = new BitmapImage(iconUri);
@@ -148,11 +153,6 @@ public partial class App : Application
             _hotkeyManager.Pressed += ShowQuickAdd;
             _hotkey = new HotkeyBinding(_hotkeyManager);
             ApplyHotkeySetting(atStartup: true);
-            AppServices.Instance.Settings.PropertyChanged += (_, args) =>
-            {
-                if (args.PropertyName is nameof(AppSettings.QuickAddHotkeyEnabled) or nameof(AppSettings.QuickAddHotkeyGesture))
-                    ApplyHotkeySetting(atStartup: false);
-            };
 
             if (missed.Count > 0)
                 NotifyMissedReminders(missed);
@@ -378,6 +378,7 @@ public partial class App : Application
 
         if (_ownsMutex)
         {
+            _settingsReactions?.Dispose();
             _trayTooltipTimer?.Stop();
             _hotkeyManager?.Dispose();
             _trayIcon?.Dispose();

@@ -65,13 +65,6 @@ public partial class SettingsViewModel : ObservableObject
         RefreshWhisperModels();
         RefreshPiperModels();
 
-        Settings.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(AppSettings.LaunchOnWindowsStartup))
-                StartupRegistration.SetEnabled(Settings.LaunchOnWindowsStartup);
-            if (e.PropertyName == nameof(AppSettings.Theme))
-                AppThemeManager.Apply(Settings.Theme);
-        };
     }
 
     partial void OnWhisperModelsChanged(List<string> value)
