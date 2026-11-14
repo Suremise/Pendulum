@@ -15,7 +15,6 @@ using Pendulum.App.ViewModels;
 using Pendulum.App.Views;
 using Pendulum.Core.Models;
 using Pendulum.Core.Persistence;
-using Wpf.Ui.Markup;
 using ThemeMode = Pendulum.Core.Models.ThemeMode;
 
 namespace Pendulum.Screenshots;
@@ -129,19 +128,13 @@ public static class Program
         }
     }
 
-    // --- The application, as App.xaml and the dark theme set it up -----------------------------
+    // --- The application resources and selected theme -----------------------------
 
     private static void StartApplication(ThemeMode theme)
     {
         var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-        app.Resources.MergedDictionaries.Add(new ThemesDictionary
-        {
-            Theme = theme == ThemeMode.Light ? Wpf.Ui.Appearance.ApplicationTheme.Light : Wpf.Ui.Appearance.ApplicationTheme.Dark,
-        });
-        app.Resources.MergedDictionaries.Add(new ControlsDictionary());
-        var linkStyle = new Style(typeof(Hyperlink));
-        linkStyle.Setters.Add(new Setter(TextElement.ForegroundProperty, new DynamicResourceExtension(AppThemeManager.LinkBrushKey)));
-        app.Resources.Add(typeof(Hyperlink), linkStyle);
+        AppResources.AddTo(app, theme == ThemeMode.Light
+            ? Wpf.Ui.Appearance.ApplicationTheme.Light : Wpf.Ui.Appearance.ApplicationTheme.Dark);
 
         AppThemeManager.Apply(theme);
     }

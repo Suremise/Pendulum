@@ -4,7 +4,6 @@
         xmlns:res="clr-namespace:Pendulum.App.Resources"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:services="clr-namespace:Pendulum.App.Services"
-        xmlns:conv="clr-namespace:Pendulum.App.Converters"
         Title="{x:Static res:Strings.Edit_Reminder}"
         Width="650"
         SizeToContent="Height"
@@ -12,8 +11,6 @@
         ResizeMode="NoResize"
         ExtendsContentIntoTitleBar="True">
     <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="VisibleWhenTrue"/>
-        <conv:InverseBooleanToVisibilityConverter x:Key="VisibleWhenFalse"/>
         <!-- A colour swatch: a disc in the colour's shade (3:1 or more on the window), ringed in the
              theme's text colour when chosen, in its strong edge under the pointer, and dashed when
              it has the keyboard focus. The swatches are radio buttons, so the arrow keys move
@@ -88,7 +85,7 @@
                         <ComboBox x:Name="HourBox" ItemsSource="{Binding Hours}" SelectedItem="{Binding Hour, Mode=TwoWay}" Grid.Column="2"/>
                         <ComboBox x:Name="MinuteBox" ItemsSource="{Binding Minutes}" SelectedItem="{Binding Minute, Mode=TwoWay}" Grid.Column="4"/>
                         <ComboBox x:Name="SecondBox" ItemsSource="{Binding Minutes}" SelectedItem="{Binding Second, Mode=TwoWay}" Grid.Column="6"/>
-                        <ComboBox x:Name="AmPmBox" ItemsSource="{Binding AmPm}" SelectedIndex="{Binding AmPmIndex, Mode=TwoWay}" Visibility="{Binding Use24HourTime, Converter={StaticResource VisibleWhenFalse}}" Grid.Column="8" Padding="10,6"/>
+                        <ComboBox x:Name="AmPmBox" ItemsSource="{Binding AmPm}" SelectedIndex="{Binding AmPmIndex, Mode=TwoWay}" Visibility="{Binding Use24HourTime, Converter={StaticResource InverseBoolToVis}}" Grid.Column="8" Padding="10,6"/>
                     </Grid>
 
                     <Grid>
@@ -103,7 +100,7 @@
                     </Grid>
 
                     <Border x:Name="RecurrenceNotice" Background="{DynamicResource ControlFillColorSecondaryBrush}"
-                            CornerRadius="6" Padding="10,8" Margin="0,12,0,0" Visibility="{Binding Repeats, Converter={StaticResource VisibleWhenTrue}}">
+                            CornerRadius="6" Padding="10,8" Margin="0,12,0,0" Visibility="{Binding Repeats, Converter={StaticResource BoolToVis}}">
                         <TextBlock FontSize="12" TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
                             <Run Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"/>
                             <Run Text="{x:Static res:Strings.Edit_ThisReminderWillAutomaticallyRescheduleToItsNext}"/>
@@ -141,7 +138,7 @@
                       IsChecked="{Binding Enabled, Mode=TwoWay}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{x:Static res:Strings.Edit_Enable}"/>
-                    <TextBlock x:Name="DisabledHint" Text="{x:Static res:Strings.Edit_Disabled}" Foreground="{DynamicResource PendulumErrorTextBrush}" Visibility="{Binding Enabled, Converter={StaticResource VisibleWhenFalse}}"/>
+                    <TextBlock x:Name="DisabledHint" Text="{x:Static res:Strings.Edit_Disabled}" Foreground="{DynamicResource PendulumErrorTextBrush}" Visibility="{Binding Enabled, Converter={StaticResource InverseBoolToVis}}"/>
                 </StackPanel>
             </CheckBox>
 

@@ -206,11 +206,13 @@ public sealed class SettingsPanelTests : IDisposable
             var panel = Build(settings);
 
             // Keep alerting on: the time to dismiss it after doesn't apply, and is disabled.
+            Select(panel, "Alerts");
             Assert.True(Peer(panel, "AutoResolveBox").IsEnabled());
             settings.RepeatAlertUntilDismissed = true;
             Assert.False(Peer(panel, "AutoResolveBox").IsEnabled());
 
             // The shortcut off: changing it is disabled.
+            Select(panel, "Quick Reminder");
             var change = FindByName(panel, "Change the shortcut");
             Assert.True(change.IsEnabled());
             settings.QuickAddHotkeyEnabled = false;

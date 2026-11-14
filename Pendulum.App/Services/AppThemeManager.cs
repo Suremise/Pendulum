@@ -22,7 +22,7 @@ namespace Pendulum.App.Services;
 /// - Everything else is the theme's own neutrals.
 internal static class AppThemeManager
 {
-    /// The resource key of the brush links are drawn in (App.xaml's Hyperlink style).
+    /// The resource key of the brush links are drawn in (Shared.xaml's Hyperlink style).
     public const string LinkBrushKey = "PendulumLinkBrush";  // not user-visible: resource keys
 
     /// The accent itself (the selected tab's bar, the selected Settings section's bar, today in

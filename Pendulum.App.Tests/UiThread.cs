@@ -1,7 +1,7 @@
+using Pendulum.App.Services;
 using System.Windows;
 using System.Windows.Threading;
 using Wpf.Ui.Appearance;
-using Wpf.Ui.Markup;
 
 namespace Pendulum.App.Tests;
 
@@ -28,8 +28,7 @@ public static class UiThread
         {
             var app = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
             Pendulum.App.Services.AppServices.Instance.UseRemindersForTests();
-            app.Resources.MergedDictionaries.Add(new ThemesDictionary { Theme = ApplicationTheme.Light });
-            app.Resources.MergedDictionaries.Add(new ControlsDictionary());
+            AppResources.AddTo(app, ApplicationTheme.Light);
             dispatcher = Dispatcher.CurrentDispatcher;
             ready.Set();
             Dispatcher.Run();

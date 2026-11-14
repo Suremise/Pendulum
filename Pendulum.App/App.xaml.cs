@@ -27,6 +27,7 @@ public partial class App : Application
         RegisterErrorHandlers();
         try
         {
+            AppResources.AddTo(this);
             _singleInstance = new SingleInstance(() => Dispatcher.BeginInvoke(ShowMainWindow));
             if (!_singleInstance.IsPrimary)
             {

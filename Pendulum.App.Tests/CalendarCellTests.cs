@@ -87,7 +87,7 @@ public sealed class CalendarCellTests : IDisposable
             {
                 var cell = (FrameworkElement)calendar.DayGrid.ItemContainerGenerator.ContainerFromIndex(i);
                 var day = vm.Days[i];
-                var chips = Visible(cell).OfType<Border>().Where(b => ReferenceEquals(b.Style, calendar.Resources["ReminderPillBadge"])).ToList();
+                var chips = Visible(cell).OfType<Border>().Where(b => ReferenceEquals(b.Style, calendar.FindResource("ReminderPillBadge"))).ToList();
                 var more = Visible(cell).OfType<ToggleButton>().SingleOrDefault(t => t.Name == "OverflowToggle");
 
                 foreach (var element in chips.Cast<FrameworkElement>().Concat(more is null ? [] : [more]))
@@ -142,7 +142,7 @@ public sealed class CalendarCellTests : IDisposable
             return InMainWindow(1200, 800, calendar =>
             {
                 var found = new List<string>();
-                foreach (var chip in Visible(calendar.DayGrid).OfType<Border>().Where(b => ReferenceEquals(b.Style, calendar.Resources["ReminderPillBadge"])))
+                foreach (var chip in Visible(calendar.DayGrid).OfType<Border>().Where(b => ReferenceEquals(b.Style, calendar.FindResource("ReminderPillBadge"))))
                 {
                     var reminder = (TriggerTimer)chip.DataContext;
                     var tint = Application.Current.Resources[PaletteBrush.KeyFor(reminder.DisplayColor, tint: true)!];

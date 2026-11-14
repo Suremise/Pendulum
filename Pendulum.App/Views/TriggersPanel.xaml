@@ -5,22 +5,11 @@
              xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
-             xmlns:conv="clr-namespace:Pendulum.App.Converters"
              xmlns:services="clr-namespace:Pendulum.App.Services">
     <UserControl.DataContext>
         <vm:TriggersViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <conv:SortArrowConverter x:Key="SortArrow"/>
-        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
-        <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
-        <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
-        <conv:InverseBooleanConverter x:Key="InverseBool"/>
-        <conv:BoolToSelectColumnWidthConverter x:Key="SelectColumnWidth"/>
-        <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
-        <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
-        <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
         <!-- The badges take the palette (AppThemeManager sets each per theme): Upcoming in teal (as
              the calendar's chips), the alert types in blue, ochre and plum; Fixed, Scheduled and
              Disabled are the theme's neutral greys. Rose is kept for the brand. Each badge is told
@@ -38,41 +27,7 @@
         <Style x:Key="TriggersOnText" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
         </Style>
-        <Style x:Key="TagBadge" TargetType="Border">
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="6,0,6,2"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
-        </Style>
-        <Style x:Key="TagBadgeText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-        <Style x:Key="RowBadgeText" TargetType="TextBlock" BasedOn="{StaticResource TagBadgeText}">
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="ModeBadge" TargetType="Border" BasedOn="{StaticResource TagBadge}">
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding Mode}" Value="SoundOnly">
-                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundOnlyBrush}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Mode}" Value="SoundAndSpeech">
-                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundAndSpeechBrush}"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Mode}" Value="SpeechOnly">
-                    <Setter Property="Background" Value="{DynamicResource PendulumBadgeSpeechOnlyBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <!-- Initial sort (TriggerAt ascending) is applied in code-behind (ApplySort, called from
-             Loaded) rather than declared here, so there's one source of truth shared with the
-             column-header click-to-sort logic instead of two independent starting points. -->
+        <!-- Sort state and filtering are owned by TriggersViewModel. -->
         <Style x:Key="CleanGridViewColumnHeader" TargetType="GridViewColumnHeader">
             <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -114,18 +69,6 @@
                             <ContentPresenter/>
                         </Border>
                     </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <Style x:Key="ColumnFilterPopupBorder" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource PendulumPopupBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="Black" Opacity="0.35" BlurRadius="16" ShadowDepth="3" Direction="270"/>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -372,7 +315,7 @@
                                                       Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=TypeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=TypeFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
-                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                            <Border Style="{StaticResource PopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.TypeFixed}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeFixedBrush}">
@@ -427,7 +370,7 @@
                                                       Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=DateFilterToggle}" IsOpen="{Binding IsChecked, ElementName=DateFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
-                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                            <Border Style="{StaticResource PopupBorder}">
                                                 <StackPanel Width="190">
                                                     <TextBlock Text="{x:Static res:Strings.Reminders_From}" FontSize="11" FontWeight="Normal"
                                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,4"/>
@@ -477,7 +420,7 @@
                                                       Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=ModeFilterToggle}" IsOpen="{Binding IsChecked, ElementName=ModeFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
-                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                            <Border Style="{StaticResource PopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.ModeSoundOnly}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumBadgeSoundOnlyBrush}">
@@ -554,7 +497,7 @@
                                                       Visibility="{Binding Filter.RowVisible, Converter={StaticResource BoolToVis}}"/>
                                         <Popup PlacementTarget="{Binding ElementName=StatusFilterToggle}" IsOpen="{Binding IsChecked, ElementName=StatusFilterToggle}"
                                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
-                                            <Border Style="{StaticResource ColumnFilterPopupBorder}">
+                                            <Border Style="{StaticResource PopupBorder}">
                                                 <StackPanel>
                                                     <CheckBox Style="{StaticResource ColumnFilterCheckBox}" IsChecked="{Binding Filter.StatusUpcoming}">
                                                         <Border Style="{StaticResource TagBadge}" Background="{DynamicResource PendulumChipBrush}" BorderBrush="{DynamicResource PendulumChipStrokeBrush}">

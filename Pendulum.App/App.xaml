@@ -1,21 +1,5 @@
 <Application x:Class="Pendulum.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Pendulum.App"
-             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              ShutdownMode="OnExplicitShutdown">
-    <Application.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ui:ThemesDictionary Theme="Dark" />
-                <ui:ControlsDictionary />
-            </ResourceDictionary.MergedDictionaries>
-
-            <!-- Pendulum's own brushes (the accent, the palette, the badges, the alert's) are all
-                 set by AppThemeManager, for the theme in use, before any window opens. -->
-            <Style TargetType="Hyperlink">
-                <Setter Property="Foreground" Value="{DynamicResource PendulumLinkBrush}"/>
-            </Style>
-        </ResourceDictionary>
-    </Application.Resources>
 </Application>

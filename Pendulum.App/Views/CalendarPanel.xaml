@@ -4,103 +4,19 @@
              xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
-             xmlns:conv="clr-namespace:Pendulum.App.Converters"
              xmlns:services="clr-namespace:Pendulum.App.Services">
     <UserControl.DataContext>
         <vm:CalendarViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-        <conv:DateTimeDisplayConverter x:Key="DateTimeDisplay"/>
 
         <!-- A reminder chip, in the reminder's own colour (ReminderColors, from the palette): a tint
              of it with a bar of its shade at the start, the theme's text on it (4.5:1 or more in
              light and dark, ThemeColourTests). Neutral once it has gone off. A chip is one line,
              ChipLine high with its gap (CalendarPanel.xaml.cs fits the day's chips to its cell). -->
-        <Style x:Key="ReminderPillBadge" TargetType="Border">
-            <Setter Property="CornerRadius" Value="3"/>
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="Padding" Value="5,0,5,0"/>
-            <Setter Property="BorderThickness" Value="3,0,0,0"/>
-            <Setter Property="Margin" Value="0,0,0,2"/>
-            <Setter Property="services:PaletteBrush.Background" Value="{Binding DisplayColor}"/>
-            <Setter Property="services:PaletteBrush.BorderBrush" Value="{Binding DisplayColor}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="services:PaletteBrush.Background" Value="{x:Null}"/>
-                    <Setter Property="services:PaletteBrush.BorderBrush" Value="{x:Null}"/>
-                    <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="ReminderPillText" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasFired}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
         <!-- Invisible chrome so a Button can host a badge-styled pill and still be clickable. -->
-        <Style x:Key="PillButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <ContentPresenter/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <!-- "+N more": plain text in the theme's secondary text colour, one chip line high, with
              room below it; under the pointer or while its list is open, the primary text colour. -->
-        <Style x:Key="OverflowChip" TargetType="ToggleButton">
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="Padding" Value="2,0,2,0"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="Transparent" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="OverflowPopupBorder" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource PendulumPopupBrush}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="10"/>
-            <Setter Property="Effect">
-                <Setter.Value>
-                    <DropShadowEffect Color="Black" Opacity="0.35" BlurRadius="16" ShadowDepth="3" Direction="270"/>
-                </Setter.Value>
-            </Setter>
-        </Style>
         <Style x:Key="NavButton" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
             <Setter Property="Appearance" Value="Secondary"/>
             <Setter Property="Width" Value="36"/>
@@ -182,7 +98,7 @@
                     </ToggleButton>
                         <Popup PlacementTarget="{Binding ElementName=OverflowToggle}" IsOpen="{Binding IsChecked, ElementName=OverflowToggle}"
                                StaysOpen="False" AllowsTransparency="True" Placement="Bottom">
-                            <Border Style="{StaticResource OverflowPopupBorder}" MinWidth="160" MaxWidth="260">
+                            <Border Style="{StaticResource PopupBorder}" MinWidth="160" MaxWidth="260">
                                 <StackPanel>
                                     <TextBlock Text="{Binding Date, Converter={StaticResource DateTimeDisplay}, ConverterParameter=Date}" FontSize="11" FontWeight="Bold"
                                                Foreground="{DynamicResource TextFillColorSecondaryBrush}" Margin="0,0,0,8"/>

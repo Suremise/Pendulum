@@ -34,6 +34,12 @@ internal static class Views
         ("02-calendar.png", "Calendar: a busy month, each reminder in its own colour", () => MainWindowShot(tab: 1)),
         ("02-calendar-small.png", "Calendar in the smallest window (820 × 560): \"+N more\" beside the day's number", () => MainWindowShot(tab: 1, 820, 560)),
         ("03-settings.png", "Settings", Settings),
+        ("03-settings-alerts.png", "Settings: alerts", () => SettingsSection(1)),
+        ("03-settings-voice.png", "Settings: Windows speech", () => SettingsSection(2)),
+        ("03-settings-piper.png", "Settings: Piper speech", () => SettingsSection(2, piper: true)),
+        ("03-settings-quick.png", "Settings: Quick Reminder", () => SettingsSection(3)),
+        ("03-settings-whisper.png", "Settings: Whisper speech recognition", () => SettingsSection(3, whisper: true)),
+        ("03-settings-data.png", "Settings: backup and data", () => SettingsSection(4)),
         ("04-editor.png", "A reminder's editor (a reminder that's turned off)", Editor),
         ("05-repeat.png", "Repeat", Repeat),
         ("06-quick-reminder.png", "Quick Reminder, with a message", QuickReminder),
@@ -95,7 +101,17 @@ internal static class Views
         AppServices.Instance.Settings.Theme = dark ? ThemeMode.Dark : ThemeMode.Light;
         AppThemeManager.Apply(dark ? ThemeMode.Dark : ThemeMode.Light);
         foreach (var shot in Shots)
-            Save(Draw(shot.Build()), Path.Combine(output, shot.File));
+        {
+            var settings = AppServices.Instance.Settings;
+            var tts = settings.TextToSpeechEngine;
+            var stt = settings.SpeechToTextEngine;
+            try { Save(Draw(shot.Build()), Path.Combine(output, shot.File)); }
+            finally
+            {
+                settings.TextToSpeechEngine = tts;
+                settings.SpeechToTextEngine = stt;
+            }
+        }
     }
 
     private static FrameworkElement MainWindowShot(int tab, double width = 1100, double height = 720)
@@ -116,6 +132,18 @@ internal static class Views
     }
 
     private static FrameworkElement Settings() => Window(new SettingsWindow());
+
+    private static FrameworkElement SettingsSection(int section, bool piper = false, bool whisper = false)
+    {
+        var settings = AppServices.Instance.Settings;
+        settings.TextToSpeechEngine = piper ? TextToSpeechEngine.Piper : TextToSpeechEngine.WindowsSpeechSynthesis;
+        settings.SpeechToTextEngine = whisper ? SpeechToTextEngine.Whisper : SpeechToTextEngine.WindowsSpeechRecognition;
+        var host = Window(new SettingsWindow());
+        var panel = Descendants(host).OfType<SettingsPanel>().Single();
+        ((ListBox)panel.FindName("SectionList")).SelectedIndex = section; // not user-visible: the view's own element
+        Layout(host);
+        return host;
+    }
 
     private static FrameworkElement Editor()
     {

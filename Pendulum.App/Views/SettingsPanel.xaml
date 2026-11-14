@@ -4,89 +4,12 @@
              xmlns:res="clr-namespace:Pendulum.App.Resources"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:vm="clr-namespace:Pendulum.App.ViewModels"
-             xmlns:conv="clr-namespace:Pendulum.App.Converters"
+             xmlns:controls="clr-namespace:Pendulum.App.Controls"
              xmlns:models="clr-namespace:Pendulum.Core.Models;assembly=Pendulum.Core">
     <UserControl.DataContext>
         <vm:SettingsViewModel/>
     </UserControl.DataContext>
     <UserControl.Resources>
-        <conv:InverseBooleanConverter x:Key="InverseBool"/>
-        <conv:EnumSpacedDisplayConverter x:Key="EnumSpaced"/>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-
-        <!-- A section's title, a group's title, a row's label and a help line. -->
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Margin" Value="0,0,0,12"/>
-        </Style>
-        <Style x:Key="GroupTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
-        </Style>
-        <Style x:Key="RowLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="Margin" Value="0,0,12,0"/>
-        </Style>
-        <Style x:Key="Help" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
-            <Setter Property="Margin" Value="0,2,0,12"/>
-        </Style>
-        <!-- Help under a check box lines up with the box's text. -->
-        <Style x:Key="CheckHelp" TargetType="TextBlock" BasedOn="{StaticResource Help}">
-            <Setter Property="Margin" Value="28,0,0,12"/>
-        </Style>
-        <Style x:Key="Row" TargetType="Grid">
-            <Setter Property="Margin" Value="0,4,0,10"/>
-        </Style>
-        <Style x:Key="Group" TargetType="ui:Card" BasedOn="{StaticResource {x:Type ui:Card}}">
-            <Setter Property="Margin" Value="0,0,0,12"/>
-        </Style>
-        <Style x:Key="Field" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-            <Setter Property="Width" Value="260"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-        </Style>
-        <Style x:Key="Number" TargetType="ui:TextBox" BasedOn="{StaticResource {x:Type ui:TextBox}}">
-            <Setter Property="Width" Value="64"/>
-            <Setter Property="ClearButtonEnabled" Value="False"/>
-        </Style>
-        <Style x:Key="Unit" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="8,0,0,0"/>
-        </Style>
-        <Style x:Key="Buttons" TargetType="StackPanel">
-            <Setter Property="Orientation" Value="Horizontal"/>
-            <Setter Property="Margin" Value="0,0,0,4"/>
-        </Style>
-        <Style x:Key="Secondary" TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
-            <Setter Property="Appearance" Value="Secondary"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-        </Style>
-        <GridLength x:Key="LabelWidth">220</GridLength>
-
-        <!-- The engines by plain names (the saved values stay the enum's). -->
-        <DataTemplate x:Key="TtsEngineName">
-            <TextBlock x:Name="Name" Text="{x:Static res:Strings.Settings_WindowsBuiltIn}"/>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding}" Value="{x:Static models:TextToSpeechEngine.Piper}">
-                    <Setter TargetName="Name" Property="Text" Value="{x:Static res:Strings.Settings_PiperOfflineMoreNatural}"/>
-                </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>
-        <DataTemplate x:Key="SttEngineName">
-            <TextBlock x:Name="Name" Text="{x:Static res:Strings.Settings_WindowsBuiltIn}"/>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding}" Value="{x:Static models:SpeechToTextEngine.Whisper}">
-                    <Setter TargetName="Name" Property="Text" Value="{x:Static res:Strings.Settings_WhisperOfflineMoreAccurate}"/>
-                </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>
 
         <!-- The section list: the selected one tinted with a bar in the accent, as the main tabs are. -->
         <Style x:Key="SectionItem" TargetType="ListBoxItem">
@@ -152,26 +75,24 @@
 
                 <!-- General -->
                 <StackPanel x:Name="GeneralSection" AutomationProperties.Name="{x:Static res:Strings.Settings_General}">
-                    <TextBlock Text="{x:Static res:Strings.Settings_General}" Style="{StaticResource SectionTitle}"/>
-                    <ui:Card Style="{StaticResource Group}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_General}" Style="{StaticResource SettingsSectionTitle}"/>
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_WhenPendulumStarts}" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_WhenPendulumStarts}" Style="{StaticResource SettingsGroupTitle}"/>
                             <CheckBox x:Name="LaunchOnStartupBox" Content="{x:Static res:Strings.Settings_StartWithWindows}" IsChecked="{Binding Settings.LaunchOnWindowsStartup}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Text="{x:Static res:Strings.Settings_PendulumOpensWhenYouSignInSoYourRemindersGoOffEv}"/>
+                            <TextBlock Style="{StaticResource SettingsCheckHelp}" Text="{x:Static res:Strings.Settings_PendulumOpensWhenYouSignInSoYourRemindersGoOffEv}"/>
                             <CheckBox x:Name="StartMinimizedBox" Content="{x:Static res:Strings.Settings_StartInTheTray}" IsChecked="{Binding Settings.StartMinimized}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Text="{x:Static res:Strings.Settings_OpensHiddenInTheNotificationAreaInsteadOfShowing}"/>
+                            <TextBlock Style="{StaticResource SettingsCheckHelp}" Text="{x:Static res:Strings.Settings_OpensHiddenInTheNotificationAreaInsteadOfShowing}"/>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Appearance}" Style="{StaticResource GroupTitle}"/>
-                            <Grid Style="{StaticResource Row}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="ThemeLabel" Text="{x:Static res:Strings.Settings_Theme}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="ThemeBox" Grid.Column="1" Style="{StaticResource Field}" Width="200"
+                            <TextBlock Text="{x:Static res:Strings.Settings_Appearance}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="ThemeLabel" Text="{x:Static res:Strings.Settings_Theme}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <ComboBox x:Name="ThemeBox" Style="{StaticResource SettingsField}" Width="200"
                                           ItemsSource="{Binding ThemeModes}" SelectedItem="{Binding Settings.Theme}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=ThemeLabel}">
                                     <ComboBox.ItemTemplate>
@@ -180,26 +101,24 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
-                            </Grid>
-                            <Grid Style="{StaticResource Row}" Margin="0,0,0,4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TimeFormatLabel" Text="{x:Static res:Strings.Settings_TimeFormat}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="TimeFormatBox" Grid.Column="1" Style="{StaticResource Field}" Width="200" SelectedIndex="{Binding TimeFormatIndex}"
+                            </controls:SettingRow>
+                            <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,0,0,4">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="TimeFormatLabel" Text="{x:Static res:Strings.Settings_TimeFormat}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <ComboBox x:Name="TimeFormatBox" Style="{StaticResource SettingsField}" Width="200" SelectedIndex="{Binding TimeFormatIndex}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=TimeFormatLabel}">
                                     <ComboBoxItem Content="{x:Static res:Strings.Settings_12Hour230PM}"/>
                                     <ComboBoxItem Content="{x:Static res:Strings.Settings_24Hour1430}"/>
                                 </ComboBox>
-                            </Grid>
+                            </controls:SettingRow>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Updates}" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Updates}" Style="{StaticResource SettingsGroupTitle}"/>
                             <CheckBox x:Name="UpdateCheckBox" Content="{x:Static res:Strings.Settings_CheckForUpdatesWhenPendulumStarts}" IsChecked="{Binding Settings.CheckForUpdatesOnStartup}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4"
+                            <TextBlock Style="{StaticResource SettingsCheckHelp}" Margin="28,0,0,4"
                                        Text="{x:Static res:Strings.Settings_OffUnlessYouTurnItOnWhenPendulumStartsItAsksGitH}"/>
                         </StackPanel>
                     </ui:Card>
@@ -207,58 +126,51 @@
 
                 <!-- Alerts -->
                 <StackPanel x:Name="AlertsSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_Alerts}">
-                    <TextBlock Text="{x:Static res:Strings.Settings_Alerts}" Style="{StaticResource SectionTitle}"/>
-                    <ui:Card Style="{StaticResource Group}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_Alerts}" Style="{StaticResource SettingsSectionTitle}"/>
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Sound}" Style="{StaticResource GroupTitle}"/>
-                            <Grid Style="{StaticResource Row}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="DefaultSoundLabel" Text="{x:Static res:Strings.Settings_SoundForNewReminders}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="DefaultSoundBox" Grid.Column="1" Style="{StaticResource Field}" Width="200"
+                            <TextBlock Text="{x:Static res:Strings.Settings_Sound}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,4,0,0">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="DefaultSoundLabel" Text="{x:Static res:Strings.Settings_SoundForNewReminders}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <controls:SettingRow.Footer>
+                                    <StackPanel Style="{StaticResource SettingsButtons}" Margin="0,10,0,4">
+                                        <ui:Button Content="{x:Static res:Strings.Settings_AddSound}" Style="{StaticResource SettingsSecondary}" Command="{Binding AddSoundCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenSoundsFolder}" Style="{StaticResource SettingsSecondary}" Command="{Binding OpenSoundsFolderCommand}"/>
+                                    </StackPanel>
+                                </controls:SettingRow.Footer>
+                                <ComboBox x:Name="DefaultSoundBox" Style="{StaticResource SettingsField}" Width="200"
                                           ItemsSource="{Binding SoundFiles}" SelectedItem="{Binding Settings.DefaultSoundFileName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=DefaultSoundLabel}"/>
-                            </Grid>
-                            <StackPanel Style="{StaticResource Buttons}" Margin="220,0,0,4">
-                                <ui:Button Content="{x:Static res:Strings.Settings_AddSound}" Style="{StaticResource Secondary}" Command="{Binding AddSoundCommand}"/>
-                                <ui:Button Content="{x:Static res:Strings.Settings_OpenSoundsFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenSoundsFolderCommand}"/>
-                            </StackPanel>
+                            </controls:SettingRow>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_WhenAnAlertAppears}" Style="{StaticResource GroupTitle}"/>
-                            <Grid Style="{StaticResource Row}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SnoozeLabel" Text="{x:Static res:Strings.Settings_SnoozeFor}" Style="{StaticResource RowLabel}"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <ui:TextBox x:Name="SnoozeBox" Style="{StaticResource Number}" MaxLength="3"
+                            <TextBlock Text="{x:Static res:Strings.Settings_WhenAnAlertAppears}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="SnoozeLabel" Text="{x:Static res:Strings.Settings_SnoozeFor}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:TextBox x:Name="SnoozeBox" Style="{StaticResource SettingsNumber}" MaxLength="3"
                                                 Text="{Binding Settings.SnoozeMinutes, UpdateSourceTrigger=PropertyChanged}"
                                                 AutomationProperties.Name="{x:Static res:Strings.Settings_SnoozeForMinutes}"/>
-                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource Unit}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource SettingsUnit}"/>
                                 </StackPanel>
-                            </Grid>
+                            </controls:SettingRow>
                             <CheckBox x:Name="RepeatBox" Content="{x:Static res:Strings.Settings_KeepAlertingUntilIDismissIt}" IsChecked="{Binding Settings.RepeatAlertUntilDismissed}"/>
-                            <Grid Style="{StaticResource Row}" Margin="28,8,0,4"
-                                  IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="192"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Static res:Strings.Settings_OtherwiseDismissItAfter}" Style="{StaticResource RowLabel}"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <ui:TextBox x:Name="AutoResolveBox" Style="{StaticResource Number}" MaxLength="3"
+                            <controls:SettingRow LabelWidth="192" Style="{StaticResource SettingRow}" Margin="28,8,0,4"
+                                  IsEnabled="{Binding Settings.RepeatAlertUntilDismissed, Converter={StaticResource InverseBool}}" Header="{x:Static res:Strings.Settings_OtherwiseDismissItAfter}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:TextBox x:Name="AutoResolveBox" Style="{StaticResource SettingsNumber}" MaxLength="3"
                                                 Text="{Binding Settings.AutoResolveMinutes, UpdateSourceTrigger=PropertyChanged}"
                                                 AutomationProperties.Name="{x:Static res:Strings.Settings_OtherwiseDismissItAfterMinutes}"/>
-                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource Unit}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Minutes}" Style="{StaticResource SettingsUnit}"/>
                                 </StackPanel>
-                            </Grid>
-                            <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4"
+                            </controls:SettingRow>
+                            <TextBlock Style="{StaticResource SettingsCheckHelp}" Margin="28,0,0,4"
                                        Text="{x:Static res:Strings.Settings_UsedOnlyWhenAlertsDontKeepGoingAnUnansweredAlert}"/>
                         </StackPanel>
                     </ui:Card>
@@ -266,43 +178,39 @@
 
                 <!-- Spoken alerts -->
                 <StackPanel x:Name="VoiceSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_SpokenAlerts}">
-                    <TextBlock Text="{x:Static res:Strings.Settings_SpokenAlerts}" Style="{StaticResource SectionTitle}"/>
-                    <ui:Card Style="{StaticResource Group}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_SpokenAlerts}" Style="{StaticResource SettingsSectionTitle}"/>
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Voice}" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_UsedForRemindersSetToSpeakAndForTestVoice}"/>
-                            <Grid Style="{StaticResource Row}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="TtsEngineLabel" Text="{x:Static res:Strings.Settings_SpeechEngine}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="TtsEngineBox" Grid.Column="1" Style="{StaticResource Field}"
+                            <TextBlock Text="{x:Static res:Strings.Settings_Voice}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_UsedForRemindersSetToSpeakAndForTestVoice}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="TtsEngineLabel" Text="{x:Static res:Strings.Settings_SpeechEngine}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <ComboBox x:Name="TtsEngineBox" Style="{StaticResource SettingsField}"
                                           ItemsSource="{Binding TextToSpeechEngines}" SelectedItem="{Binding Settings.TextToSpeechEngine}"
-                                          ItemTemplate="{StaticResource TtsEngineName}"
+                                          ItemTemplate="{StaticResource SettingsTtsEngineName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=TtsEngineLabel}"/>
-                            </Grid>
+                            </controls:SettingRow>
 
                             <!-- Only the chosen engine's voices. -->
-                            <Grid>
-                                <Grid.Style>
-                                    <Style TargetType="Grid" BasedOn="{StaticResource Row}">
+                            <controls:SettingRow>
+                                <controls:SettingRow.Style>
+                                    <Style TargetType="controls:SettingRow" BasedOn="{StaticResource SettingRow}">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Settings.TextToSpeechEngine}" Value="{x:Static models:TextToSpeechEngine.Piper}">
                                                 <Setter Property="Visibility" Value="Collapsed"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Grid.Style>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="WindowsVoiceLabel" Text="{x:Static res:Strings.Settings_WindowsVoice}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="WindowsVoiceBox" Grid.Column="1" Style="{StaticResource Field}"
+                                </controls:SettingRow.Style>
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="WindowsVoiceLabel" Text="{x:Static res:Strings.Settings_WindowsVoice}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <ComboBox x:Name="WindowsVoiceBox" Style="{StaticResource SettingsField}"
                                           ItemsSource="{Binding VoiceNames}" SelectedItem="{Binding Settings.TtsVoiceName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=WindowsVoiceLabel}"/>
-                            </Grid>
+                            </controls:SettingRow>
                             <StackPanel>
                                 <StackPanel.Style>
                                     <Style TargetType="StackPanel">
@@ -314,61 +222,63 @@
                                         </Style.Triggers>
                                     </Style>
                                 </StackPanel.Style>
-                                <Grid Style="{StaticResource Row}" Margin="0,4,0,2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="PiperVoiceLabel" Text="{x:Static res:Strings.Settings_PiperVoice}" Style="{StaticResource RowLabel}"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <ComboBox x:Name="PiperVoiceBox" Style="{StaticResource Field}"
+                                <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,4,0,0">
+                                    <controls:SettingRow.Header>
+                                        <TextBlock x:Name="PiperVoiceLabel" Text="{x:Static res:Strings.Settings_PiperVoice}" Style="{StaticResource SettingsRowLabel}"/>
+                                    </controls:SettingRow.Header>
+                                    <controls:SettingRow.Footer>
+                                        <TextBlock Text="{Binding PiperStatusText}" Style="{StaticResource SettingsHelp}" Margin="0,2,0,10"/>
+                                    </controls:SettingRow.Footer>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ComboBox x:Name="PiperVoiceBox" Style="{StaticResource SettingsField}"
                                                   ItemsSource="{Binding PiperModels}" SelectedItem="{Binding Settings.PiperVoiceModelFileName}"
                                                   IsEnabled="{Binding IsPiperAvailable}"
                                                   AutomationProperties.LabeledBy="{Binding ElementName=PiperVoiceLabel}"/>
-                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshPiperModelsCommand}"
+                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource SettingsSecondary}" Margin="8,0,0,0" Command="{Binding RefreshPiperModelsCommand}"
                                                    AutomationProperties.Name="{x:Static res:Strings.Settings_RefreshPiperVoices}"/>
                                     </StackPanel>
-                                </Grid>
-                                <TextBlock Text="{Binding PiperStatusText}" Style="{StaticResource Help}" Margin="220,0,0,10"/>
+                                </controls:SettingRow>
                             </StackPanel>
 
-                            <Grid Style="{StaticResource Row}">
+                            <Grid Style="{StaticResource SettingsSliderRow}">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
+                                    <ColumnDefinition Width="{StaticResource SettingsLabelWidth}"/>
                                     <ColumnDefinition Width="260"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Static res:Strings.Settings_Speed}" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_Speed}" Style="{StaticResource SettingsRowLabel}"/>
                                 <Slider x:Name="RateSlider" Grid.Column="1" Minimum="-10" Maximum="10" IsSnapToTickEnabled="True" TickFrequency="1"
-                                        Value="{Binding Settings.TtsRate}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Speed}"/>
-                                <TextBlock Grid.Column="2" Text="{Binding Settings.TtsRate}" Style="{StaticResource Unit}" Width="32" TextAlignment="Right"/>
+                                                                        Value="{Binding Settings.TtsRate}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Speed}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Settings.TtsRate}" Style="{StaticResource SettingsUnit}" Width="32" TextAlignment="Right"/>
                             </Grid>
-                            <Grid Style="{StaticResource Row}">
+                            <Grid Style="{StaticResource SettingsSliderRow}">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
+                                    <ColumnDefinition Width="{StaticResource SettingsLabelWidth}"/>
                                     <ColumnDefinition Width="260"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Static res:Strings.Settings_Volume}" Style="{StaticResource RowLabel}"/>
+                                <TextBlock Text="{x:Static res:Strings.Settings_Volume}" Style="{StaticResource SettingsRowLabel}"/>
                                 <Slider x:Name="VolumeSlider" Grid.Column="1" Minimum="0" Maximum="100" IsSnapToTickEnabled="True" TickFrequency="1"
-                                        Value="{Binding Settings.TtsVolume}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Volume}"/>
-                                <TextBlock Grid.Column="2" Text="{Binding Settings.TtsVolume}" Style="{StaticResource Unit}" Width="32" TextAlignment="Right"/>
+                                                                        Value="{Binding Settings.TtsVolume}" VerticalAlignment="Center" AutomationProperties.Name="{x:Static res:Strings.Settings_Volume}"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Settings.TtsVolume}" Style="{StaticResource SettingsUnit}" Width="32" TextAlignment="Right"/>
                             </Grid>
-                            <StackPanel Style="{StaticResource Buttons}" Margin="220,0,0,8">
-                                <ui:Button Content="{x:Static res:Strings.Settings_TestVoice}" Style="{StaticResource Secondary}" Command="{Binding TestVoiceCommand}"/>
-                            </StackPanel>
+                            <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,0,0,8">
+                                <StackPanel Style="{StaticResource SettingsButtons}" Margin="0">
+                                    <ui:Button Content="{x:Static res:Strings.Settings_TestVoice}" Style="{StaticResource SettingsSecondary}" Command="{Binding TestVoiceCommand}"/>
+                                </StackPanel>
+                            </controls:SettingRow>
 
                             <Expander Header="{x:Static res:Strings.Settings_SetUpPiper}" Margin="0,4,0,0" AutomationProperties.Name="{x:Static res:Strings.Settings_SetUpPiper}">
                                 <StackPanel Margin="0,8,0,0">
-                                    <TextBlock Style="{StaticResource Help}"
+                                    <TextBlock Style="{StaticResource SettingsHelp}"
                                                Text="{x:Static res:Strings.Settings_PiperIsAFreeVoiceThatRunsOnYourComputerAndSounds}"/>
-                                    <TextBlock Style="{StaticResource Help}"
+                                    <TextBlock Style="{StaticResource SettingsHelp}"
                                                Text="{x:Static res:Strings.Settings_ItRunsOnTheCPUNoGraphicsCardNeededAndNothingIsSe}"/>
-                                    <StackPanel Style="{StaticResource Buttons}" Margin="0,0,0,2">
-                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadPiper}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperEnginePageCommand}"/>
-                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenPiperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenPiperModelsFolderCommand}"/>
+                                    <StackPanel Style="{StaticResource SettingsButtons}" Margin="0,0,0,2">
+                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadPiper}" Style="{StaticResource SettingsSecondary}" Command="{Binding OpenPiperEnginePageCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenPiperFolder}" Style="{StaticResource SettingsSecondary}" Command="{Binding OpenPiperModelsFolderCommand}"/>
                                     </StackPanel>
-                                    <TextBlock Style="{StaticResource Help}" Text="{x:Static res:Strings.Settings_PiperLicence}"/>
+                                    <TextBlock Style="{StaticResource SettingsHelp}" Text="{x:Static res:Strings.Settings_PiperLicence}"/>
 
                                     <!-- Only the voices whose terms let anyone use them, each with its licence and credit. -->
                                     <TextBlock Text="{x:Static res:Strings.Settings_VoicesHeading}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,6"/>
@@ -402,43 +312,36 @@
 
                 <!-- Quick Reminder -->
                 <StackPanel x:Name="QuickSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_QuickReminder}">
-                    <TextBlock Text="{x:Static res:Strings.Settings_QuickReminder}" Style="{StaticResource SectionTitle}"/>
-                    <ui:Card Style="{StaticResource Group}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_QuickReminder}" Style="{StaticResource SettingsSectionTitle}"/>
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Shortcut}" Style="{StaticResource GroupTitle}"/>
+                            <TextBlock Text="{x:Static res:Strings.Settings_Shortcut}" Style="{StaticResource SettingsGroupTitle}"/>
                             <CheckBox x:Name="HotkeyEnabledBox" Content="{x:Static res:Strings.Settings_OpenQuickReminderWithAKeyboardShortcut}" IsChecked="{Binding Settings.QuickAddHotkeyEnabled}"/>
-                            <TextBlock Style="{StaticResource CheckHelp}" Margin="28,0,0,4" Text="{x:Static res:Strings.Settings_WorksFromAnyAppSoYouCanSetAReminderWithoutOpenin}"/>
-                            <Grid Style="{StaticResource Row}" Margin="28,4,0,4" IsEnabled="{Binding Settings.QuickAddHotkeyEnabled}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="192"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Static res:Strings.Settings_Shortcut}" Style="{StaticResource RowLabel}"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource SettingsCheckHelp}" Margin="28,0,0,4" Text="{x:Static res:Strings.Settings_WorksFromAnyAppSoYouCanSetAReminderWithoutOpenin}"/>
+                            <controls:SettingRow LabelWidth="192" Style="{StaticResource SettingRow}" Margin="28,4,0,4" IsEnabled="{Binding Settings.QuickAddHotkeyEnabled}" Header="{x:Static res:Strings.Settings_Shortcut}">
+                                <StackPanel Orientation="Horizontal">
                                     <Border Background="{DynamicResource ControlFillColorDefaultBrush}" CornerRadius="4" Padding="10,6" Margin="0,0,10,0">
                                         <TextBlock x:Name="HotkeyText" Text="{Binding Settings.QuickAddHotkeyGesture}" FontFamily="Consolas"
                                                    AutomationProperties.Name="{Binding Settings.QuickAddHotkeyGesture, StringFormat={x:Static res:Strings.Settings_ShortcutNameFormat}}"/>
                                     </Border>
                                     <ui:Button Content="{x:Static res:Strings.Settings_Change}" Appearance="Secondary" Command="{Binding ChangeHotkeyCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_ChangeTheShortcut}"/>
                                 </StackPanel>
-                            </Grid>
+                            </controls:SettingRow>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_SpeakingAReminder}" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_ForTheMicrophoneButtonInQuickReminder}"/>
-                            <Grid Style="{StaticResource Row}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="SttEngineLabel" Text="{x:Static res:Strings.Settings_SpeechRecognition}" Style="{StaticResource RowLabel}"/>
-                                <ComboBox x:Name="SttEngineBox" Grid.Column="1" Style="{StaticResource Field}"
+                            <TextBlock Text="{x:Static res:Strings.Settings_SpeakingAReminder}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,0,0,8" Text="{x:Static res:Strings.Settings_ForTheMicrophoneButtonInQuickReminder}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}">
+                                <controls:SettingRow.Header>
+                                    <TextBlock x:Name="SttEngineLabel" Text="{x:Static res:Strings.Settings_SpeechRecognition}" Style="{StaticResource SettingsRowLabel}"/>
+                                </controls:SettingRow.Header>
+                                <ComboBox x:Name="SttEngineBox" Style="{StaticResource SettingsField}"
                                           ItemsSource="{Binding SpeechToTextEngines}" SelectedItem="{Binding Settings.SpeechToTextEngine}"
-                                          ItemTemplate="{StaticResource SttEngineName}"
+                                          ItemTemplate="{StaticResource SettingsSttEngineName}"
                                           AutomationProperties.LabeledBy="{Binding ElementName=SttEngineLabel}"/>
-                            </Grid>
+                            </controls:SettingRow>
 
                             <!-- Whisper's model only with Whisper. -->
                             <StackPanel>
@@ -452,37 +355,37 @@
                                         </Style.Triggers>
                                     </Style>
                                 </StackPanel.Style>
-                                <Grid Style="{StaticResource Row}" Margin="0,4,0,2">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock x:Name="WhisperModelLabel" Text="{x:Static res:Strings.Settings_WhisperModel}" Style="{StaticResource RowLabel}"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <ComboBox x:Name="WhisperModelBox" Style="{StaticResource Field}"
+                                <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,4,0,0">
+                                    <controls:SettingRow.Header>
+                                        <TextBlock x:Name="WhisperModelLabel" Text="{x:Static res:Strings.Settings_WhisperModel}" Style="{StaticResource SettingsRowLabel}"/>
+                                    </controls:SettingRow.Header>
+                                    <controls:SettingRow.Footer>
+                                        <TextBlock Text="{Binding WhisperStatusText}" Style="{StaticResource SettingsHelp}" Margin="0,2,0,10"/>
+                                    </controls:SettingRow.Footer>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ComboBox x:Name="WhisperModelBox" Style="{StaticResource SettingsField}"
                                                   ItemsSource="{Binding WhisperModels}" SelectedItem="{Binding Settings.WhisperModelFileName}"
                                                   IsEnabled="{Binding IsWhisperAvailable}"
                                                   AutomationProperties.LabeledBy="{Binding ElementName=WhisperModelLabel}"/>
-                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource Secondary}" Margin="8,0,0,0" Command="{Binding RefreshWhisperModelsCommand}"
+                                        <ui:Button Content="{x:Static res:Strings.Settings_Refresh}" Style="{StaticResource SettingsSecondary}" Margin="8,0,0,0" Command="{Binding RefreshWhisperModelsCommand}"
                                                    AutomationProperties.Name="{x:Static res:Strings.Settings_RefreshWhisperModels}"/>
                                     </StackPanel>
-                                </Grid>
-                                <TextBlock Text="{Binding WhisperStatusText}" Style="{StaticResource Help}" Margin="220,0,0,10"/>
+                                </controls:SettingRow>
                             </StackPanel>
 
                             <CheckBox x:Name="AutoListenBox" Content="{x:Static res:Strings.Settings_StartListeningAsSoonAsQuickReminderOpens}" IsChecked="{Binding Settings.QuickAddAutoListen}" Margin="0,4,0,8"/>
 
                             <Expander Header="{x:Static res:Strings.Settings_SetUpWhisper}" Margin="0,4,0,0" AutomationProperties.Name="{x:Static res:Strings.Settings_SetUpWhisper}">
                                 <StackPanel Margin="0,8,0,0">
-                                    <TextBlock Style="{StaticResource Help}"
+                                    <TextBlock Style="{StaticResource SettingsHelp}"
                                                Text="{x:Static res:Strings.Settings_WhisperIsFreeSpeechRecognitionThatRunsOnYourComp}"/>
-                                    <TextBlock Style="{StaticResource Help}"
+                                    <TextBlock Style="{StaticResource SettingsHelp}"
                                                Text="{x:Static res:Strings.Settings_ItRunsOnTheCPUNoGraphicsCardNeededOnlyWhileItLis}"/>
-                                    <StackPanel Style="{StaticResource Buttons}">
-                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadModels}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelPageCommand}"/>
-                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenWhisperFolder}" Style="{StaticResource Secondary}" Command="{Binding OpenWhisperModelsFolderCommand}"/>
+                                    <StackPanel Style="{StaticResource SettingsButtons}">
+                                        <ui:Button Content="{x:Static res:Strings.Settings_DownloadModels}" Style="{StaticResource SettingsSecondary}" Command="{Binding OpenWhisperModelPageCommand}"/>
+                                        <ui:Button Content="{x:Static res:Strings.Settings_OpenWhisperFolder}" Style="{StaticResource SettingsSecondary}" Command="{Binding OpenWhisperModelsFolderCommand}"/>
                                     </StackPanel>
-                                    <TextBlock Style="{StaticResource Help}" Margin="0,6,0,0" Text="{x:Static res:Strings.Settings_WhisperLicence}"/>
+                                    <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,6,0,0" Text="{x:Static res:Strings.Settings_WhisperLicence}"/>
                                 </StackPanel>
                             </Expander>
                         </StackPanel>
@@ -491,45 +394,40 @@
 
                 <!-- Backup and data -->
                 <StackPanel x:Name="DataSection" Visibility="Collapsed" AutomationProperties.Name="{x:Static res:Strings.Settings_BackupAndData}">
-                    <TextBlock Text="{x:Static res:Strings.Settings_BackupAndData}" Style="{StaticResource SectionTitle}"/>
-                    <ui:Card Style="{StaticResource Group}">
+                    <TextBlock Text="{x:Static res:Strings.Settings_BackupAndData}" Style="{StaticResource SettingsSectionTitle}"/>
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_SpentReminders}" Style="{StaticResource GroupTitle}"/>
-                            <Grid Style="{StaticResource Row}" Margin="0,4,0,2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="{StaticResource LabelWidth}"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Static res:Strings.Settings_DeleteSpentRemindersAfter}" Style="{StaticResource RowLabel}"/>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <ui:TextBox x:Name="AutoDeleteBox" Style="{StaticResource Number}" MaxLength="4"
+                            <TextBlock Text="{x:Static res:Strings.Settings_SpentReminders}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <controls:SettingRow Style="{StaticResource SettingRow}" Margin="0,4,0,2" Header="{x:Static res:Strings.Settings_DeleteSpentRemindersAfter}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ui:TextBox x:Name="AutoDeleteBox" Style="{StaticResource SettingsNumber}" MaxLength="4"
                                                 Text="{Binding Settings.AutoDeleteSpentAfterDays, UpdateSourceTrigger=PropertyChanged}"
                                                 AutomationProperties.Name="{x:Static res:Strings.Settings_DeleteSpentRemindersAfterDays}"/>
-                                    <TextBlock Text="{x:Static res:Strings.Settings_Days}" Style="{StaticResource Unit}"/>
+                                    <TextBlock Text="{x:Static res:Strings.Settings_Days}" Style="{StaticResource SettingsUnit}"/>
                                 </StackPanel>
-                            </Grid>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,4"
+                            </controls:SettingRow>
+                            <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,0,0,4"
                                        Text="{x:Static res:Strings.Settings_ASpentReminderIsAOneOffThatHasAlreadyGoneOffThey}"/>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Backup}" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,10"
+                            <TextBlock Text="{x:Static res:Strings.Settings_Backup}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,0,0,10"
                                        Text="{x:Static res:Strings.Settings_SavesEverySettingAndReminderToOneFileToMovePendu}"/>
-                            <StackPanel Style="{StaticResource Buttons}">
-                                <ui:Button Content="{x:Static res:Strings.Settings_BackUpButton}" Style="{StaticResource Secondary}" Command="{Binding ExportBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_BackUpSettingsAndReminders}"/>
-                                <ui:Button Content="{x:Static res:Strings.Settings_Restore}" Style="{StaticResource Secondary}" Command="{Binding RestoreBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_RestoreABackup}"/>
+                            <StackPanel Style="{StaticResource SettingsButtons}">
+                                <ui:Button Content="{x:Static res:Strings.Settings_BackUpButton}" Style="{StaticResource SettingsSecondary}" Command="{Binding ExportBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_BackUpSettingsAndReminders}"/>
+                                <ui:Button Content="{x:Static res:Strings.Settings_Restore}" Style="{StaticResource SettingsSecondary}" Command="{Binding RestoreBackupCommand}" AutomationProperties.Name="{x:Static res:Strings.Settings_RestoreABackup}"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:Card>
-                    <ui:Card Style="{StaticResource Group}">
+                    <ui:Card Style="{StaticResource SettingsGroup}">
                         <StackPanel Margin="4">
-                            <TextBlock Text="{x:Static res:Strings.Settings_Reset}" Style="{StaticResource GroupTitle}"/>
-                            <TextBlock Style="{StaticResource Help}" Margin="0,0,0,10"
+                            <TextBlock Text="{x:Static res:Strings.Settings_Reset}" Style="{StaticResource SettingsGroupTitle}"/>
+                            <TextBlock Style="{StaticResource SettingsHelp}" Margin="0,0,0,10"
                                        Text="{x:Static res:Strings.Settings_PutsEverySettingInTheseSectionsBackToItsDefaultY}"/>
-                            <StackPanel Style="{StaticResource Buttons}">
-                                <ui:Button Content="{x:Static res:Strings.Settings_ResetSettings}" Style="{StaticResource Secondary}" Command="{Binding ResetToDefaultsCommand}"/>
+                            <StackPanel Style="{StaticResource SettingsButtons}">
+                                <ui:Button Content="{x:Static res:Strings.Settings_ResetSettings}" Style="{StaticResource SettingsSecondary}" Command="{Binding ResetToDefaultsCommand}"/>
                             </StackPanel>
                         </StackPanel>
                     </ui:Card>
