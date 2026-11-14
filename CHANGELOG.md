@@ -20,6 +20,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
   while the disk is busy. Pending changes are saved before exit or Windows sign-out.
 - The calendar updates once after reminder changes, waits while hidden, and moves its today
   marker when the day changes.
+- Repeating reminders still move to their next occurrence after years without opening the
+  app, keeping the count of missed daily reminders instead of incorrectly marking them spent.
 
 ## [1.2.0] - 2026-11-02
 

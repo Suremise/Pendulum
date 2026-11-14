@@ -12,7 +12,7 @@ public static class RecurrenceCalculator
 
     /// The next scheduled occurrence strictly after <paramref name="after"/>, following
     /// <paramref name="rule"/> anchored at <paramref name="anchor"/>. Returns null if the
-    /// rule has no frequency or the calculation can't find one within a safety bound.
+    /// rule has no frequency or no further occurrence fits in DateTime's range.
     public static DateTime? GetNextOccurrence(RecurrenceRule rule, DateTime anchor, DateTime after)
     {
         if (rule.Frequency == RecurrenceFrequency.None)
@@ -39,23 +39,8 @@ public static class RecurrenceCalculator
         if (IsExhausted(rule))
             return null;
 
-        var candidate = searchFrom;
-        for (int i = 0; i < MaxIterations; i++)
-        {
-            var next = GetNextOccurrence(rule, anchor, candidate);
-            if (next is null)
-                return null;
-
-            if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && next.Value.Date > endDate.Date)
-                return null;
-
-            if (next.Value > now)
-                return next.Value;
-
-            candidate = next.Value;
-        }
-
-        return null;
+        var next = GetNextOccurrence(rule, anchor, searchFrom > now ? searchFrom : now);
+        return next is { } occurrence && !IsPastEnd(rule, occurrence) ? next : null;
     }
 
     /// Counts how many scheduled occurrences lie in [from, to) — from itself counts as one, plus
@@ -65,6 +50,16 @@ public static class RecurrenceCalculator
     /// skipped in a single jump rather than just the one immediately due.
     public static int CountOccurrencesBetween(RecurrenceRule rule, DateTime anchor, DateTime from, DateTime to)
     {
+        // A daily series can span more than the general expansion guard (years in an unused
+        // portable copy). Count it directly so catch-up credits every missed occurrence.
+        if (rule.Frequency == RecurrenceFrequency.Daily)
+        {
+            var first = GetNextOccurrence(rule, anchor, from);
+            if (first is null || first.Value >= to) return 1;
+            var wholeDays = (to.Ticks - 1 - first.Value.Ticks) / TimeSpan.TicksPerDay;
+            return 2 + (int)(wholeDays / Math.Max(1, rule.Interval));
+        }
+
         var count = 1;
         var candidate = from;
         for (int i = 0; i < MaxIterations; i++)
@@ -108,7 +103,7 @@ public static class RecurrenceCalculator
             // GetNextFutureOccurrenceWithinEndCondition) so this agrees with what the live engine
             // would actually do — previously this yielded the occurrence first and only stopped
             // afterward, showing one phantom occurrence past the recurrence's real end date.
-            if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && occurrence.Date > endDate.Date)
+            if (IsPastEnd(rule, occurrence))
                 yield break;
 
             if (occurrence >= rangeStart)
@@ -143,7 +138,7 @@ public static class RecurrenceCalculator
         if (first is null)
             return null;
 
-        if (rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && first.Value.Date > endDate.Date)
+        if (IsPastEnd(rule, first.Value))
             return null;
 
         return first.Value > now
@@ -176,7 +171,7 @@ public static class RecurrenceCalculator
         var after = lookBack > anchor ? lookBack : anchor.AddTicks(-1);
 
         DateTime? latest = null;
-        for (int i = 0; i < MaxIterations; i++)
+        while (true)
         {
             var next = GetNextOccurrence(rule, anchor, after);
             if (next is null || next.Value > trigger.TriggerAt)
@@ -207,6 +202,9 @@ public static class RecurrenceCalculator
 
     public static bool IsExhausted(RecurrenceRule rule) =>
         rule.EndType == RecurrenceEndType.AfterOccurrences && rule.OccurrencesSoFar >= rule.OccurrenceCount;
+
+    private static bool IsPastEnd(RecurrenceRule rule, DateTime occurrence) =>
+        rule.EndType == RecurrenceEndType.ByDate && rule.EndDate is { } endDate && occurrence.Date > endDate.Date;
 
     /// The rule in words ("Every 2 weeks on Mon, Fri, 6 times"), from CoreStrings, with month and
     /// day names and the end date in the user's culture.
@@ -311,32 +309,36 @@ public static class RecurrenceCalculator
         var named => culture.DateTimeFormat.GetDayName((DayOfWeek)(int)named),
     };
 
-    private static DateTime NextDaily(DateTime anchor, DateTime after, int interval)
+    private static DateTime? NextDaily(DateTime anchor, DateTime after, int interval)
     {
         if (after < anchor)
             return anchor;
 
         var days = (after.Date - anchor.Date).Days;
         var stepsPassed = days / interval;
-        var next = anchor.AddDays((double)stepsPassed * interval);
-        while (next <= after)
-            next = next.AddDays(interval);
-        return next;
+        var day = anchor.Date.Ticks / TimeSpan.TicksPerDay + (long)stepsPassed * interval;
+        var next = AtDay(day, anchor);
+        return next > after ? next : AtDay(day + interval, anchor);
     }
 
     private static DateTime? NextWeekly(DateTime anchor, DateTime after, int interval, List<DayOfWeek> daysOfWeek)
     {
         var days = daysOfWeek.Count > 0 ? daysOfWeek : new List<DayOfWeek> { anchor.DayOfWeek };
-        var anchorWeekStart = anchor.Date.AddDays(-(int)anchor.DayOfWeek);
-        var timeOfDay = anchor.TimeOfDay;
+        // Weeks start on Sunday, as in the original rules. Work in day numbers so the week
+        // containing DateTime.MinValue can begin before the representable date range.
+        var anchorWeekStart = anchor.Date.Ticks / TimeSpan.TicksPerDay - (int)anchor.DayOfWeek;
+        var periodDays = 7L * interval;
+        var elapsedDays = after.Date.Ticks / TimeSpan.TicksPerDay - anchorWeekStart;
+        var period = Math.Max(0, elapsedDays / periodDays);
+        var weekStart = anchorWeekStart + period * periodDays;
 
-        for (int week = 0; week < MaxIterations; week++)
+        // The period containing 'after', or the following active period, is enough.
+        for (var attempt = 0; attempt < 2; attempt++, weekStart += periodDays)
         {
-            var weekStart = anchorWeekStart.AddDays(week * interval * 7);
             DateTime? best = null;
             foreach (var dow in days)
             {
-                var candidate = weekStart.AddDays((int)dow).Add(timeOfDay);
+                var candidate = AtDay(weekStart + (int)dow, anchor);
                 if (candidate > after && (best is null || candidate < best))
                     best = candidate;
             }
@@ -347,31 +349,39 @@ public static class RecurrenceCalculator
         return null;
     }
 
-    private static DateTime NextMonthly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
+    private static DateTime? NextMonthly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
     {
         var start = new DateTime(anchor.Year, anchor.Month, 1).Add(anchor.TimeOfDay);
-        for (int i = 0; i < MaxIterations; i++)
+        var elapsedMonths = (after.Year - anchor.Year) * 12 + after.Month - anchor.Month;
+        var months = (long)Math.Max(0, elapsedMonths / interval) * interval;
+        var availableMonths = (9999 - anchor.Year) * 12 + 12 - anchor.Month;
+        for (var attempt = 0; attempt < 2 && months <= availableMonths; attempt++, months += interval)
         {
-            var monthDate = start.AddMonths(i * interval);
+            var monthDate = start.AddMonths((int)months);
             var day = DayInMonth(rule, monthDate.Year, monthDate.Month);
             var candidate = new DateTime(monthDate.Year, monthDate.Month, day).Add(anchor.TimeOfDay);
             if (candidate > after)
                 return candidate;
         }
-        return after;
+        return null;
     }
 
-    private static DateTime NextYearly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
+    private static DateTime? NextYearly(RecurrenceRule rule, DateTime anchor, DateTime after, int interval)
     {
         var month = Math.Clamp(rule.Month, 1, 12);
-        for (int i = 0; i < MaxIterations; i++)
+        var year = anchor.Year + (long)Math.Max(0, (after.Year - anchor.Year) / interval) * interval;
+        for (var attempt = 0; attempt < 2 && year <= 9999; attempt++, year += interval)
         {
-            var year = anchor.Year + i * interval;
-            var day = DayInMonth(rule, year, month);
-            var candidate = new DateTime(year, month, day).Add(anchor.TimeOfDay);
+            var day = DayInMonth(rule, (int)year, month);
+            var candidate = new DateTime((int)year, month, day).Add(anchor.TimeOfDay);
             if (candidate > after)
                 return candidate;
         }
-        return after;
+        return null;
     }
+
+    private static DateTime? AtDay(long day, DateTime anchor) =>
+        day < 0 || day > DateTime.MaxValue.Ticks / TimeSpan.TicksPerDay
+            ? null
+            : new DateTime(day * TimeSpan.TicksPerDay + anchor.TimeOfDay.Ticks, anchor.Kind);
 }
