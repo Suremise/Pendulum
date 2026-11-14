@@ -10,6 +10,106 @@ namespace Pendulum.App.Tests;
 [Collection(nameof(SettingsScreen))]
 public sealed class SaveSchedulingTests
 {
+    // Deliberate examples, independent of ReminderStore's property-discovery implementation.
+    // The JSON contract check below forces a new saved property to get a behavioral case too.
+    private static readonly Dictionary<string, object> ReminderChanges = new()
+    {
+        [nameof(TriggerTimer.Id)] = Guid.Parse("3a678c60-409d-4efb-a154-e921bd99fb70"),
+        [nameof(TriggerTimer.Name)] = "Changed",
+        [nameof(TriggerTimer.TriggerAt)] = new DateTime(2030, 4, 5, 12, 0, 0),
+        [nameof(TriggerTimer.DueUtc)] = new DateTime(2030, 4, 5, 11, 0, 0, DateTimeKind.Utc),
+        [nameof(TriggerTimer.SnoozedOccurrence)] = new DateTime(2030, 4, 5, 10, 0, 0),
+        [nameof(TriggerTimer.Enabled)] = false,
+        [nameof(TriggerTimer.Mode)] = AlertMode.SoundAndSpeech,
+        [nameof(TriggerTimer.SoundFileName)] = "bell.wav",
+        [nameof(TriggerTimer.Phrase)] = "Changed phrase",
+        [nameof(TriggerTimer.Volume)] = 30,
+        [nameof(TriggerTimer.HasFired)] = true,
+        [nameof(TriggerTimer.RecurrenceAnchor)] = new DateTime(2030, 4, 4, 12, 0, 0),
+        [nameof(TriggerTimer.Recurrence)] = new RecurrenceRule(),
+        [nameof(TriggerTimer.Color)] = "teal"
+    };
+
+    private static readonly Dictionary<string, object> RuleChanges = new()
+    {
+        [nameof(RecurrenceRule.Frequency)] = RecurrenceFrequency.Weekly,
+        [nameof(RecurrenceRule.Interval)] = 2,
+        [nameof(RecurrenceRule.DaysOfWeek)] = new List<DayOfWeek> { DayOfWeek.Friday },
+        [nameof(RecurrenceRule.DayOfMonth)] = 15,
+        [nameof(RecurrenceRule.Month)] = 4,
+        [nameof(RecurrenceRule.MonthDayRule)] = MonthDayRule.RelativeDay,
+        [nameof(RecurrenceRule.WeekOfMonth)] = WeekOfMonth.Last,
+        [nameof(RecurrenceRule.RelativeDay)] = RelativeDay.Weekday,
+        [nameof(RecurrenceRule.EndType)] = RecurrenceEndType.AfterOccurrences,
+        [nameof(RecurrenceRule.OccurrenceCount)] = 20,
+        [nameof(RecurrenceRule.EndDate)] = new DateTime(2031, 4, 5),
+        [nameof(RecurrenceRule.OccurrencesSoFar)] = 1
+    };
+
+    public static IEnumerable<object[]> PersistedChanges =>
+        ReminderChanges.Keys.Select(name => new object[] { false, name })
+            .Concat(RuleChanges.Keys.Select(name => new object[] { true, name }));
+
+    [Fact]
+    public void Every_property_written_to_JSON_has_a_save_scheduling_case()
+    {
+        Assert.Equal(JsonSerializer.SerializeToElement(new TriggerTimer()).EnumerateObject()
+            .Select(p => p.Name).Order(), ReminderChanges.Keys.Order());
+        Assert.Equal(JsonSerializer.SerializeToElement(new RecurrenceRule()).EnumerateObject()
+            .Select(p => p.Name).Order(), RuleChanges.Keys.Order());
+    }
+
+    [Theory]
+    [MemberData(nameof(PersistedChanges))]
+    public void Each_persisted_change_schedules_exactly_once_and_saves_its_value(bool nested, string property)
+        => UiThread.Invoke(() =>
+        {
+            var clock = new SaveClock();
+            var snapshots = new List<JsonElement>();
+            var services = new AppServices((_, snapshot) => snapshots.Add(snapshot), clock);
+            try
+            {
+                var trigger = new TriggerTimer
+                {
+                    Id = Guid.Empty,
+                    Color = "amber",
+                    TriggerAt = new DateTime(2029, 1, 1),
+                    RecurrenceAnchor = new DateTime(2029, 1, 1),
+                    Recurrence = new() { Frequency = RecurrenceFrequency.None }
+                };
+                services.AddTrigger(trigger);
+                services.FlushPendingSaves();
+                snapshots.Clear();
+                clock.Requests = 0;
+                object target = nested ? trigger.Recurrence : trigger;
+                var before = JsonSerializer.SerializeToElement(target).GetProperty(property);
+                var notifications = new List<string?>();
+                trigger.PropertyChanged += (_, e) => notifications.Add(e.PropertyName);
+
+                var value = (nested ? RuleChanges : ReminderChanges)[property];
+                target.GetType().GetProperty(property)!.SetValue(target, value);
+
+                var expected = JsonSerializer.SerializeToElement(target).GetProperty(property);
+                Assert.False(JsonElement.DeepEquals(before, expected), $"{property} must actually change");
+                Assert.Equal(1, clock.Requests);
+                Assert.Empty(snapshots);
+                services.FlushPendingSaves();
+                var saved = Assert.Single(snapshots)[0];
+                if (nested) saved = saved.GetProperty(nameof(TriggerTimer.Recurrence));
+                Assert.True(JsonElement.DeepEquals(expected, saved.GetProperty(property)));
+
+                // These notifications really occur, but must not request additional saves.
+                if (!nested && property is nameof(TriggerTimer.Id) or nameof(TriggerTimer.Color))
+                    Assert.Contains(nameof(TriggerTimer.DisplayColor), notifications);
+                if (!nested && property is nameof(TriggerTimer.Enabled) or nameof(TriggerTimer.HasFired))
+                    Assert.Contains(nameof(TriggerTimer.StatusSortOrder), notifications);
+                if ((!nested && property == nameof(TriggerTimer.Recurrence)) ||
+                    (nested && property == nameof(RecurrenceRule.Frequency)))
+                    Assert.Contains(nameof(TriggerTimer.IsScheduled), notifications);
+            }
+            finally { services.Shutdown(); }
+        });
+
     [Theory]
     [InlineData("fire")]
     [InlineData("snooze")]
