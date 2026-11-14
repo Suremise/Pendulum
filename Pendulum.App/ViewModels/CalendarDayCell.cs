@@ -5,7 +5,7 @@ namespace Pendulum.App.ViewModels;
 
 /// One cell in the Calendar tab's month grid. UI-only, not persisted, and rebuilt wholesale
 /// (never mutated in place) every time CalendarViewModel.RebuildGrid runs — Reminders is fully
-/// populated before the cell is ever exposed to the bound Days collection, so plain properties
+/// populated before the cell is ever exposed to the bound Days list, so plain properties
 /// (no INotifyPropertyChanged) are enough here.
 public sealed class CalendarDayCell
 {

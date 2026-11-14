@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Pendulum.App.Resources;
@@ -15,7 +16,13 @@ namespace Pendulum.App.ViewModels;
 
 public partial class CalendarViewModel : ObservableObject
 {
-    private ObservableCollection<TriggerTimer> Triggers => AppServices.Instance.Triggers;
+    private readonly ObservableCollection<TriggerTimer> Triggers;
+    private readonly Func<DateTime> _today;
+    private readonly Action<Action> _post;
+    private DateTime _lastToday;
+    private bool _visible;
+    private bool _dirty = true;
+    private bool _rebuildPosted;
 
     [ObservableProperty] private DateTime displayedMonth;
 
@@ -49,7 +56,12 @@ public partial class CalendarViewModel : ObservableObject
         set => DisplayedMonth = new DateTime(value, DisplayedMonth.Month, 1);
     }
 
-    public ObservableCollection<CalendarDayCell> Days { get; } = new();
+    private IReadOnlyList<CalendarDayCell> _days = Array.Empty<CalendarDayCell>();
+    public IReadOnlyList<CalendarDayCell> Days
+    {
+        get => _days;
+        private set => SetProperty(ref _days, value);
+    }
 
     /// How many lines of chips fit in a day's cell, as the view measures it (CalendarPanel): the
     /// grid is rebuilt when it changes.
@@ -65,7 +77,7 @@ public partial class CalendarViewModel : ObservableObject
                 return;
             _chipLines = value;
             OnPropertyChanged();
-            RebuildGrid();
+            MarkDirty();
         }
     }
 
@@ -75,15 +87,24 @@ public partial class CalendarViewModel : ObservableObject
     // holds the new value, so there's no other way to reach the one we need to detach from.
     private readonly Dictionary<TriggerTimer, RecurrenceRule?> _wiredRecurrence = new();
 
-    public CalendarViewModel()
+    public CalendarViewModel() : this(AppServices.Instance.Triggers, () => DateTime.Today,
+        action => Application.Current.Dispatcher.BeginInvoke(action, DispatcherPriority.Background))
     {
-        displayedMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    }
 
-        Triggers.CollectionChanged += OnTriggersCollectionChanged;
+    internal CalendarViewModel(ObservableCollection<TriggerTimer> triggers, Func<DateTime> today, Action<Action> post)
+    {
+        Triggers = triggers;
+        _today = today;
+        _post = post;
+        _lastToday = today().Date;
+        displayedMonth = new DateTime(_lastToday.Year, _lastToday.Month, 1);
+
+        // Views can be unloaded and loaded again with the same view model. Weak subscriptions
+        // let a closed window's calendar go away without keeping it alive through the store.
+        CollectionChangedEventManager.AddHandler(Triggers, OnTriggersCollectionChanged);
         foreach (var t in Triggers)
             Wire(t);
-
-        RebuildGrid();
     }
 
     partial void OnDisplayedMonthChanged(DateTime value)
@@ -91,7 +112,7 @@ public partial class CalendarViewModel : ObservableObject
         OnPropertyChanged(nameof(MonthYearLabel));
         OnPropertyChanged(nameof(SelectedMonthIndex));
         OnPropertyChanged(nameof(SelectedYear));
-        RebuildGrid();
+        MarkDirty();
     }
 
     [RelayCommand]
@@ -101,15 +122,51 @@ public partial class CalendarViewModel : ObservableObject
     private void NextMonth() => DisplayedMonth = DisplayedMonth.AddMonths(1);
 
     [RelayCommand]
-    private void Today() => DisplayedMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private void Today()
+    {
+        RefreshDate();
+        DisplayedMonth = new DateTime(_lastToday.Year, _lastToday.Month, 1);
+    }
 
-    /// The initial RebuildGrid() in the constructor runs before this panel is ever part of the
-    /// live visual tree (Calendar isn't the initially-selected tab), which can leave the day
-    /// grid's ItemsControl having missed painting its first population — it only recovers once
-    /// something else forces a fresh Days.Clear()+re-add (e.g. changing month). Call this from
-    /// the view's Loaded event so the grid gets a guaranteed fresh build once it's actually
-    /// on screen, regardless of any timing race during startup.
-    public void RefreshForDisplay() => RebuildGrid();
+    /// Also used by the off-screen renderer: prepare the calendar as if it became visible.
+    public void RefreshForDisplay() => SetVisible(true);
+
+    internal void SetVisible(bool visible)
+    {
+        _visible = visible;
+        if (!visible) return;
+        RefreshDate();
+        ScheduleRebuild();
+    }
+
+    /// Called at midnight, when shown again, and after a time change or resume. It never moves
+    /// the month the user is browsing; only the today marker and reminder occurrences change.
+    internal void RefreshDate()
+    {
+        var today = _today().Date;
+        if (today == _lastToday) return;
+        _lastToday = today;
+        MarkDirty();
+    }
+
+    private void MarkDirty()
+    {
+        _dirty = true;
+        ScheduleRebuild();
+    }
+
+    private void ScheduleRebuild()
+    {
+        if (!_visible || !_dirty || _rebuildPosted) return;
+        _rebuildPosted = true;
+        _post(() =>
+        {
+            _rebuildPosted = false;
+            if (!_visible || !_dirty) return;
+            _dirty = false;
+            RebuildGrid();
+        });
+    }
 
     [RelayCommand]
     private void EditReminder(TriggerTimer? trigger)
@@ -124,6 +181,11 @@ public partial class CalendarViewModel : ObservableObject
 
     private void OnTriggersCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            foreach (var t in _wiredRecurrence.Keys.ToList()) Unwire(t);
+            foreach (var t in Triggers) Wire(t);
+        }
         if (e.OldItems is not null)
             foreach (TriggerTimer t in e.OldItems)
                 Unwire(t);
@@ -131,22 +193,22 @@ public partial class CalendarViewModel : ObservableObject
             foreach (TriggerTimer t in e.NewItems)
                 Wire(t);
 
-        RebuildGrid();
+        MarkDirty();
     }
 
     private void Wire(TriggerTimer t)
     {
-        t.PropertyChanged += OnTriggerPropertyChanged;
+        PropertyChangedEventManager.AddHandler(t, OnTriggerPropertyChanged, string.Empty);
         _wiredRecurrence[t] = t.Recurrence;
         if (t.Recurrence is not null)
-            t.Recurrence.PropertyChanged += OnRecurrencePropertyChanged;
+            PropertyChangedEventManager.AddHandler(t.Recurrence, OnRecurrencePropertyChanged, string.Empty);
     }
 
     private void Unwire(TriggerTimer t)
     {
-        t.PropertyChanged -= OnTriggerPropertyChanged;
+        PropertyChangedEventManager.RemoveHandler(t, OnTriggerPropertyChanged, string.Empty);
         if (_wiredRecurrence.TryGetValue(t, out var rule) && rule is not null)
-            rule.PropertyChanged -= OnRecurrencePropertyChanged;
+            PropertyChangedEventManager.RemoveHandler(rule, OnRecurrencePropertyChanged, string.Empty);
         _wiredRecurrence.Remove(t);
     }
 
@@ -158,36 +220,23 @@ public partial class CalendarViewModel : ObservableObject
         if (e.PropertyName == nameof(TriggerTimer.Recurrence))
         {
             if (_wiredRecurrence.TryGetValue(t, out var oldRule) && oldRule is not null)
-                oldRule.PropertyChanged -= OnRecurrencePropertyChanged;
+                PropertyChangedEventManager.RemoveHandler(oldRule, OnRecurrencePropertyChanged, string.Empty);
             _wiredRecurrence[t] = t.Recurrence;
             if (t.Recurrence is not null)
-                t.Recurrence.PropertyChanged += OnRecurrencePropertyChanged;
+                PropertyChangedEventManager.AddHandler(t.Recurrence, OnRecurrencePropertyChanged, string.Empty);
         }
 
         if (e.PropertyName is nameof(TriggerTimer.TriggerAt) or nameof(TriggerTimer.RecurrenceAnchor)
             or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.Enabled) or nameof(TriggerTimer.Name)
             or nameof(TriggerTimer.Recurrence))
         {
-            RunOnUiThread(RebuildGrid);
+            MarkDirty();
         }
     }
 
-    private void OnRecurrencePropertyChanged(object? sender, PropertyChangedEventArgs e) => RunOnUiThread(RebuildGrid);
-
-    // TimerEngine.Tick() mutates TriggerTimer/RecurrenceRule fields (HasFired, OccurrencesSoFar)
-    // on a background ThreadPool thread, which raises PropertyChanged synchronously from there —
-    // without this marshal, RebuildGrid()'s Days.Clear()/Add() would mutate a UI-bound collection
-    // off the Dispatcher thread, which WPF rejects with an exception. That exception used to abort
-    // TimerEngine.Tick() before it ever raised the alert for the trigger that just fired, silently
-    // marking it HasFired with no alert ever shown whenever the Calendar tab was open.
-    private static void RunOnUiThread(Action action)
-    {
-        var dispatcher = Application.Current.Dispatcher;
-        if (dispatcher.CheckAccess())
-            action();
-        else
-            dispatcher.BeginInvoke(action);
-    }
+    // TimerEngine and user edits both change reminders on the UI thread. Posting once at
+    // Background priority coalesces the whole operation instead of rebuilding per property.
+    private void OnRecurrencePropertyChanged(object? sender, PropertyChangedEventArgs e) => MarkDirty();
 
     private void RebuildGrid()
     {
@@ -196,7 +245,8 @@ public partial class CalendarViewModel : ObservableObject
         var leadingDays = ((int)firstOfMonth.DayOfWeek - (int)firstDayOfWeek + 7) % 7;
         var gridStart = firstOfMonth.AddDays(-leadingDays);
         var gridEnd = gridStart.AddDays(42).AddTicks(-1);
-        var today = DateTime.Today;
+        var today = _today().Date;
+        _lastToday = today;
 
         var cells = new List<CalendarDayCell>(42);
         for (int i = 0; i < 42; i++)
@@ -215,13 +265,12 @@ public partial class CalendarViewModel : ObservableObject
         {
             foreach (var occurrence in RecurrenceCalculator.GetOccurrencesInRange(trigger, gridStart, gridEnd))
             {
-                var cell = cells.FirstOrDefault(c => c.Date == occurrence.Date);
-                cell?.Reminders.Add(trigger);
+                var index = (occurrence.Date - gridStart).Days;
+                if (index >= 0 && index < cells.Count)
+                    cells[index].Reminders.Add(trigger);
             }
         }
 
-        Days.Clear();
-        foreach (var cell in cells)
-            Days.Add(cell);
+        Days = cells;
     }
 }

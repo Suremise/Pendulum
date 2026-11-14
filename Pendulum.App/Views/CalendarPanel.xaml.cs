@@ -1,5 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
+using Microsoft.Win32;
 using Pendulum.App.ViewModels;
 
 namespace Pendulum.App.Views;
@@ -13,10 +15,76 @@ public partial class CalendarPanel : UserControl
     internal const double CellChrome = 0.6 * 2 + 3 * 2 + 18 + 2;
     internal const double ChipLine = 16 + 2;
 
+    private readonly DispatcherTimer _midnightTimer;
+    private Window? _owner;
+    private bool _active;
+
     public CalendarPanel()
     {
+        _midnightTimer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher);
+        _midnightTimer.Tick += (_, _) => RefreshClock();
         InitializeComponent();
-        Loaded += (_, __) => (DataContext as CalendarViewModel)?.RefreshForDisplay();
+        Loaded += (_, _) =>
+        {
+            _owner = Window.GetWindow(this);
+            if (_owner is not null) _owner.StateChanged += OnOwnerStateChanged;
+            UpdateActivity();
+        };
+        Unloaded += (_, _) =>
+        {
+            SetActive(false);
+            if (_owner is not null) _owner.StateChanged -= OnOwnerStateChanged;
+            _owner = null;
+        };
+        IsVisibleChanged += (_, _) => UpdateActivity();
+        DataContextChanged += (_, e) =>
+        {
+            (e.OldValue as CalendarViewModel)?.SetVisible(false);
+            (e.NewValue as CalendarViewModel)?.SetVisible(_active);
+        };
+    }
+
+    private void OnOwnerStateChanged(object? sender, EventArgs e) => UpdateActivity();
+
+    private void UpdateActivity() => SetActive(IsLoaded && IsVisible && _owner?.WindowState != WindowState.Minimized);
+
+    private void SetActive(bool active)
+    {
+        (DataContext as CalendarViewModel)?.SetVisible(active);
+        if (_active == active) return;
+        _active = active;
+        if (active)
+        {
+            SystemEvents.TimeChanged += OnTimeChanged;
+            SystemEvents.PowerModeChanged += OnPowerModeChanged;
+            RefreshClock();
+        }
+        else
+        {
+            _midnightTimer.Stop();
+            SystemEvents.TimeChanged -= OnTimeChanged;
+            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        }
+    }
+
+    private void OnTimeChanged(object? sender, EventArgs e) =>
+        Dispatcher.BeginInvoke(RefreshClock, DispatcherPriority.Background);
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        if (e.Mode == PowerModes.Resume)
+            Dispatcher.BeginInvoke(RefreshClock, DispatcherPriority.Background);
+    }
+
+    private void RefreshClock()
+    {
+        if (!_active) return;
+        (DataContext as CalendarViewModel)?.RefreshDate();
+        _midnightTimer.Stop();
+        var now = DateTime.Now;
+        // A local day can be 23 or 25 real hours when daylight saving changes.
+        _midnightTimer.Interval = now.Date.AddDays(1).ToUniversalTime() - now.ToUniversalTime();
+        _midnightTimer.Start();
     }
 
     /// The day grid is six rows of cells: as many chip lines as fit in one (none in a small

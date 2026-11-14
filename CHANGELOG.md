@@ -16,6 +16,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
   responsive while other apps are busy.
 - Save reminder and settings changes together in the background, keeping the app responsive
   while the disk is busy. Pending changes are saved before exit or Windows sign-out.
+- The calendar updates once after reminder changes, waits while hidden, and moves its today
+  marker when the day changes.
 
 ## [1.2.0] - 2026-11-02
 
