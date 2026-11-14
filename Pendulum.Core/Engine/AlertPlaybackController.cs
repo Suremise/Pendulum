@@ -27,8 +27,8 @@ public class AlertPlaybackController : IDisposable
 
     private readonly object _gate = new();
     private readonly Func<IAlertSound> _createAudio;
-    private readonly Func<ITextToSpeechEngine> _createSpeech;
-    private readonly Func<ITextToSpeechEngine>? _fallbackSpeech;
+    private readonly Func<SpeechEngineSelection> _chooseSpeech;
+    private SpeechEngineSelection? _speechSelection;
     private readonly Action<AlertProblem>? _onProblem;
     private readonly HashSet<AlertStep> _reported = [];
     private IAlertSound? _audio;
@@ -57,10 +57,17 @@ public class AlertPlaybackController : IDisposable
         Func<ITextToSpeechEngine> createSpeech,
         Func<ITextToSpeechEngine>? fallbackSpeech = null,
         Action<AlertProblem>? onProblem = null)
+        : this(createAudio, () => new SpeechEngineSelection(createSpeech, fallbackSpeech), onProblem)
+    {
+    }
+
+    public AlertPlaybackController(
+        Func<IAlertSound> createAudio,
+        Func<SpeechEngineSelection> chooseSpeech,
+        Action<AlertProblem>? onProblem = null)
     {
         _createAudio = createAudio;
-        _createSpeech = createSpeech;
-        _fallbackSpeech = fallbackSpeech;
+        _chooseSpeech = chooseSpeech;
         _onProblem = onProblem;
     }
 
@@ -157,7 +164,8 @@ public class AlertPlaybackController : IDisposable
             return;
         try
         {
-            var engine = _fallback ?? (_speech ??= _createSpeech());
+            var selection = _speechSelection ??= _chooseSpeech();
+            var engine = _fallback ?? (_speech ??= selection.Primary());
             token.ThrowIfCancellationRequested();
             _prepared ??= await engine.SynthesizeAsync(phrase, token).ConfigureAwait(false);
             token.ThrowIfCancellationRequested();
@@ -166,13 +174,13 @@ public class AlertPlaybackController : IDisposable
         }
         catch (Exception e) when (!token.IsCancellationRequested)
         {
-            if (_fallback is not null || _fallbackSpeech is null)
+            if (_fallback is not null || _speechSelection?.Fallback is not { } fallbackSpeech)
             {
                 _speechUnavailable = true;
                 Report(AlertStep.Speech, e, fellBack: false);
                 return;
             }
-            try { _fallback = _fallbackSpeech(); }
+            try { _fallback = fallbackSpeech(); }
             catch (Exception fallbackError)
             {
                 _speechUnavailable = true;

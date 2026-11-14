@@ -164,14 +164,26 @@ public sealed class AppServices
     public ITextToSpeechEngine CreateSpeechEngine() => CaptureSpeechEngineFactory()();
 
     /// One owned, lazy playback stack for either an alert or an editor preview.
-    public AlertPlaybackController CreatePlayback(Action<AlertProblem> onProblem) => new(
-        () => new AudioService(), CaptureSpeechEngineFactory(),
-        Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? CaptureWindowsSpeechEngineFactory() : null,
-        onProblem);
+    public AlertPlaybackController CreatePlayback(Action<AlertProblem> onProblem) => CreatePlayback(
+        onProblem, () => new AudioService(), CaptureWindowsSpeechEngineFactory(),
+        (exe, model, rate, volume) => new PiperSpeechService(exe, model, rate, volume));
+
+    internal AlertPlaybackController CreatePlayback(Action<AlertProblem> onProblem,
+        Func<IAlertSound> audio, Func<ITextToSpeechEngine> windows,
+        Func<string, string, float, float, ITextToSpeechEngine> piper) => new(
+            audio, CaptureSpeechSelection(windows, piper), onProblem);
 
     /// Captures settings on the UI thread; file checks and voice/device setup happen only when
     /// the worker needs speech. An alert keeps these settings throughout its life.
     public Func<ITextToSpeechEngine> CaptureSpeechEngineFactory()
+    {
+        var choose = CaptureSpeechSelection(CaptureWindowsSpeechEngineFactory(),
+            (exe, model, rate, volume) => new PiperSpeechService(exe, model, rate, volume));
+        return () => choose().Primary();
+    }
+
+    private Func<SpeechEngineSelection> CaptureSpeechSelection(Func<ITextToSpeechEngine> windows,
+        Func<string, string, float, float, ITextToSpeechEngine> piper)
     {
         var selected = Settings.TextToSpeechEngine;
         var executable = PiperExecutablePath;
@@ -179,13 +191,12 @@ public sealed class AppServices
         var modelName = Settings.PiperVoiceModelFileName;
         var speakingRate = 1f - (Settings.TtsRate / 20f);
         var volume = Settings.TtsVolume / 100f;
-        var windows = CaptureWindowsSpeechEngineFactory();
         return () =>
         {
             if (selected == TextToSpeechEngine.Piper && File.Exists(executable)
                 && DataFileName.PathInside(models, modelName) is { } modelPath && File.Exists(modelPath))
-                return new PiperSpeechService(executable, modelPath, speakingRate, volume);
-            return windows();
+                return new SpeechEngineSelection(() => piper(executable, modelPath, speakingRate, volume), windows);
+            return new SpeechEngineSelection(windows);
         };
     }
 

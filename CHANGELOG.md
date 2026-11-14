@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- When Piper's files are missing, a Windows voice failure is reported without retrying the same voice or claiming it fell back from Piper.
 - Restoring a backup that another program has open now reports the read error instead of calling it an invalid backup.
 - Saving a reminder without changing its displayed time keeps its exact relative deadline.
 - Settings panels no longer repeat changes to the theme or Windows startup entry.

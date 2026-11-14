@@ -98,6 +98,41 @@ public sealed class AlertPlaybackTests : IDisposable
     }
 
     [Fact]
+    public async Task A_selected_primary_that_fails_during_setup_still_uses_its_fallback()
+    {
+        var windows = new FakeSpeech();
+        var problems = new ConcurrentQueue<AlertProblem>();
+        var primaryAttempts = 0;
+        var selections = 0;
+        var playback = new AlertPlaybackController(() => new FakeSound(), () =>
+        {
+            selections++;
+            return new SpeechEngineSelection(() =>
+            {
+                primaryAttempts++;
+                throw new InvalidOperationException("primary setup failed");
+            }, () => windows);
+        }, problems.Enqueue);
+        try
+        {
+            playback.Start(null, AlertMode.SpeechOnly, "Dentist", repeatUntilDismissed: false);
+            await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+            Assert.True(Assert.Single(problems).FellBackToWindowsSpeech);
+
+            playback.Start(null, AlertMode.SpeechOnly, "Next reminder", repeatUntilDismissed: false);
+            await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+            Assert.Equal(1, selections);
+            Assert.Equal(1, primaryAttempts);
+            Assert.Equal(2, windows.Attempts);
+        }
+        finally
+        {
+            playback.Dispose();
+            await playback.Running.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+    }
+
+    [Fact]
     public async Task A_failing_alert_that_doesnt_repeat_plays_once_and_ends()
     {
         var sound = new FakeSound { Fails = true };
