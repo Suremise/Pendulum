@@ -123,6 +123,7 @@ internal static class Views
         var reminder = new TriggerTimer
         {
             Name = "Dentist",
+            Color = "teal", // not user-visible: stable palette key for this invented reminder
             TriggerAt = at,
             RecurrenceAnchor = at,
             Mode = AlertMode.SoundAndSpeech,
