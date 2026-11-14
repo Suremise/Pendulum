@@ -32,11 +32,12 @@ public static class QuickAddParser
     private static readonly Regex RelativeTime =
         new(@"\bin\s+(\d+)\s*(minutes?|mins?|hours?|hrs?)\b", RegexOptions.IgnoreCase);
 
+    // Without an am/pm suffix, leave the separating whitespace for weekday adjacency checks.
     private static readonly Regex TimeWithAt =
-        new(@"\bat\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?\b", RegexOptions.IgnoreCase);
+        new(@"\bat\s+(\d{1,2})(?::(\d{2}))?(?:\s*(am|pm))?\b", RegexOptions.IgnoreCase);
 
     private static readonly Regex TimeWithColon =
-        new(@"\b(\d{1,2}):(\d{2})\s*(am|pm)?\b", RegexOptions.IgnoreCase);
+        new(@"\b(\d{1,2}):(\d{2})(?:\s*(am|pm))?\b", RegexOptions.IgnoreCase);
 
     // Not straight after a colon or a digit, so the end of a time already turned down ("25:10pm")
     // isn't read again as an hour of its own.

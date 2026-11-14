@@ -10,6 +10,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ### Fixed
 - The calendar shows the correct days and reminder layout immediately when opening, changing month or resizing.
 
+- Quick Reminder recognizes short weekday names after 24-hour times, so "meet at 14:30 fri notes" schedules Friday and keeps "meet notes" as the name.
 - When Piper's files are missing, a Windows voice failure is reported without retrying the same voice or claiming it fell back from Piper.
 - Restoring a backup that another program has open now reports the read error instead of calling it an invalid backup.
 - Saving a reminder without changing its displayed time keeps its exact relative deadline.

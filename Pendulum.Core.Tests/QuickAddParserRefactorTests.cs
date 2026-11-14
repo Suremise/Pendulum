@@ -18,7 +18,7 @@ public sealed class QuickAddParserRefactorTests
     [InlineData("report today tomorrow 9am", "report today", "2026-06-04 09:00")]
     [InlineData("report fri monday 9am", "report fri", "2026-06-08 09:00")]
     [InlineData("meet fri at 14:30 notes", "meet notes", "2026-06-05 14:30")]
-    [InlineData("meet at 14:30 fri notes", "meet fri notes", "2026-06-03 14:30")]
+    [InlineData("meet at 14:30 fri notes", "meet notes", "2026-06-05 14:30")]
     [InlineData("meet at 2:30pm fri notes", "meet notes", "2026-06-05 14:30")]
     [InlineData("meet 14:30, fri", "meet", "2026-06-05 14:30")]
     [InlineData("meet fri, at 14:30", "meet", "2026-06-05 14:30")]

@@ -108,6 +108,41 @@ public class QuickAddParserTests
     }
 
     [Theory]
+    [InlineData("meet 14:30 sun notes", "meet notes", "2026-06-07 14:30")]
+    [InlineData("meet at 14:30 mon notes", "meet notes", "2026-06-08 14:30")]
+    [InlineData("meet 14:30 tue notes", "meet notes", "2026-06-09 14:30")]
+    [InlineData("meet at 14 wed notes", "meet notes", "2026-06-03 14:00")]
+    [InlineData("meet at 9 wed notes", "meet notes", "2026-06-10 09:00")]
+    [InlineData("meet 14:30 thu notes", "meet notes", "2026-06-04 14:30")]
+    [InlineData("meet at 14:30 Fri notes", "meet notes", "2026-06-05 14:30")]
+    [InlineData("meet 14:30 sat notes", "meet notes", "2026-06-06 14:30")]
+    [InlineData("meet at 14:30 \t fri notes", "meet notes", "2026-06-05 14:30")]
+    [InlineData("meet 14:30\nfri notes", "meet notes", "2026-06-05 14:30")]
+    [InlineData("meet, 14:30 fri notes.", "meet, notes", "2026-06-05 14:30")]
+    [InlineData("meet 14:30 , fri notes", "meet , notes", "2026-06-05 14:30")]
+    [InlineData("meet at 2:30 pm fri notes", "meet notes", "2026-06-05 14:30")]
+    public void A_short_weekday_after_a_valid_time_sets_the_day_and_leaves_the_other_words(string input, string name, string when)
+    {
+        var result = QuickAddParser.Parse(input, Now);
+        Assert.Equal(name, result.Name);
+        Assert.Equal(At(when), result.When);
+        Assert.Null(result.Refusal);
+        Assert.Null(result.DueUtc);
+    }
+
+    [Theory]
+    [InlineData("meet at 25 Sun Street 4pm", "meet at 25 Sun Street", "2026-06-03 16:00")]
+    [InlineData("meet at 10:75 sat nav 4pm", "meet at 10:75 sat nav", "2026-06-03 16:00")]
+    [InlineData("meet 25:10 sun cream 4pm", "meet 25:10 sun cream", "2026-06-03 16:00")]
+    [InlineData("meet 14:75 sat nav 4pm", "meet 14:75 sat nav", "2026-06-03 16:00")]
+    public void An_invalid_bare_time_does_not_turn_a_following_word_into_a_weekday(string input, string name, string when)
+    {
+        var result = QuickAddParser.Parse(input, Now);
+        Assert.Equal(name, result.Name);
+        Assert.Equal(At(when), result.When);
+    }
+
+    [Theory]
     [InlineData("buy milk")]
     [InlineData("call 555 1234")]
     [InlineData("in a few minutes")]
