@@ -19,9 +19,6 @@
     <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
     <conv:SortArrowConverter x:Key="SortArrow"/>
     <conv:BoolToSelectColumnWidthConverter x:Key="SelectColumnWidth"/>
-    <conv:NullToVisibilityConverter x:Key="ScheduledVis"/>
-    <conv:InverseNullToVisibilityConverter x:Key="FixedVis"/>
-    <conv:ReminderStatusVisibilityConverter x:Key="ReminderStatusVis"/>
 
     <Style x:Key="BadgeBase" TargetType="Border">
         <Setter Property="CornerRadius" Value="3"/>
@@ -39,8 +36,40 @@
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <Style x:Key="RowBadgeText" TargetType="TextBlock" BasedOn="{StaticResource TagBadgeText}">
+    <!-- One border and label, shared by row cells and the filter options. Tag carries
+         the type/mode/status value; Content may override a filter's shorter wording. -->
+    <Style x:Key="BadgePresenter" TargetType="ContentControl">
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border Style="{StaticResource TagBadge}" Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}">
+                        <TextBlock Text="{TemplateBinding Content}" Style="{StaticResource TagBadgeText}"
+                                   Foreground="{TemplateBinding Foreground}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TypeBadge" TargetType="ContentControl" BasedOn="{StaticResource BadgePresenter}">
+        <Setter Property="Content" Value="{x:Static res:Strings.Reminders_Fixed}"/>
+        <Setter Property="Background" Value="{DynamicResource PendulumBadgeFixedBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="True">
+                <Setter Property="Content" Value="{x:Static res:Strings.Reminders_Scheduled}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrongStrokeColorDefaultBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="RowTypeBadge" TargetType="ContentControl" BasedOn="{StaticResource TypeBadge}">
         <Style.Triggers>
             <DataTrigger Binding="{Binding HasFired}" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
@@ -48,17 +77,43 @@
         </Style.Triggers>
     </Style>
 
-    <Style x:Key="ModeBadge" TargetType="Border" BasedOn="{StaticResource TagBadge}">
-        <Setter Property="HorizontalAlignment" Value="Left"/>
+    <Style x:Key="ModeBadge" TargetType="ContentControl" BasedOn="{StaticResource BadgePresenter}">
+        <Setter Property="Content" Value="{Binding Tag, RelativeSource={RelativeSource Self}, Converter={StaticResource EnumSpaced}}"/>
         <Style.Triggers>
-            <DataTrigger Binding="{Binding Mode}" Value="SoundOnly">
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="{x:Static models:AlertMode.SoundOnly}">
                 <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundOnlyBrush}"/>
             </DataTrigger>
-            <DataTrigger Binding="{Binding Mode}" Value="SoundAndSpeech">
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="{x:Static models:AlertMode.SoundAndSpeech}">
                 <Setter Property="Background" Value="{DynamicResource PendulumBadgeSoundAndSpeechBrush}"/>
             </DataTrigger>
-            <DataTrigger Binding="{Binding Mode}" Value="SpeechOnly">
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="{x:Static models:AlertMode.SpeechOnly}">
                 <Setter Property="Background" Value="{DynamicResource PendulumBadgeSpeechOnlyBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="RowModeBadge" TargetType="ContentControl" BasedOn="{StaticResource ModeBadge}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasFired}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="StatusBadge" TargetType="ContentControl" BasedOn="{StaticResource BadgePresenter}">
+        <Setter Property="Content" Value="{x:Static res:Strings.Reminders_Upcoming}"/>
+        <Setter Property="Background" Value="{DynamicResource PendulumChipBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PendulumChipStrokeBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="1">
+                <Setter Property="Content" Value="{x:Static res:Strings.Reminders_Disabled}"/>
+                <Setter Property="Background" Value="{DynamicResource PendulumBadgeDisabledBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource Self}}" Value="2">
+                <Setter Property="Content" Value="{x:Static res:Strings.Reminders_Spent}"/>
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorSecondaryBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
             </DataTrigger>
         </Style.Triggers>
     </Style>

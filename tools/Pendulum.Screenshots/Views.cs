@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -31,6 +32,8 @@ internal static class Views
     private static readonly (string File, string Title, Func<FrameworkElement> Build)[] Shots =
     [
         ("01-reminders.png", "Reminders", () => MainWindowShot(tab: 0)),
+        ("01-badge-values.png", "Every reminder type, mode and status", BadgeValues),
+        ("01-badge-filters.png", "Type, mode and status filter options (laid out without opening popups)", BadgeFilters),
         ("02-calendar.png", "Calendar: a busy month, each reminder in its own colour", () => MainWindowShot(tab: 1)),
         ("02-calendar-small.png", "Calendar in the smallest window (820 × 560): \"+N more\" beside the day's number", () => MainWindowShot(tab: 1, 820, 560)),
         ("03-settings.png", "Settings", Settings),
@@ -105,11 +108,13 @@ internal static class Views
             var settings = AppServices.Instance.Settings;
             var tts = settings.TextToSpeechEngine;
             var stt = settings.SpeechToTextEngine;
+            var originalReminders = shot.File == "01-badge-values.png" ? AppServices.Instance.Triggers.ToArray() : null; // not user-visible: a fixture file
             try { Save(Draw(shot.Build()), Path.Combine(output, shot.File)); }
             finally
             {
                 settings.TextToSpeechEngine = tts;
                 settings.SpeechToTextEngine = stt;
+                if (originalReminders is not null) AppServices.Instance.Reminders.ReplaceAll(originalReminders);
             }
         }
     }
@@ -129,6 +134,58 @@ internal static class Views
             (calendar.DataContext as CalendarViewModel)?.RefreshForDisplay();
         Layout(host);
         return Framed(host);
+    }
+
+    private static FrameworkElement BadgeValues()
+    {
+        var reminders = new List<TriggerTimer>();
+        foreach (var scheduled in new[] { false, true })
+            foreach (var mode in Enum.GetValues<AlertMode>())
+                foreach (var status in new[] { 0, 1, 2 })
+                {
+                    var at = DateTime.Today.AddDays(3).AddMinutes(reminders.Count);
+                    reminders.Add(new TriggerTimer
+                    {
+                        Name = $"{(scheduled ? "Scheduled" : "Fixed")} / {mode} / {status}", // not user-visible: invented fixture labels
+                        TriggerAt = at,
+                        RecurrenceAnchor = at,
+                        Recurrence = scheduled ? new RecurrenceRule { Frequency = RecurrenceFrequency.Daily } : null,
+                        Mode = mode,
+                        Enabled = status == 0,
+                        HasFired = status == 2,
+                        Color = "teal", // not user-visible: stable palette key
+                        SoundFileName = "chime.wav" // not user-visible: invented fixture
+                    });
+                }
+        AppServices.Instance.Reminders.ReplaceAll(reminders);
+        var surface = MainWindowShot(0, 1100, 1280);
+        if (Descendants(surface).OfType<System.Windows.Controls.ListViewItem>().Count(item => item.DataContext is TriggerTimer) != reminders.Count)
+            throw new InvalidOperationException("The badge matrix did not lay out every reminder."); // not user-visible: renderer validation
+        return surface;
+    }
+
+    private static FrameworkElement BadgeFilters()
+    {
+        var panel = new TriggersPanel { Width = 1100, Height = 720 };
+        Layout(panel);
+        var options = new StackPanel { Orientation = Orientation.Horizontal };
+        foreach (var property in new[] { nameof(TriggerTimer.IsScheduled), nameof(TriggerTimer.Mode), nameof(TriggerTimer.StatusSortOrder) })
+        {
+            var header = Descendants(panel).OfType<GridViewColumnHeader>().Single(item => Equals(item.Tag, property));
+            var popup = ((StackPanel)header.Content).Children.OfType<Popup>().Single();
+            var content = (FrameworkElement)popup.Child;
+            popup.Child = null;
+            content.DataContext = panel.DataContext;
+            content.Margin = new Thickness(8);
+            options.Children.Add(content);
+        }
+        var host = new Border { Child = options, Padding = new Thickness(16) };
+        host.SetResourceReference(Border.BackgroundProperty, "ApplicationBackgroundBrush"); // not user-visible: a theme resource
+        host.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        host.Width = host.DesiredSize.Width;
+        host.Height = host.DesiredSize.Height;
+        Layout(host);
+        return host;
     }
 
     private static FrameworkElement Settings() => Window(new SettingsWindow());

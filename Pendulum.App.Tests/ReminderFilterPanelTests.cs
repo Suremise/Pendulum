@@ -49,17 +49,16 @@ public sealed class ReminderFilterPanelTests : IDisposable
             try
             {
                 var panel = Build(new AppSettings());
-                Border Badge(string text) => (Border)Elements(panel).OfType<TextBlock>()
-                    .Single(t => t.Text == text && ReferenceEquals(t.DataContext, _reminder)
-                        && t.Style == panel.FindResource("RowBadgeText")).Parent;
-                var fixedBadge = Badge(Pendulum.App.Resources.Strings.Reminders_Fixed);
-                var scheduledBadge = Badge(Pendulum.App.Resources.Strings.Reminders_Scheduled);
-                Assert.Equal(Visibility.Visible, fixedBadge.Visibility);
-                Assert.Equal(Visibility.Collapsed, scheduledBadge.Visibility);
+                TextBlock Label() => Elements(panel).OfType<TextBlock>()
+                    .Single(text => text.Text == Pendulum.App.Resources.Strings.Reminders_Fixed && ReferenceEquals(text.DataContext, _reminder));
+                var label = Label();
+                var badge = (Border)label.Parent;
+                Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Fixed, label.Text);
                 rule.Frequency = RecurrenceFrequency.Daily;
                 Dispatcher.CurrentDispatcher.Invoke(() => { }, DispatcherPriority.ContextIdle);
-                Assert.Equal(Visibility.Collapsed, fixedBadge.Visibility);
-                Assert.Equal(Visibility.Visible, scheduledBadge.Visibility);
+                Assert.Equal(Pendulum.App.Resources.Strings.Reminders_Scheduled, label.Text);
+                Assert.Same(badge, label.Parent);
+                Assert.Equal(Visibility.Visible, badge.Visibility);
             }
             finally { _reminder.Recurrence = null; }
         });
@@ -337,7 +336,7 @@ public sealed class ReminderFilterPanelTests : IDisposable
             TextBlock Tick() => Elements(panel).OfType<TextBlock>().Single(t => t.Text == "" && ReferenceEquals(t.DataContext, _reminder));
             ListViewItem Row() => Elements(panel).OfType<ListViewItem>().Single(i => ReferenceEquals(i.Content, _reminder));
             TextBlock Badge(string text) => Elements(panel).OfType<TextBlock>()
-                .Single(t => t.Text == text && ReferenceEquals(t.DataContext, _reminder) && t.Style == panel.FindResource("RowBadgeText"));
+                .Single(t => t.Text == text && ReferenceEquals(t.DataContext, _reminder));
 
             // Upcoming: no tick, the list's own background, badges in the primary text.
             Assert.Equal(Visibility.Collapsed, Tick().Visibility);
