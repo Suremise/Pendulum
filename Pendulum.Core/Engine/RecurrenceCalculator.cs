@@ -55,29 +55,54 @@ public static class RecurrenceCalculator
     /// skipped in a single jump rather than just the one immediately due.
     public static int CountOccurrencesBetween(RecurrenceRule rule, DateTime anchor, DateTime from, DateTime to)
     {
-        // A daily series can span more than the general expansion guard (years in an unused
-        // portable copy). Count it directly so catch-up credits every missed occurrence.
-        if (rule.Frequency == RecurrenceFrequency.Daily)
+        var first = GetNextOccurrence(rule, anchor, from);
+        if (first is null || first.Value >= to) return 1;
+        var interval = Math.Max(1, rule.Interval);
+
+        // Count active periods rather than expanding every missed occurrence. The initial
+        // due time counts separately, even when a snooze puts it off the pattern.
+        return rule.Frequency switch
         {
-            var first = GetNextOccurrence(rule, anchor, from);
-            if (first is null || first.Value >= to) return 1;
-            var wholeDays = (to.Ticks - 1 - first.Value.Ticks) / TimeSpan.TicksPerDay;
-            return 2 + (int)(wholeDays / Math.Max(1, rule.Interval));
-        }
+            RecurrenceFrequency.Daily => 2 + (int)((to.Ticks - 1 - first.Value.Ticks) / TimeSpan.TicksPerDay / interval),
+            RecurrenceFrequency.Weekly => 1 + CountWeekly(rule, anchor, first.Value, to, interval),
+            RecurrenceFrequency.Monthly or RecurrenceFrequency.Yearly => 1 + CountCalendarPeriods(rule, first.Value, to, interval),
+            _ => 1,
+        };
+    }
 
-        var count = 1;
-        var candidate = from;
-        for (int i = 0; i < MaxIterations; i++)
+    private static int CountWeekly(RecurrenceRule rule, DateTime anchor, DateTime first, DateTime to, int interval)
+    {
+        // Work in day numbers: multiplying a very large interval by ticks would overflow.
+        var firstDay = first.Date.Ticks / TimeSpan.TicksPerDay;
+        var weekStart = firstDay - (int)first.DayOfWeek;
+        var periodDays = 7L * interval;
+        var lastTicks = to.Ticks - 1; // The upper bound is strictly excluded, including its ticks.
+        var lastDay = lastTicks / TimeSpan.TicksPerDay;
+        if (lastTicks % TimeSpan.TicksPerDay < anchor.TimeOfDay.Ticks) lastDay--;
+        var days = rule.DaysOfWeek.Count > 0 ? rule.DaysOfWeek : [anchor.DayOfWeek];
+
+        var count = 0;
+        foreach (var day in days.Distinct())
         {
-            var next = GetNextOccurrence(rule, anchor, candidate);
-            if (next is null || next.Value >= to)
-                break;
-
-            count++;
-            candidate = next.Value;
+            var candidate = weekStart + (int)day;
+            if (candidate < firstDay) candidate += periodDays;
+            if (candidate <= lastDay) count += 1 + (int)((lastDay - candidate) / periodDays);
         }
-
         return count;
+    }
+
+    private static int CountCalendarPeriods(RecurrenceRule rule, DateTime first, DateTime to, int interval)
+    {
+        var monthly = rule.Frequency == RecurrenceFrequency.Monthly;
+        var elapsed = monthly ? (to.Year - first.Year) * 12 + to.Month - first.Month : to.Year - first.Year;
+        var periods = elapsed / interval;
+        var start = new DateTime(first.Year, first.Month, 1);
+        var lastPeriod = monthly ? start.AddMonths(periods * interval) : start.AddYears(periods * interval);
+        // Every active month/year has one occurrence. Only the final period may fall after
+        // the upper bound; derive its day afresh so clamping and relative days don't drift.
+        var last = new DateTime(lastPeriod.Year, lastPeriod.Month, DayInMonth(rule, lastPeriod.Year, lastPeriod.Month))
+            .Add(first.TimeOfDay);
+        return periods + 1 - (last >= to ? 1 : 0);
     }
 
     /// Expands a trigger (one-shot or recurring) into every occurrence date that falls within
