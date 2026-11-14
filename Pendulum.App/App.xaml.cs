@@ -356,6 +356,13 @@ public partial class App : Application
 
     private static void OnSystemTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
 
+    protected override void OnSessionEnding(SessionEndingCancelEventArgs e)
+    {
+        if (_ownsMutex)
+            AppServices.Instance.FlushPendingSaves();
+        base.OnSessionEnding(e);
+    }
+
     private static void OnPowerModeChanged(object? sender, Microsoft.Win32.PowerModeChangedEventArgs e)
     {
         if (e.Mode == Microsoft.Win32.PowerModes.Resume)

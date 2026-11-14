@@ -28,6 +28,7 @@ public sealed class RestoreResetTests : IDisposable
 
     public void Dispose()
     {
+        UiThread.Invoke(() => AppServices.Instance.FlushPendingSaves());
         AppPaths.BaseDirectoryOverride = null;
         try { Directory.Delete(_base, recursive: true); }
         catch (IOException) { }
@@ -54,6 +55,7 @@ public sealed class RestoreResetTests : IDisposable
         Assert.False(current.LaunchOnWindowsStartup);
 
         // Saved once, at the end, with everything in it.
+        AppServices.Instance.FlushPendingSaves();
         var onDisk = new SettingsRepository(AppPaths.SettingsFile).Load();
         Assert.Equal(30, onDisk.AutoDeleteSpentAfterDays);
         Assert.Equal("Ctrl+Alt+P", onDisk.QuickAddHotkeyGesture);
@@ -75,6 +77,7 @@ public sealed class RestoreResetTests : IDisposable
         foreach (var p in AppSettings.CopiedSettings)
             Assert.True(Equals(p.GetValue(defaults), p.GetValue(current)), p.Name);
         Assert.False(current.LaunchOnWindowsStartup);  // the default is on: Reset doesn't turn it on
+        AppServices.Instance.FlushPendingSaves();
         Assert.Equal(0, new SettingsRepository(AppPaths.SettingsFile).Load().AutoDeleteSpentAfterDays);
     });
 
@@ -83,6 +86,7 @@ public sealed class RestoreResetTests : IDisposable
         AppServices.Instance.UseSettingsForTests(settings, saveOnChange: true);
         var vm = new SettingsViewModel();
         // Building the screen can pick a voice or model when none is set, which saves: start clean.
+        AppServices.Instance.FlushPendingSaves();
         File.Delete(AppPaths.SettingsFile);
         return vm;
     }

@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text.Json;
+using System.Windows;
 using Pendulum.App.Resources;
 using Pendulum.Core.Engine;
 using Pendulum.Core.Models;
@@ -29,6 +31,9 @@ public sealed class AppServices
     /// the save before it was used or Pendulum started without it. The App tells the user.
     public List<DataFileNotice> DataFileNotices { get; } = new();
 
+    private readonly DebouncedSave<(string Path, JsonElement Value)> _settingsSave;
+    private readonly DebouncedSave<(string Path, JsonElement Value)> _triggersSave;
+
     /// For tests only: settings loaded from a test's own file, without Initialize (which reads
     /// the app's Data\ and can write the Run key). With saveOnChange, each change saves as in the
     /// app, through the same batching. Never called by the app.
@@ -51,8 +56,15 @@ public sealed class AppServices
     /// updating to a new version visibly confirms the install worked.
     public bool JustInstalledOrUpdated { get; private set; }
 
-    private AppServices()
+    internal AppServices(Action<string, JsonElement>? write = null, TimeProvider? timeProvider = null)
     {
+        write ??= (path, value) => JsonStore.Save(path, value);
+        void Dispatch(Action action) => Application.Current.Dispatcher.BeginInvoke(action);
+        void Report(Exception error) => CrashLog.Write("Save", error);
+        _settingsSave = new(() => (AppPaths.SettingsFile, JsonSerializer.SerializeToElement(Settings)),
+            snapshot => write(snapshot.Path, snapshot.Value), Dispatch, Report, timeProvider);
+        _triggersSave = new(() => (AppPaths.TriggersFile, JsonSerializer.SerializeToElement(Triggers.ToList())),
+            snapshot => write(snapshot.Path, snapshot.Value), Dispatch, Report, timeProvider);
     }
 
     /// Loads settings and triggers, silently reconciling anything that was due while the
@@ -103,7 +115,7 @@ public sealed class AppServices
 
         Engine.SetTriggers(Triggers);
         if (missed.Count > 0 || removedSpent > 0)
-            TriggerRepository.Save(Triggers);
+            _triggersSave.MarkDirty();
 
         return missed;
     }
@@ -113,7 +125,7 @@ public sealed class AppServices
     private void SaveUnlessBatched()
     {
         if (_settingsBatch == 0)
-            SettingsRepository.Save(Settings);
+            _settingsSave.MarkDirty();
     }
 
     /// Makes many settings changes with one save at the end, so a restore or reset is never
@@ -131,7 +143,7 @@ public sealed class AppServices
         }
 
         if (_settingsBatch == 0)
-            SettingsRepository.Save(Settings);
+            _settingsSave.MarkDirty();
     }
 
     public string PiperExecutablePath => Path.Combine(AppPaths.PiperModelsDirectory, "piper.exe");
@@ -179,8 +191,15 @@ public sealed class AppServices
 
     private void WireItem(TriggerTimer t) => t.PropertyChanged += (_, e) =>
     {
-        // Bulk-select checkboxes are UI-only state — don't churn a disk write for every click.
-        if (e.PropertyName != nameof(TriggerTimer.IsSelectedForBulk))
+        // Only persisted properties change the file. Derived status/colour notifications and
+        // bulk selection must not duplicate the real change's save and engine refresh.
+        if (e.PropertyName is nameof(TriggerTimer.Id) or nameof(TriggerTimer.Name)
+            or nameof(TriggerTimer.TriggerAt) or nameof(TriggerTimer.DueUtc)
+            or nameof(TriggerTimer.SnoozedOccurrence) or nameof(TriggerTimer.Enabled)
+            or nameof(TriggerTimer.Mode) or nameof(TriggerTimer.SoundFileName)
+            or nameof(TriggerTimer.Phrase) or nameof(TriggerTimer.Volume)
+            or nameof(TriggerTimer.HasFired) or nameof(TriggerTimer.RecurrenceAnchor)
+            or nameof(TriggerTimer.Recurrence) or nameof(TriggerTimer.Color))
             RefreshTriggers();
     };
 
@@ -209,7 +228,7 @@ public sealed class AppServices
     public void RefreshTriggers()
     {
         Engine.SetTriggers(Triggers);
-        TriggerRepository.Save(Triggers);
+        _triggersSave.MarkDirty();
     }
 
     /// The full path of a sound in Sounds\, or empty for none. A name that isn't a plain file
@@ -297,8 +316,17 @@ public sealed class AppServices
         return backup;
     }
 
+    public void FlushPendingSaves()
+    {
+        // Try both files even if one cannot be saved. Flush reports failures to the caller.
+        try { _settingsSave.Flush(); }
+        finally { _triggersSave.Flush(); }
+    }
+
     public void Shutdown()
     {
         Engine.Dispose();
+        try { _settingsSave.Dispose(); }
+        finally { _triggersSave.Dispose(); }
     }
 }
