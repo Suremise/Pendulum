@@ -186,13 +186,15 @@ public partial class TriggersViewModel : ObservableObject
     };
 
     [RelayCommand]
-    private void Add()
-    {
-        var draft = NewDraft(AppServices.Instance.Settings);
+    private void Add() => Add(AppServices.Instance);
 
-        if (_dialogs.EditReminder(draft, isNew: true) is { } result)
+    internal void Add(AppServices services)
+    {
+        if (services.IsShuttingDown) return;
+        var draft = NewDraft(services.Settings);
+
+        if (_dialogs.EditReminder(draft, isNew: true) is { } result && services.TryAddTrigger(result))
         {
-            AppServices.Instance.AddTrigger(result);
             SelectedTrigger = result;
         }
     }

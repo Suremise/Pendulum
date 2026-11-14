@@ -125,18 +125,29 @@ public partial class QuickAddWindow : FluentWindow
 
     private void TryAdd()
     {
-        var result = QuickAddParser.Parse(InputBox.Text, DateTime.Now);
+        if (TrySubmit(InputBox.Text, DateTime.Now, AppServices.Instance, out var error))
+            DialogResult = true;
+        else if (error is not null)
+            ShowError(error);
+    }
+
+    /// The same submission path without constructing or showing a window.
+    internal static bool TrySubmit(string text, DateTime now, AppServices services, out string? error)
+    {
+        error = null;
+        if (services.IsShuttingDown) return false;
+        var result = QuickAddParser.Parse(text, now);
 
         if (result.When is null)
         {
-            ShowError(result.Refusal == QuickAddRefusal.TimePassedToday ? Strings.QuickAdd_TimePassedToday : Strings.QuickAdd_NoTime);
-            return;
+            error = result.Refusal == QuickAddRefusal.TimePassedToday ? Strings.QuickAdd_TimePassedToday : Strings.QuickAdd_NoTime;
+            return false;
         }
 
         if (string.IsNullOrWhiteSpace(result.Name))
         {
-            ShowError(Strings.QuickAdd_NoName);
-            return;
+            error = Strings.QuickAdd_NoName;
+            return false;
         }
 
         var trigger = new TriggerTimer
@@ -144,14 +155,13 @@ public partial class QuickAddWindow : FluentWindow
             Name = result.Name,
             TriggerAt = result.When.Value,
             RecurrenceAnchor = result.When.Value,
-            SoundFileName = AppServices.Instance.Settings.DefaultSoundFileName,
+            SoundFileName = services.Settings.DefaultSoundFileName,
             Mode = AlertMode.SoundOnly
         };
         // A span from now ("in 20 min") keeps its real instant, so it's right across a clock change.
         trigger.SetDue(result.When.Value, result.DueUtc);
 
-        AppServices.Instance.AddTrigger(trigger);
-        DialogResult = true;
+        return services.TryAddTrigger(trigger);
     }
 
     /// What Quick Reminder says when speaking a reminder didn't work.

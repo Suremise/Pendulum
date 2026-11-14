@@ -37,6 +37,7 @@ public sealed class AppServices
     private readonly DebouncedSave<(string Path, JsonElement Value)> _settingsSave;
     private readonly DebouncedSave<(string Path, JsonElement Value)> _triggersSave;
     private bool _persistReminders;
+    internal bool IsShuttingDown { get; private set; }
 
     /// Explicit opt-out for the in-memory UI tests and renderer. Never called by the app.
     internal void UseRemindersForTests() => _persistReminders = false;
@@ -235,6 +236,15 @@ public sealed class AppServices
     }
 
     public void AddTrigger(TriggerTimer t) => Reminders.Add(t);
+
+    /// UI submissions can return from a nested dispatcher pump during exit. Keep explicit
+    /// store membership operations strict, but let these callers decline without success.
+    internal bool TryAddTrigger(TriggerTimer t)
+    {
+        if (IsShuttingDown) return false;
+        Reminders.Add(t);
+        return true;
+    }
     public void RemoveTrigger(TriggerTimer t) => Reminders.Remove(t);
     public void RemoveTriggers(IEnumerable<TriggerTimer> items) => Reminders.RemoveRange(items);
     public void ChangeRemindersTogether(Action change) => Reminders.ChangeTogether(change);
@@ -350,6 +360,7 @@ public sealed class AppServices
 
     public void Shutdown()
     {
+        IsShuttingDown = true;
         try
         {
             ShutdownCleanup.Run(CrashLog.Write,

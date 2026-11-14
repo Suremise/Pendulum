@@ -15,6 +15,7 @@ internal sealed class FakeDialogs : IDialogs
     public string? OpenPath { get; set; }
     public string? SavePath { get; set; }
     public TriggerTimer? EditResult { get; set; }
+    public Action? OnEdit { get; set; }
     public string? HotkeyResult { get; set; }
     public List<string> HotkeyRequests { get; } = new();
 
@@ -42,6 +43,7 @@ internal sealed class FakeDialogs : IDialogs
     public TriggerTimer? EditReminder(TriggerTimer reminder, bool isNew = false)
     {
         Edits.Add((reminder, isNew));
+        OnEdit?.Invoke();
         return EditResult;
     }
 

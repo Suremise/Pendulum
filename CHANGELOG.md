@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Quick Reminder and the new-reminder editor ignore submissions once shutdown begins.
 - Late alert actions and edits are ignored after shutdown, avoiding errors or changes to reminders that can no longer be saved.
 - Editing sounds or showing filters no longer repeats the work of sizing every date.
 - A failed final save is logged without interrupting the rest of shutdown or leaving save timers running.
