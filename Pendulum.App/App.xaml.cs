@@ -58,10 +58,11 @@ public partial class App : Application
     private void RegisterErrorHandlers()
     {
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
-        {
-            if (args.ExceptionObject is Exception ex)
-                CrashLog.Write("AppDomain.UnhandledException", ex);
-        };
+            FatalExceptionHandler.Handle(args.ExceptionObject as Exception, Dispatcher, () =>
+            {
+                if (_singleInstance?.IsPrimary == true)
+                    AppServices.Instance.FlushPendingSaves();
+            }, CrashLog.Write);
         DispatcherUnhandledException += (_, args) =>
         {
             CrashLog.Write("DispatcherUnhandledException", args.Exception);

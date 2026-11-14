@@ -9,6 +9,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Pendulum attempts to save pending reminder and settings changes before a fatal error on its window thread.
 - The calendar's today marker updates on time when clock changes skip or repeat midnight.
 - Long gaps between uses now count every missed weekly, monthly and yearly reminder, so series that end after a set number stop on time.
 - The calendar shows the correct days and reminder layout immediately when opening, changing month or resizing.
