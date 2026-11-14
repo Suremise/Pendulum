@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using Pendulum.App.ViewModels;
+using Pendulum.Core.Engine;
 
 namespace Pendulum.App.Views;
 
@@ -81,9 +82,8 @@ public partial class CalendarPanel : UserControl
         if (!_active) return;
         (DataContext as CalendarViewModel)?.RefreshDate();
         _midnightTimer.Stop();
-        var now = DateTime.Now;
-        // A local day can be 23 or 25 real hours when daylight saving changes.
-        _midnightTimer.Interval = now.Date.AddDays(1).ToUniversalTime() - now.ToUniversalTime();
+        var now = DateTimeOffset.UtcNow;
+        _midnightTimer.Interval = WallClock.NextDateBoundary(now, TimeZoneInfo.Local) - now;
         _midnightTimer.Start();
     }
 

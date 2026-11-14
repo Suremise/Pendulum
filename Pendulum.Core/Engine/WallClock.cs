@@ -6,6 +6,43 @@ namespace Pendulum.Core.Engine;
 /// the wall-clock time it lands on. That way it's right across the clocks going back or forward.
 public static class WallClock
 {
+    /// The next local date boundary as a real instant, for scheduling a calendar rollover.
+    public static DateTimeOffset NextDateBoundary(DateTimeOffset now, TimeZoneInfo zone)
+    {
+        var midnight = TimeZoneInfo.ConvertTime(now, zone).Date.AddDays(1);
+        if (zone.IsInvalidTime(midnight))
+        {
+            // A gap can start before midnight and end partway through the new date. Find
+            // its exact end, rather than assuming a one-hour gap or rounding to a minute.
+            var lastInvalid = midnight;
+            var firstValid = midnight.AddHours(1);
+            while (zone.IsInvalidTime(firstValid))
+            {
+                lastInvalid = firstValid;
+                firstValid = firstValid.AddHours(1);
+            }
+            while (firstValid.Ticks - lastInvalid.Ticks > 1)
+            {
+                var middle = lastInvalid.AddTicks((firstValid.Ticks - lastInvalid.Ticks) / 2);
+                if (zone.IsInvalidTime(middle)) lastInvalid = middle;
+                else firstValid = middle;
+            }
+            midnight = firstValid;
+        }
+
+        if (zone.IsAmbiguousTime(midnight))
+        {
+            // The larger offset gives the earlier instant. A rollback can cross the date:
+            // if that first midnight already passed, use the next occurrence still ahead.
+            return zone.GetAmbiguousTimeOffsets(midnight)
+                .Select(offset => new DateTimeOffset(midnight, offset).ToUniversalTime())
+                .Where(instant => instant > now)
+                .Min();
+        }
+
+        return new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(midnight, zone));
+    }
+
     /// The real instant <paramref name="span"/> after <paramref name="now"/>, as a UTC time and as
     /// the wall-clock time it reads in <paramref name="zone"/> (the machine's own, unless given).
     /// <paramref name="now"/> is best DateTime.Now or a UTC time: a Local DateTime from the clock
