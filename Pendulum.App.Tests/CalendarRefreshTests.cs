@@ -42,7 +42,7 @@ public sealed class CalendarRefreshTests
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
-        posted.Dequeue()();
+        Assert.Empty(posted);
         var first = vm.Days[0].Date;
         var last = vm.Days[^1].Date;
         var daily = new TriggerTimer { TriggerAt = first, RecurrenceAnchor = first, Recurrence = new() };
@@ -69,7 +69,7 @@ public sealed class CalendarRefreshTests
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
-        posted.Dequeue()();
+        Assert.Empty(posted);
         var rebuilds = 0;
         vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(vm.Days)) rebuilds++; };
 
@@ -95,7 +95,7 @@ public sealed class CalendarRefreshTests
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(new ReminderStore([trigger]), () => today, posted.Enqueue);
         vm.RefreshForDisplay();
-        posted.Dequeue()();
+        Assert.Empty(posted);
         var initial = vm.Days;
         trigger.Name = "Before hiding";
         vm.SetVisible(false);
@@ -107,8 +107,7 @@ public sealed class CalendarRefreshTests
         Assert.Same(initial, vm.Days);
 
         vm.RefreshForDisplay();
-        Assert.Single(posted)();
-        posted.Clear();
+        Assert.Empty(posted);
         Assert.NotSame(initial, vm.Days);
         vm.RefreshForDisplay();
         Assert.Empty(posted);
@@ -123,7 +122,7 @@ public sealed class CalendarRefreshTests
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(new(), () => today, posted.Enqueue);
         vm.RefreshForDisplay();
-        posted.Dequeue()();
+        Assert.Empty(posted);
         Assert.Equal(today, Assert.Single(vm.Days, d => d.IsToday).Date);
         var month = vm.DisplayedMonth;
         vm.SetVisible(!hidden);
@@ -133,8 +132,9 @@ public sealed class CalendarRefreshTests
         {
             Assert.Empty(posted);
             vm.RefreshForDisplay();
+            Assert.Empty(posted);
         }
-        Assert.Single(posted)();
+        else Assert.Single(posted)();
         Assert.Equal(today, Assert.Single(vm.Days, d => d.IsToday).Date);
         Assert.Equal(month, vm.DisplayedMonth);
     });
@@ -149,7 +149,7 @@ public sealed class CalendarRefreshTests
         var posted = new Queue<Action>();
         var vm = new CalendarViewModel(triggers, () => today, posted.Enqueue);
         vm.RefreshForDisplay();
-        posted.Dequeue()();
+        Assert.Empty(posted);
         trigger.Recurrence = new();
         posted.Dequeue()();
         oldRule.OccurrencesSoFar++;

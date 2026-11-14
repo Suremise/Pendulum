@@ -76,8 +76,8 @@ public partial class CalendarViewModel : ObservableObject
             if (value == _chipLines)
                 return;
             _chipLines = value;
+            MarkDirty(immediate: true);
             OnPropertyChanged();
-            MarkDirty();
         }
     }
 
@@ -102,10 +102,10 @@ public partial class CalendarViewModel : ObservableObject
 
     partial void OnDisplayedMonthChanged(DateTime value)
     {
+        MarkDirty(immediate: true);
         OnPropertyChanged(nameof(MonthYearLabel));
         OnPropertyChanged(nameof(SelectedMonthIndex));
         OnPropertyChanged(nameof(SelectedYear));
-        MarkDirty();
     }
 
     [RelayCommand]
@@ -117,8 +117,10 @@ public partial class CalendarViewModel : ObservableObject
     [RelayCommand]
     private void Today()
     {
-        RefreshDate();
-        DisplayedMonth = new DateTime(_lastToday.Year, _lastToday.Month, 1);
+        var today = _today().Date;
+        if (today != _lastToday) _dirty = true;
+        DisplayedMonth = new DateTime(today.Year, today.Month, 1);
+        RebuildIfDirty();
     }
 
     /// Also used by the off-screen renderer: prepare the calendar as if it became visible.
@@ -128,8 +130,8 @@ public partial class CalendarViewModel : ObservableObject
     {
         _visible = visible;
         if (!visible) return;
-        RefreshDate();
-        ScheduleRebuild();
+        if (_today().Date != _lastToday) _dirty = true;
+        RebuildIfDirty();
     }
 
     /// Called at midnight, when shown again, and after a time change or resume. It never moves
@@ -142,10 +144,20 @@ public partial class CalendarViewModel : ObservableObject
         MarkDirty();
     }
 
-    private void MarkDirty()
+    private void MarkDirty(bool immediate = false)
     {
         _dirty = true;
-        ScheduleRebuild();
+        if (immediate) RebuildIfDirty();
+        else ScheduleRebuild();
+    }
+
+    /// Display, navigation and layout must publish a complete grid before the next render.
+    /// Keep any already-posted callback: it can consume later reminder changes, or do nothing.
+    private void RebuildIfDirty()
+    {
+        if (!_visible || !_dirty) return;
+        _dirty = false;
+        RebuildGrid();
     }
 
     private void ScheduleRebuild()
@@ -155,9 +167,7 @@ public partial class CalendarViewModel : ObservableObject
         _post(() =>
         {
             _rebuildPosted = false;
-            if (!_visible || !_dirty) return;
-            _dirty = false;
-            RebuildGrid();
+            RebuildIfDirty();
         });
     }
 

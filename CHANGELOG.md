@@ -8,6 +8,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- The calendar shows the correct days and reminder layout immediately when opening, changing month or resizing.
 
 - When Piper's files are missing, a Windows voice failure is reported without retrying the same voice or claiming it fell back from Piper.
 - Restoring a backup that another program has open now reports the read error instead of calling it an invalid backup.
