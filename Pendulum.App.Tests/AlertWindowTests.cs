@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Threading;
 using Pendulum.App.Resources;
 using Pendulum.App.Views;
 
@@ -13,7 +15,7 @@ public sealed class AlertWindowTests
     private static T WithWindow<T>(Func<AlertWindow, T> read) =>
         UiThread.Invoke(() =>
         {
-            var window = new AlertWindow("Dentist", "10:00", canSnooze: true);
+            var window = new AlertWindow("Dentist", "10:00");
             try { return read(window); }
             finally
             {
@@ -24,12 +26,27 @@ public sealed class AlertWindowTests
         });
 
     [Fact]
+    public void An_unshown_alert_has_no_topmost_timer_and_close_keeps_it_stopped()
+    {
+        var timer = WithWindow(w =>
+        {
+            var timer = (DispatcherTimer)typeof(AlertWindow)
+                .GetField("_topmostReinforcer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(w)!;
+            Assert.False(w.IsVisible);
+            Assert.False(timer.IsEnabled);
+            return timer;
+        });
+        Assert.False(timer.IsEnabled);
+    }
+
+    [Fact]
     public void A_new_alert_doesnt_say_it_is_waiting_and_offers_no_dismiss_all()
     {
-        var (waiting, dismissAll) = WithWindow(w => (w.WaitingText.Visibility, w.DismissAllButton.Visibility));
+        var (waiting, dismissAll, snooze) = WithWindow(w => (w.WaitingText.Visibility, w.DismissAllButton.Visibility, w.SnoozeButton.Visibility));
 
         Assert.Equal(Visibility.Collapsed, waiting);
         Assert.Equal(Visibility.Collapsed, dismissAll);
+        Assert.Equal(Visibility.Visible, snooze);
     }
 
     [Fact]

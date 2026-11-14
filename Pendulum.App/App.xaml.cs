@@ -248,7 +248,6 @@ public partial class App : Application
                 trigger.SoundFileName,
                 trigger.Mode,
                 trigger.Phrase,
-                canSnooze: true,
                 volumePercent: trigger.Volume,
                 onSnooze: () =>
                 {

@@ -155,7 +155,7 @@ internal static class Views
 
     private static FrameworkElement Alert()
     {
-        var window = new AlertWindow("Take a break", DisplayFormat.DateAndTime(DateTime.Today.AddHours(11), use24Hour: true), canSnooze: true);
+        var window = new AlertWindow("Take a break", DisplayFormat.DateAndTime(DateTime.Today.AddHours(11), use24Hour: true));
         var host = Detach(window, window.Width, double.NaN, background: Brushes.Transparent, margin: new Thickness(16, 12, 16, 22));
         Layout(host);
         return host;

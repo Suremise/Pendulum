@@ -247,7 +247,7 @@ public static class Program
     private static void RenderAlert(string output)
     {
         var at = DateTime.Today.AddHours(11);
-        var window = new AlertWindow("Take a break", DisplayFormat.DateAndTime(at, use24Hour: true), canSnooze: true);
+        var window = new AlertWindow("Take a break", DisplayFormat.DateAndTime(at, use24Hour: true));
         // The alert draws its own rounded card and shadow on a transparent window: room for the
         // shadow round it, and transparent beyond, as on the desktop.
         var host = Detach(window, window.Width, double.NaN, background: Brushes.Transparent, margin: new Thickness(16, 12, 16, 22));

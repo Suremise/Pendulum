@@ -43,7 +43,6 @@ public static class AlertCoordinator
         string? soundFileName,
         AlertMode mode,
         string? phrase,
-        bool canSnooze,
         Action? onSnooze,
         Action? onDismiss,
         int volumePercent = 100)
@@ -63,7 +62,7 @@ public static class AlertCoordinator
             services.CaptureSpeechEngineFactory(),
             services.Settings.TextToSpeechEngine == TextToSpeechEngine.Piper ? services.CaptureWindowsSpeechEngineFactory() : null,
             problem => CrashLog.Write($"Alert {problem.Step}{(problem.FellBackToWindowsSpeech ? " (fell back to the Windows voice)" : "")}", problem.Error));  // not user-visible
-        var window = new AlertWindow(title, subtitle, canSnooze);
+        var window = new AlertWindow(title, subtitle);
         var session = new Session(playback, window, soundPath, mode, phrase, repeat, volume);
         window.Dismissed += () => onDismiss?.Invoke();
         window.Snoozed += () => onSnooze?.Invoke();

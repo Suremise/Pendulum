@@ -19,21 +19,12 @@ public partial class AlertWindow : Window
     public event Action? Dismissed;
     public event Action? Snoozed;
 
-    public AlertWindow(string title, string subtitle, bool canSnooze)
+    public AlertWindow(string title, string subtitle)
     {
         InitializeComponent();
 
         TitleText.Text = title;
         SubtitleText.Text = subtitle;
-        SnoozeButton.Visibility = canSnooze ? Visibility.Visible : Visibility.Collapsed;
-
-        SourceInitialized += (_, __) => Win32Interop.MakeNonActivating(new WindowInteropHelper(this).Handle);
-        Loaded += (_, __) =>
-        {
-            OpenWindows.Add(this);
-            _workArea = WorkAreaFor(this);
-            RestackOpenWindows();
-        };
 
         _topmostReinforcer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _topmostReinforcer.Tick += (_, __) =>
@@ -42,7 +33,17 @@ public partial class AlertWindow : Window
             if (hwnd != IntPtr.Zero)
                 Win32Interop.ForceTopmost(hwnd);
         };
-        _topmostReinforcer.Start();
+
+        SourceInitialized += (_, __) => Win32Interop.MakeNonActivating(new WindowInteropHelper(this).Handle);
+        Loaded += (_, __) =>
+        {
+            OpenWindows.Add(this);
+            _workArea = WorkAreaFor(this);
+            RestackOpenWindows();
+            // Only a real, loaded alert needs native topmost reinforcement. Constructing a
+            // view for tests or off-screen rendering must leave its timer stopped.
+            _topmostReinforcer.Start();
+        };
 
         Closed += (_, __) =>
         {
